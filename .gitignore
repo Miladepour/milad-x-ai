@@ -1,5 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
 /.pnp
@@ -16,17 +14,23 @@
 # production
 /build
 
+# local form & admin data (never commit user submissions)
+/data/
+
+# environment & secrets
+.env
+.env*.local
+
 # misc
 .DS_Store
 *.pem
+Thumbs.db
 
-# debug
+# debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# local env files
-.env*.local
+pnpm-debug.log*
 
 # vercel
 .vercel
@@ -34,3 +38,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# cursor (local agent state — not for the repo)
+.cursor/
+
+# duplicate source images (site uses public/images)
+/Images/

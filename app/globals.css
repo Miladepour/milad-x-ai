@@ -1,27 +1,406 @@
+@import "@fontsource/vazirmatn/arabic-300.css";
+@import "@fontsource/vazirmatn/arabic-400.css";
+@import "@fontsource/vazirmatn/arabic-500.css";
+@import "@fontsource/vazirmatn/arabic-600.css";
+@import "@fontsource/vazirmatn/arabic-700.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@layer components {
+  .form-field {
+    @apply w-full bg-surface border border-cream/30 text-cream font-dm text-sm px-4 py-3 rounded-sm outline-none transition-colors;
+    @apply placeholder:text-cream/45;
+    @apply focus:border-orange focus:ring-2 focus:ring-orange/30;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  .form-field:disabled {
+    @apply opacity-55 cursor-not-allowed;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+:root {
+  --font-vazir: "Vazirmatn", Tahoma, sans-serif;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #0D0D0D;
+  color: #F5F0E8;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-22px); }
+}
+
+.hero-orb {
+  animation: float 7s ease-in-out infinite;
+}
+
+@keyframes learn-topics-bar {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.learn-topics-show-bar {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 92, 0, 0.15) 20%,
+    #ff5c00 50%,
+    rgba(255, 92, 0, 0.15) 80%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: learn-topics-bar 2.2s ease-in-out infinite;
+}
+
+/* Farsi (Vazirmatn): font family, sizing, and Persian-friendly rhythm */
+html.rtl {
+  font-size: 17px;
+}
+
+html.rtl body,
+html.rtl .font-dm,
+html.rtl .font-mono,
+html.rtl .font-vazir {
+  font-family: var(--font-vazir);
+}
+
+html.rtl .font-dm {
+  line-height: 1.75;
+}
+
+html.rtl .uppercase {
+  text-transform: none;
+}
+
+html.rtl .tracking-widest,
+html.rtl .tracking-\[0\.35em\] {
+  letter-spacing: 0;
+}
+
+html.rtl .italic {
+  font-style: normal;
+}
+
+html.rtl .text-xs {
+  font-size: 0.8125rem;
+}
+
+html.rtl .text-sm {
+  font-size: 0.9375rem;
+}
+
+@layer components {
+  .type-hero-tag {
+    font-size: 11px;
+  }
+
+  html.rtl .type-hero-tag {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  @keyframes hero-tag-pulse {
+    0%,
+    100% {
+      opacity: 0.75;
+      text-shadow: 0 0 0 transparent;
+    }
+    50% {
+      opacity: 1;
+      text-shadow: 0 0 24px rgba(255, 92, 0, 0.45);
+    }
+  }
+
+  @keyframes hero-tag-shimmer {
+    0% {
+      background-position: 200% center;
+    }
+    100% {
+      background-position: -200% center;
+    }
+  }
+
+  .hero-tag-animated {
+    background: linear-gradient(
+      90deg,
+      #ff5c00 0%,
+      #ffb380 35%,
+      #ff5c00 50%,
+      #ffb380 65%,
+      #ff5c00 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation:
+      hero-tag-shimmer 4s linear infinite,
+      hero-tag-pulse 3s ease-in-out infinite;
+  }
+
+  .type-hero-h1 {
+    font-size: clamp(36px, 5.5vw, 70px);
+    line-height: 1.08;
+  }
+
+  html.rtl .type-hero-h1 {
+    font-size: clamp(24px, 3.6vw, 44px);
+    line-height: 1.4;
+  }
+
+  .type-hero-quote {
+    font-size: clamp(14px, 1.6vw, 18px);
+  }
+
+  html.rtl .type-hero-quote {
+    font-size: clamp(13px, 1.5vw, 17px);
+    line-height: 1.6;
+  }
+
+  .type-hero-body {
+    font-size: 15px;
+  }
+
+  html.rtl .type-hero-body {
+    font-size: 16px;
+    line-height: 1.8;
+  }
+
+  .type-hero-scroll {
+    font-size: 10px;
+    letter-spacing: 0.25em;
+  }
+
+  html.rtl .type-hero-scroll {
+    font-size: 11px;
+    letter-spacing: 0;
+  }
+
+  /* Hero FA: layout stays LTR (text left, image right); page scrolls normally */
+  html.rtl .hero-content {
+    margin-right: auto;
+    margin-left: 0;
+  }
+
+  @media (min-width: 768px) {
+    html.rtl .hero-content {
+      max-width: 55%;
+    }
+  }
+
+  .type-section-label {
+    font-size: 11px;
+  }
+
+  html.rtl .type-section-label {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .type-section-title {
+    font-size: clamp(40px, 5.5vw, 72px);
+    line-height: 1.05;
+  }
+
+  html.rtl .type-section-title {
+    font-size: clamp(42px, 5.8vw, 76px);
+    line-height: 1.2;
+  }
+
+  .type-section-body {
+    font-size: 16px;
+  }
+
+  html.rtl .type-section-body {
+    font-size: 17px;
+    line-height: 1.8;
+  }
+
+  .type-card-title-lg {
+    font-size: 28px;
+  }
+
+  html.rtl .type-card-title-lg {
+    font-size: 30px;
+    line-height: 1.35;
+  }
+
+  .type-card-title {
+    font-size: 22px;
+  }
+
+  html.rtl .type-card-title {
+    font-size: 24px;
+    line-height: 1.35;
+  }
+
+  .type-card-body {
+    font-size: 14px;
+  }
+
+  html.rtl .type-card-body {
+    font-size: 15px;
+    line-height: 1.75;
+  }
+
+  .type-badge {
+    font-size: 9px;
+  }
+
+  html.rtl .type-badge {
+    font-size: 10px;
+  }
+
+  .type-badge-meta {
+    font-size: 10px;
+  }
+
+  html.rtl .type-badge-meta {
+    font-size: 11px;
+  }
+
+  .type-book-title {
+    font-size: clamp(36px, 5vw, 64px);
+    line-height: 1.05;
+  }
+
+  html.rtl .type-book-title {
+    font-size: clamp(38px, 5.3vw, 68px);
+    line-height: 1.2;
+  }
+
+  .type-book-body {
+    font-size: 18px;
+  }
+
+  html.rtl .type-book-body {
+    font-size: 19px;
+    line-height: 1.75;
+  }
+
+  /* Courses listing & detail — smaller titles on desktop */
+  .type-course-page-title {
+    font-size: clamp(32px, 7vw, 40px);
+    line-height: 1.12;
+  }
+
+  @media (min-width: 768px) {
+    .type-course-page-title {
+      font-size: clamp(28px, 2.8vw, 42px);
+      line-height: 1.15;
+    }
+  }
+
+  html.rtl .type-course-page-title {
+    font-size: clamp(28px, 6.5vw, 38px);
+    line-height: 1.3;
+  }
+
+  @media (min-width: 768px) {
+    html.rtl .type-course-page-title {
+      font-size: clamp(26px, 2.6vw, 40px);
+      line-height: 1.35;
+    }
+  }
+
+  .type-course-subtitle {
+    font-size: 17px;
+    line-height: 1.45;
+  }
+
+  @media (min-width: 768px) {
+    .type-course-subtitle {
+      font-size: 18px;
+    }
+  }
+
+  html.rtl .type-course-subtitle {
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  @media (min-width: 768px) {
+    html.rtl .type-course-subtitle {
+      font-size: 17px;
+    }
+  }
+
+  .type-course-section-heading {
+    font-size: 22px;
+    line-height: 1.25;
+  }
+
+  @media (min-width: 768px) {
+    .type-course-section-heading {
+      font-size: 24px;
+      line-height: 1.3;
+    }
+  }
+
+  html.rtl .type-course-section-heading {
+    font-size: 21px;
+    line-height: 1.35;
+  }
+
+  @media (min-width: 768px) {
+    html.rtl .type-course-section-heading {
+      font-size: 22px;
+    }
+  }
+
+  .type-course-card-title {
+    font-size: 20px;
+    line-height: 1.3;
+  }
+
+  @media (min-width: 768px) {
+    .type-course-card-title {
+      font-size: 21px;
+    }
+  }
+
+  html.rtl .type-course-card-title {
+    font-size: 19px;
+    line-height: 1.4;
+  }
+
+  @media (min-width: 768px) {
+    html.rtl .type-course-card-title {
+      font-size: 20px;
+    }
+  }
+
+  .type-course-block-h3 {
+    font-size: 20px;
+    line-height: 1.3;
+  }
+
+  @media (min-width: 768px) {
+    .type-course-block-h3 {
+      font-size: 21px;
+    }
+  }
+
+  .type-course-block-h4 {
+    font-size: 18px;
+    line-height: 1.35;
+  }
+
+  @media (min-width: 768px) {
+    .type-course-block-h4 {
+      font-size: 19px;
+    }
   }
 }
