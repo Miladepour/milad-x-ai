@@ -52,8 +52,10 @@ export default function About() {
               <span className="type-section-label font-mono text-orange uppercase tracking-widest rtl:tracking-normal">
                 {t.about.label}
               </span>
-              <h2 className="type-hero-h1 font-dm font-bold text-cream">
-                {t.about.heading1}<br />{t.about.heading2}
+              <h2 className="type-course-page-title font-dm font-bold text-cream leading-tight m-0">
+                {t.about.heading1}
+                <br />
+                {t.about.heading2}
               </h2>
             </motion.div>
 

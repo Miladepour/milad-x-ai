@@ -126,7 +126,7 @@ export default function Hero() {
             <Button variant="primary" size="lg" href={href("/contact")}>
               {t.hero.cta1}
             </Button>
-            <Button variant="outline" size="lg" href={href("/#work")}>
+            <Button variant="outline" size="lg" href={href("/portfolio")}>
               {t.hero.cta2}
             </Button>
           </motion.div>

@@ -8,6 +8,7 @@ import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { localizedPath } from "@/lib/i18n/paths";
 import { COURSES_BASE_PATH } from "@/lib/courses";
+import { PORTFOLIO_BASE_PATH } from "@/lib/portfolio/constants";
 import type { UrlLocale } from "@/lib/i18n/config";
 
 function isNavActive(
@@ -72,6 +73,15 @@ export default function Navbar() {
               {t.navbar.home}
             </Link>
             <Link
+              href={href(PORTFOLIO_BASE_PATH)}
+              className={navLinkClass(
+                isNavActive(pathname, PORTFOLIO_BASE_PATH, urlLocale),
+                "desktop"
+              )}
+            >
+              {t.navbar.portfolio}
+            </Link>
+            <Link
               href={href(COURSES_BASE_PATH)}
               className={navLinkClass(
                 isNavActive(pathname, COURSES_BASE_PATH, urlLocale),
@@ -131,7 +141,7 @@ export default function Navbar() {
 
       <div
         className={`md:hidden overflow-hidden transition-all duration-300 ${
-          menuOpen ? "max-h-48 border-b border-surface" : "max-h-0"
+          menuOpen ? "max-h-64 border-b border-surface" : "max-h-0"
         } bg-background/95 backdrop-blur-md`}
       >
         <div className="flex flex-col px-8 py-4 gap-5">
@@ -141,6 +151,16 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
           >
             {t.navbar.home}
+          </Link>
+          <Link
+            href={href(PORTFOLIO_BASE_PATH)}
+            className={navLinkClass(
+              isNavActive(pathname, PORTFOLIO_BASE_PATH, urlLocale),
+              "mobile"
+            )}
+            onClick={() => setMenuOpen(false)}
+          >
+            {t.navbar.portfolio}
           </Link>
           <Link
             href={href(COURSES_BASE_PATH)}

@@ -21,7 +21,7 @@ function entry(logicalPath: string, locale: UrlLocale): MetadataRoute.Sitemap[nu
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticPaths = ["/", "/contact", "/blog", "/courses"];
+  const staticPaths = ["/", "/contact", "/blog", "/courses", "/portfolio"];
   const entries: MetadataRoute.Sitemap = [];
 
   for (const locale of locales) {

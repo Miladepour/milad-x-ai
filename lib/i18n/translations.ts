@@ -4,6 +4,7 @@ export const translations = {
   EN: {
     navbar: {
       home: "Home",
+      portfolio: "Portfolio",
       courses: "Courses",
       blog: "Blog",
       contact: "Contact",
@@ -36,14 +37,24 @@ export const translations = {
     aiwork: {
       label: "AI WORK",
       heading: "What I Create",
-      projects: [
-        { id: 1, title: "Neural Dreamscapes", size: "large" },
-        { id: 2, title: "Generative Portraits", size: "large" },
-        { id: 3, title: "Latent Space Explorer", size: "small" },
-        { id: 4, title: "AI Motion Graphics", size: "small" },
-        { id: 5, title: "Prompt Engineering Kit", size: "small" },
-      ],
+      reelsTitle: "Video",
+      imagesTitle: "Images",
+      scrollPrev: "Scroll previous",
+      scrollNext: "Scroll next",
+      createdWithAi: "Created with AI",
+      playVideo: "Play video",
+      pauseVideo: "Pause video",
       cta: "View All Work",
+    },
+    portfolioPage: {
+      label: "PORTFOLIO",
+      title: "My Work",
+      description:
+        "AI video, imagery, and applications — a full look at what I create for brands, creators, and my own products.",
+      backHome: "← Back to home",
+      applicationsTitle: "Applications",
+      imagesEmpty: "Square images coming soon — add Cloudinary URLs in lib/portfolio/media.ts",
+      viewApp: "Open app",
     },
     courses: {
       label: "EDUCATION",
@@ -228,6 +239,7 @@ export const translations = {
   FA: {
     navbar: {
       home: "خانه",
+      portfolio: "نمونه‌کار",
       courses: "دوره",
       blog: "وبلاگ",
       contact: "تماس",
@@ -265,14 +277,25 @@ export const translations = {
     aiwork: {
       label: "آثار",
       heading: "با هوش مصنوعی چه می‌سازم",
-      projects: [
-        { id: 1, title: "منظره‌های رویایی", size: "large" },
-        { id: 2, title: "پرتره‌های مولد", size: "large" },
-        { id: 3, title: "کاوش در فضای بصری", size: "small" },
-        { id: 4, title: "موشن با AI", size: "small" },
-        { id: 5, title: "جعبه‌ابزار پرامپت", size: "small" },
-      ],
-      cta: "دیدن آثار در اینستاگرام",
+      reelsTitle: "ویدیو",
+      imagesTitle: "تصاویر",
+      scrollPrev: "اسکرول قبلی",
+      scrollNext: "اسکرول بعدی",
+      createdWithAi: "ساخته‌شده با هوش مصنوعی",
+      playVideo: "پخش ویدیو",
+      pauseVideo: "توقف ویدیو",
+      cta: "مشاهده همه آثار",
+    },
+    portfolioPage: {
+      label: "نمونه‌کار",
+      title: "آثار من",
+      description:
+        "ویدیو، تصویر و اپلیکیشن‌های ساخته‌شده با هوش مصنوعی — نمونه‌کار کامل برای برندها، تولیدکنندگان محتوا و محصولات شخصی.",
+      backHome: "بازگشت به خانه",
+      applicationsTitle: "اپلیکیشن‌ها",
+      imagesEmpty:
+        "تصاویر مربعی به‌زودی — آدرس Cloudinary را در lib/portfolio/media.ts اضافه کنید",
+      viewApp: "مشاهده اپ",
     },
     courses: {
       label: "آموزش",

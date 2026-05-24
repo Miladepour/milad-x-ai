@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { COURSES_BASE_PATH } from "@/lib/courses";
+import { PORTFOLIO_BASE_PATH } from "@/lib/portfolio/constants";
 import { toLocaleDigits } from "@/lib/i18n/digits";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -49,6 +50,7 @@ export default function Footer() {
 
   const exploreLinks = [
     { href: href("/"), label: n.home },
+    { href: href(PORTFOLIO_BASE_PATH), label: n.portfolio },
     { href: href(COURSES_BASE_PATH), label: n.courses },
     { href: href("/blog"), label: n.blog },
     { href: href("/contact"), label: n.contact },
