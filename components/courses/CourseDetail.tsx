@@ -1,7 +1,7 @@
 "use client";
 
 import { notFound } from "next/navigation";
-import { getCourseBySlug } from "@/lib/courses";
+import { COURSES_BASE_PATH, getCourseBySlug, getWaitlistPath } from "@/lib/courses";
 import {
   getCurriculumItems,
   getItemBlocks,
@@ -27,7 +27,7 @@ interface CourseDetailProps {
 }
 
 export default function CourseDetail({ slug }: CourseDetailProps) {
-  const { lang } = useLanguage();
+  const { lang, href } = useLanguage();
   const t = useTranslation();
   const course = getCourseBySlug(slug, lang);
   const p = t.coursesPage;
@@ -70,6 +70,8 @@ export default function CourseDetail({ slug }: CourseDetailProps) {
         lang={lang}
         statusLabel={statusLabel}
         nav={{ home: p.home, courses: p.courses }}
+        homeHref={href("/")}
+        coursesHref={href(COURSES_BASE_PATH)}
         detail={d}
       />
 
@@ -81,6 +83,8 @@ export default function CourseDetail({ slug }: CourseDetailProps) {
             <CoursePurchaseSidebar
               course={course}
               lang={lang}
+              waitlistHref={href(getWaitlistPath(course.slug))}
+              coursesIndexHref={href(COURSES_BASE_PATH)}
               labels={{
                 joinWaitingList: p.joinWaitingList,
                 dateLabel: p.dateLabel,

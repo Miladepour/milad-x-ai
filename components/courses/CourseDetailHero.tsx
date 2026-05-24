@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { Course } from "@/lib/courses/types";
-import { COURSES_BASE_PATH } from "@/lib/courses";
 import type { Locale } from "@/lib/i18n/translations";
 import { toLocaleDigits } from "@/lib/i18n/digits";
 
@@ -15,6 +14,8 @@ interface CourseDetailHeroProps {
   lang: Locale;
   statusLabel: string;
   nav: { home: string; courses: string };
+  homeHref: string;
+  coursesHref: string;
   detail: {
     createdBy: string;
     workshopDate: string;
@@ -41,6 +42,8 @@ export default function CourseDetailHero({
   lang,
   statusLabel,
   nav,
+  homeHref,
+  coursesHref,
   detail,
 }: CourseDetailHeroProps) {
   return (
@@ -53,14 +56,11 @@ export default function CourseDetailHero({
     >
       <div className="max-w-7xl mx-auto px-8 md:px-12 lg:px-16 pt-28 pb-8 md:pb-10">
         <nav className="flex flex-wrap items-center gap-2 text-sm font-dm text-muted mb-6">
-          <Link href="/" className="hover:text-cream transition-colors">
+          <Link href={homeHref} className="hover:text-cream transition-colors">
             {nav.home}
           </Link>
           <span aria-hidden>/</span>
-          <Link
-            href={COURSES_BASE_PATH}
-            className="hover:text-cream transition-colors"
-          >
+          <Link href={coursesHref} className="hover:text-cream transition-colors">
             {nav.courses}
           </Link>
           <span aria-hidden>/</span>

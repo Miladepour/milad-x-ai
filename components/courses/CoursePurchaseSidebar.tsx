@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Course } from "@/lib/courses/types";
-import { formatCoursePrice, getWaitlistPath } from "@/lib/courses";
+import { formatCoursePrice } from "@/lib/courses";
 import type { Locale } from "@/lib/i18n/translations";
 import { toLocaleDigits } from "@/lib/i18n/digits";
 
@@ -11,6 +11,8 @@ const btnPrimary =
 interface CoursePurchaseSidebarProps {
   course: Course;
   lang: Locale;
+  waitlistHref: string;
+  coursesIndexHref: string;
   labels: {
     joinWaitingList: string;
     dateLabel: string;
@@ -31,9 +33,10 @@ interface CoursePurchaseSidebarProps {
 export default function CoursePurchaseSidebar({
   course,
   lang,
+  waitlistHref,
+  coursesIndexHref,
   labels,
 }: CoursePurchaseSidebarProps) {
-  const waitlistPath = getWaitlistPath(course.slug);
   const topicsCount = toLocaleDigits(course.insights.topicsCount, lang);
 
   return (
@@ -78,7 +81,7 @@ export default function CoursePurchaseSidebar({
             )}
           </div>
 
-          <Link href={waitlistPath} className={btnPrimary}>
+          <Link href={waitlistHref} className={btnPrimary}>
             {labels.joinWaitingList}
           </Link>
 
@@ -108,7 +111,7 @@ export default function CoursePurchaseSidebar({
           </div>
 
           <Link
-            href="/courses"
+            href={coursesIndexHref}
             className="block text-center font-dm text-sm text-muted hover:text-cream transition-colors"
           >
             {labels.allCourses}

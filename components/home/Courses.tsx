@@ -22,7 +22,7 @@ export default function Courses() {
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: '-80px' });
   const t = useTranslation();
-  const { lang } = useLanguage();
+  const { lang, href } = useLanguage();
   const catalog = getCourses(lang);
 
   const displayItems = catalog.map((course) => ({
@@ -31,11 +31,11 @@ export default function Courses() {
     description: course.excerpt,
     date: course.date,
     status: course.status,
-    detailHref: `${COURSES_BASE_PATH}/${course.slug}`,
+    detailHref: href(`${COURSES_BASE_PATH}/${course.slug}`),
     ctaHref:
       course.status === 'Live'
-        ? getWaitlistPath(course.slug)
-        : `${COURSES_BASE_PATH}/${course.slug}`,
+        ? href(getWaitlistPath(course.slug))
+        : href(`${COURSES_BASE_PATH}/${course.slug}`),
   }));
 
   return (
@@ -67,7 +67,7 @@ export default function Courses() {
             transition={{ duration: 0.5, delay: 0.15, ease }}
           >
             <Link
-              href={COURSES_BASE_PATH}
+              href={href(COURSES_BASE_PATH)}
               className="font-dm text-sm text-orange hover:text-cream transition-colors"
             >
               {t.coursesPage.viewAll}

@@ -1,48 +1,69 @@
 "use client";
 
-import { createContext, useContext, useLayoutEffect, useState } from "react";
+import { createContext, useCallback, useContext, useMemo } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  internalToUrlLocale,
+  urlLocaleToInternal,
+  type UrlLocale,
+} from "./config";
+import { localizedPath, switchLocalePath } from "./paths";
 import type { Locale } from "./translations";
 
 interface LanguageContextValue {
   lang: Locale;
+  urlLocale: UrlLocale;
   setLang: (lang: Locale) => void;
+  /** Prefix a logical path with the current locale, e.g. `/contact` → `/en/contact` */
+  href: (path: string) => string;
 }
 
-const LanguageContext = createContext<LanguageContextValue>({
-  lang: "EN",
-  setLang: () => {},
-});
+const LanguageContext = createContext<LanguageContextValue | null>(null);
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Locale>("EN");
+export function LanguageProvider({
+  children,
+  urlLocale,
+}: {
+  children: React.ReactNode;
+  urlLocale: UrlLocale;
+}) {
+  const lang = urlLocaleToInternal(urlLocale);
+  const router = useRouter();
+  const pathname = usePathname();
 
-  useLayoutEffect(() => {
-    try {
-      const stored = localStorage.getItem("lang") as Locale | null;
-      if (stored === "EN" || stored === "FA") {
-        setLangState(stored);
+  const href = useCallback(
+    (path: string) => localizedPath(path, urlLocale),
+    [urlLocale]
+  );
+
+  const setLang = useCallback(
+    (next: Locale) => {
+      const target = internalToUrlLocale(next);
+      if (target === urlLocale) return;
+      router.push(switchLocalePath(pathname, target));
+      try {
+        localStorage.setItem("lang", next);
+      } catch {
+        // localStorage unavailable
       }
-    } catch {
-      // localStorage unavailable
-    }
-  }, []);
+    },
+    [pathname, router, urlLocale]
+  );
 
-  function setLang(next: Locale) {
-    setLangState(next);
-    try {
-      localStorage.setItem("lang", next);
-    } catch {
-      // localStorage unavailable
-    }
-  }
+  const value = useMemo(
+    () => ({ lang, urlLocale, setLang, href }),
+    [lang, urlLocale, setLang, href]
+  );
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang }}>
-      {children}
-    </LanguageContext.Provider>
+    <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
   );
 }
 
 export function useLanguage() {
-  return useContext(LanguageContext);
+  const ctx = useContext(LanguageContext);
+  if (!ctx) {
+    throw new Error("useLanguage must be used within LanguageProvider");
+  }
+  return ctx;
 }

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
+import { useLanguage } from '@/lib/i18n/context';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 
 const ease = [0.25, 0.46, 0.45, 0.94] as const;
@@ -11,6 +12,7 @@ export default function BookCall() {
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
   const t = useTranslation();
+  const { href } = useLanguage();
 
   return (
     <section ref={ref} style={{ backgroundColor: '#FF5C00' }}>
@@ -44,7 +46,7 @@ export default function BookCall() {
           className="flex-shrink-0"
         >
           <Link
-            href="/contact"
+            href={href("/contact")}
             className="font-mono uppercase tracking-widest rtl:tracking-normal text-sm px-8 py-4 inline-block transition-opacity duration-200 hover:opacity-80"
             style={{
               backgroundColor: '#0D0D0D',

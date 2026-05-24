@@ -18,14 +18,14 @@ interface CourseCardProps {
 }
 
 export default function CourseCard({ course }: CourseCardProps) {
-  const { lang } = useLanguage();
+  const { lang, href } = useLanguage();
   const t = useTranslation();
   const p = t.coursesPage;
   const statusLabel = p.statusLabels[course.status];
 
   return (
     <Link
-      href={`${COURSES_BASE_PATH}/${course.slug}`}
+      href={href(`${COURSES_BASE_PATH}/${course.slug}`)}
       className="group flex flex-col bg-surface rounded-sm overflow-hidden border border-transparent hover:border-orange/40 transition-colors duration-200"
     >
       <div className="h-48 bg-background flex-shrink-0 relative overflow-hidden">

@@ -8,19 +8,20 @@ import {
   formatCoursePrice,
   getCourseBySlug,
 } from "@/lib/courses";
-import { translations } from "@/lib/i18n/translations";
+import { useLanguage } from "@/lib/i18n/context";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { cn } from "@/lib/utils";
-
-const LOCALE = "EN" as const;
-const p = translations.EN.coursesPage;
-const w = p.waitlist;
 
 interface WaitlistFormProps {
   courseSlug: string;
 }
 
 export default function WaitlistForm({ courseSlug }: WaitlistFormProps) {
-  const course = getCourseBySlug(courseSlug, LOCALE);
+  const { lang, href } = useLanguage();
+  const t = useTranslation();
+  const p = t.coursesPage;
+  const w = p.waitlist;
+  const course = getCourseBySlug(courseSlug, lang);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -34,7 +35,7 @@ export default function WaitlistForm({ courseSlug }: WaitlistFormProps) {
 
   if (!course) return null;
 
-  const coursePath = `${COURSES_BASE_PATH}/${course.slug}`;
+  const coursePath = href(`${COURSES_BASE_PATH}/${course.slug}`);
 
   function handleCountryChange(code: string) {
     setCountry(code);
@@ -57,7 +58,7 @@ export default function WaitlistForm({ courseSlug }: WaitlistFormProps) {
           email,
           mobile,
           country,
-          locale: LOCALE,
+          locale: lang,
         }),
       });
 
@@ -103,7 +104,7 @@ export default function WaitlistForm({ courseSlug }: WaitlistFormProps) {
           <span>
             <span className="text-cream/80">{p.priceLabel}: </span>
             <span className="text-orange font-semibold">
-              {formatCoursePrice(course.priceUsd, LOCALE)}
+              {formatCoursePrice(course.priceUsd, lang)}
             </span>
           </span>
         </div>

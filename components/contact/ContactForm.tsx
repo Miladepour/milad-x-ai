@@ -9,7 +9,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { cn } from "@/lib/utils";
 
 export default function ContactForm() {
-  const { lang } = useLanguage();
+  const { lang, href } = useLanguage();
   const t = useTranslation();
   const p = t.contactPage;
 
@@ -64,7 +64,7 @@ export default function ContactForm() {
           {p.successMessage}
         </p>
         <Link
-          href="/"
+          href={href("/")}
           className="inline-flex font-mono text-sm text-orange hover:text-cream transition-colors"
         >
           {p.backHome}

@@ -41,23 +41,26 @@ const footerLinkClass =
   "font-dm text-sm text-cream/75 hover:text-orange transition-colors";
 
 export default function Footer() {
-  const { lang } = useLanguage();
+  const { lang, href } = useLanguage();
   const t = useTranslation();
   const f = t.footer;
   const n = t.navbar;
   const year = toLocaleDigits(String(new Date().getFullYear()), lang);
 
   const exploreLinks = [
-    { href: "/", label: n.home },
-    { href: COURSES_BASE_PATH, label: n.courses },
-    { href: "/blog", label: n.blog },
-    { href: "/contact", label: n.contact },
+    { href: href("/"), label: n.home },
+    { href: href(COURSES_BASE_PATH), label: n.courses },
+    { href: href("/blog"), label: n.blog },
+    { href: href("/contact"), label: n.contact },
   ];
 
   const offeringLinks = [
-    { href: `${COURSES_BASE_PATH}/${WORKSHOP_SLUG}`, label: f.offeringWorkshop },
-    { href: "/contact", label: f.offeringPrivate },
-    { href: "/contact", label: f.offeringCollaboration },
+    {
+      href: href(`${COURSES_BASE_PATH}/${WORKSHOP_SLUG}`),
+      label: f.offeringWorkshop,
+    },
+    { href: href("/contact"), label: f.offeringPrivate },
+    { href: href("/contact"), label: f.offeringCollaboration },
   ];
 
   const socialLinks = [
@@ -83,7 +86,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-8 md:px-12 lg:px-16 py-12 md:py-14">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
           <div className="sm:col-span-2 lg:col-span-1 lg:max-w-sm">
-            <Link href="/" className="inline-block group">
+            <Link href={href("/")} className="inline-block group">
               <p className="font-dm text-lg font-bold text-cream group-hover:text-orange transition-colors">
                 {f.brandName}
               </p>
@@ -132,7 +135,7 @@ export default function Footer() {
               {f.connectTitle}
             </h2>
             <Link
-              href="/contact"
+              href={href("/contact")}
               className="inline-block font-dm text-sm font-semibold text-orange hover:text-cream transition-colors mb-5"
             >
               {f.contactCta} →

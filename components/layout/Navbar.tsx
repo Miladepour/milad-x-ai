@@ -2,15 +2,39 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { localizedPath } from "@/lib/i18n/paths";
 import { COURSES_BASE_PATH } from "@/lib/courses";
+import type { UrlLocale } from "@/lib/i18n/config";
+
+function isNavActive(
+  pathname: string,
+  logicalPath: string,
+  urlLocale: UrlLocale
+) {
+  const target = localizedPath(logicalPath, urlLocale);
+  if (logicalPath === "/") {
+    return pathname === target || pathname === `${target}/`;
+  }
+  return pathname === target || pathname.startsWith(`${target}/`);
+}
+
+function navLinkClass(active: boolean, variant: "desktop" | "mobile") {
+  const base = "font-dm text-sm transition-colors";
+  if (variant === "desktop") {
+    return `${base} ${active ? "text-orange" : "text-muted hover:text-cream"}`;
+  }
+  return `${base} ${active ? "text-orange" : "text-cream hover:text-orange"}`;
+}
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const { lang, setLang } = useLanguage();
+  const { lang, urlLocale, setLang, href } = useLanguage();
   const t = useTranslation();
 
   useEffect(() => {
@@ -28,48 +52,48 @@ export default function Navbar() {
       }`}
     >
       <nav className="px-8 md:px-12 lg:px-16 h-20 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center">
+        <Link href={href("/")} className="flex items-center">
           <Image
-            src="/images/miladxailogo6.png"
+            src="/images/miladxailogo9.png"
             alt="Milad X AI"
-            width={130}
-            height={130}
+            width={98}
+            height={98}
+            className="h-[97.5px] w-[97.5px] object-contain"
             priority
           />
         </Link>
 
-        {/* Right side */}
         <div className="flex items-center gap-6">
-          {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-8">
             <Link
-              href="/"
-              className="font-dm text-sm text-muted hover:text-cream transition-colors"
+              href={href("/")}
+              className={navLinkClass(isNavActive(pathname, "/", urlLocale), "desktop")}
             >
               {t.navbar.home}
             </Link>
             <Link
-              href={COURSES_BASE_PATH}
-              className="font-dm text-sm text-muted hover:text-cream transition-colors"
+              href={href(COURSES_BASE_PATH)}
+              className={navLinkClass(
+                isNavActive(pathname, COURSES_BASE_PATH, urlLocale),
+                "desktop"
+              )}
             >
               {t.navbar.courses}
             </Link>
             <Link
-              href="/blog"
-              className="font-dm text-sm text-muted hover:text-cream transition-colors"
+              href={href("/blog")}
+              className={navLinkClass(isNavActive(pathname, "/blog", urlLocale), "desktop")}
             >
               {t.navbar.blog}
             </Link>
             <Link
-              href="/contact"
-              className="font-dm text-sm text-muted hover:text-cream transition-colors"
+              href={href("/contact")}
+              className={navLinkClass(isNavActive(pathname, "/contact", urlLocale), "desktop")}
             >
               {t.navbar.contact}
             </Link>
           </div>
 
-          {/* Language toggle — always visible */}
           <button
             onClick={() => setLang(lang === "EN" ? "FA" : "EN")}
             className="font-mono text-xs text-muted hover:text-cream transition-colors tracking-widest"
@@ -80,7 +104,6 @@ export default function Navbar() {
             <span className={lang === "FA" ? "text-orange" : "text-muted"}>FA</span>
           </button>
 
-          {/* Hamburger — mobile only */}
           <button
             className="group md:hidden relative flex h-8 w-8 items-center justify-center"
             onClick={() => setMenuOpen((o) => !o)}
@@ -106,7 +129,6 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile menu */}
       <div
         className={`md:hidden overflow-hidden transition-all duration-300 ${
           menuOpen ? "max-h-48 border-b border-surface" : "max-h-0"
@@ -114,29 +136,32 @@ export default function Navbar() {
       >
         <div className="flex flex-col px-8 py-4 gap-5">
           <Link
-            href="/"
-            className="font-dm text-sm text-cream hover:text-orange transition-colors"
+            href={href("/")}
+            className={navLinkClass(isNavActive(pathname, "/", urlLocale), "mobile")}
             onClick={() => setMenuOpen(false)}
           >
             {t.navbar.home}
           </Link>
           <Link
-            href={COURSES_BASE_PATH}
-            className="font-dm text-sm text-cream hover:text-orange transition-colors"
+            href={href(COURSES_BASE_PATH)}
+            className={navLinkClass(
+              isNavActive(pathname, COURSES_BASE_PATH, urlLocale),
+              "mobile"
+            )}
             onClick={() => setMenuOpen(false)}
           >
             {t.navbar.courses}
           </Link>
           <Link
-            href="/blog"
-            className="font-dm text-sm text-cream hover:text-orange transition-colors"
+            href={href("/blog")}
+            className={navLinkClass(isNavActive(pathname, "/blog", urlLocale), "mobile")}
             onClick={() => setMenuOpen(false)}
           >
             {t.navbar.blog}
           </Link>
           <Link
-            href="/contact"
-            className="font-dm text-sm text-cream hover:text-orange transition-colors"
+            href={href("/contact")}
+            className={navLinkClass(isNavActive(pathname, "/contact", urlLocale), "mobile")}
             onClick={() => setMenuOpen(false)}
           >
             {t.navbar.contact}

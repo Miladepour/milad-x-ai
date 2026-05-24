@@ -7,7 +7,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import CourseCard from "./CourseCard";
 
 export default function CoursesListing() {
-  const { lang } = useLanguage();
+  const { lang, href } = useLanguage();
   const t = useTranslation();
   const courses = getCourses(lang);
   const p = t.coursesPage;
@@ -16,7 +16,7 @@ export default function CoursesListing() {
     <div className="flex-1 w-full bg-background text-cream">
       <div className="max-w-6xl mx-auto px-8 md:px-12 lg:px-16 pt-32 pb-24">
         <Link
-          href="/"
+          href={href("/")}
           className="font-dm text-sm text-muted hover:text-cream transition-colors mb-10 inline-block"
         >
           {p.backHome}
