@@ -3,8 +3,19 @@ import About from "@/components/home/About";
 import AIWork from "@/components/home/AIWork";
 import Courses from "@/components/home/Courses";
 import BookCall from "@/components/home/BookCall";
+import { getCourses } from "@/lib/courses/store";
+import { urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 
-export default function Home() {
+interface PageProps {
+  params: { locale: string };
+}
+
+export const dynamic = "force-dynamic";
+
+export default async function Home({ params }: PageProps) {
+  const locale = urlLocaleToInternal(params.locale as UrlLocale);
+  const courses = await getCourses(locale);
+
   return (
     <>
       <Hero />
@@ -15,7 +26,7 @@ export default function Home() {
         <AIWork />
       </div>
       <div id="courses">
-        <Courses />
+        <Courses courses={courses} />
       </div>
       <BookCall />
     </>

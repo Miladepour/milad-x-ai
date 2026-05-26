@@ -18,6 +18,8 @@ Follow these steps in the [Supabase Dashboard](https://supabase.com/dashboard). 
    - `blog_posts`
    - `contact_submissions`
    - `waitlist_submissions`
+   - `courses`
+   - `course_locales`
 
 ## 3. Enable email login (admin)
 
@@ -32,10 +34,11 @@ Follow these steps in the [Supabase Dashboard](https://supabase.com/dashboard). 
 1. Go to **Authentication** → **URL Configuration**.
 2. Set **Site URL** to your site, e.g.:
    - Local: `http://localhost:3000`
-   - Production: `https://mxaiacademy.com`
+   - Production: `https://www.mxaiacademy.com`
 3. Under **Redirect URLs**, add (one per line):
    - `http://localhost:3000/**`
-   - `https://mxaiacademy.com/**`
+   - `https://www.mxaiacademy.com/**`
+   - `https://mxaiacademy.com/**` (optional; redirect apex to www in Vercel)
    - Your secret admin path if you use auth callbacks there later, e.g. `http://localhost:3000/mx-console-*/**`
 
 ## 5. Create your admin user

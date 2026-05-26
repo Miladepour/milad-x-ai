@@ -44,6 +44,30 @@ export interface WaitlistSubmissionRow {
   submitted_at: string;
 }
 
+export interface CourseRow {
+  id: string;
+  slug: string;
+  cover_image: string;
+  price_usd: number;
+  sort_order: number;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CourseLocaleRow {
+  id: string;
+  course_id: string;
+  locale: LocaleCode;
+  list_title: string;
+  title: string;
+  subtitle: string;
+  excerpt: string;
+  date: string;
+  status: string;
+  content: Record<string, unknown>;
+}
+
 type TableDef<Row, Insert, Update> = {
   Row: Row;
   Insert: Insert;
@@ -96,6 +120,20 @@ export interface Database {
           submitted_at?: string;
         },
         Partial<Omit<WaitlistSubmissionRow, "id">>
+      >;
+      courses: TableDef<
+        CourseRow,
+        Omit<CourseRow, "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        },
+        Partial<Omit<CourseRow, "id">>
+      >;
+      course_locales: TableDef<
+        CourseLocaleRow,
+        Omit<CourseLocaleRow, "id"> & { id?: string },
+        Partial<Omit<CourseLocaleRow, "id">>
       >;
     };
     Views: {

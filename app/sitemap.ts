@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getAllBlogSlugs } from "@/lib/blog/store";
-import { courseSlugs } from "@/lib/courses";
+import { getAllCourseSlugs } from "@/lib/courses/store";
 import { locales, SITE_URL, type UrlLocale } from "@/lib/i18n/config";
 import { localizedPath } from "@/lib/i18n/paths";
 
@@ -29,7 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       entries.push(entry(path, locale));
     }
 
-    for (const slug of courseSlugs) {
+    for (const slug of await getAllCourseSlugs()) {
       entries.push(entry(`/courses/${slug}`, locale));
       entries.push(entry(`/courses/${slug}/waitlist`, locale));
     }

@@ -1,0 +1,10 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "mxaiacademy.com" }],
+      "destination": "https://www.mxaiacademy.com/:path*",
+      "permanent": true
+    }
+  ]
+}

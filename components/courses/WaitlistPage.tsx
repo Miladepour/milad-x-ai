@@ -1,23 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { COURSES_BASE_PATH, getCourseBySlug } from "@/lib/courses";
+import type { Course } from "@/lib/courses";
+import { COURSES_BASE_PATH } from "@/lib/courses";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import WaitlistForm from "./WaitlistForm";
 
 interface WaitlistPageProps {
-  courseSlug: string;
+  course: Course;
 }
 
-export default function WaitlistPage({ courseSlug }: WaitlistPageProps) {
+export default function WaitlistPage({ course }: WaitlistPageProps) {
   const { lang, href } = useLanguage();
   const t = useTranslation();
   const p = t.coursesPage;
-  const course = getCourseBySlug(courseSlug, lang);
-
-  if (!course) notFound();
 
   const coursePath = href(`${COURSES_BASE_PATH}/${course.slug}`);
 
@@ -45,7 +42,7 @@ export default function WaitlistPage({ courseSlug }: WaitlistPageProps) {
           </Link>
         </nav>
 
-        <WaitlistForm courseSlug={courseSlug} />
+        <WaitlistForm course={course} />
       </div>
     </div>
   );

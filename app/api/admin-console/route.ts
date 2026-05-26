@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import { upsertBlogPost } from "@/lib/blog/store";
 import type { BlogPost } from "@/lib/blog/types";
 import {
+  getCourseAdmin,
+  importStaticCourses,
+  listCoursesAdmin,
+  upsertCourse,
+} from "@/lib/courses/store";
+import { revalidateCoursePaths } from "@/lib/courses/revalidate";
+import {
   contactRowToSubmission,
   waitlistRowToSubmission,
 } from "@/lib/supabase/mappers";
@@ -55,6 +62,49 @@ export async function POST(request: Request) {
       });
 
       return NextResponse.json({ ok: true, post });
+    }
+
+    if (action === "list-courses") {
+      const courses = await listCoursesAdmin();
+      return NextResponse.json({ ok: true, courses });
+    }
+
+    if (action === "get-course") {
+      const slug = String(body.slug ?? "").trim();
+      if (!slug) {
+        return NextResponse.json({ error: "slug is required" }, { status: 400 });
+      }
+      const course = await getCourseAdmin(slug);
+      return NextResponse.json({ ok: true, course });
+    }
+
+    if (action === "publish-course") {
+      const payload = body.course ?? body;
+      const publishNow = body.publishNow !== false;
+      if (publishNow && (!payload.publishedAt || payload.publishedAt === null)) {
+        payload.publishedAt = new Date().toISOString();
+      }
+      const course = await upsertCourse(payload);
+      revalidateCoursePaths(course.slug);
+      return NextResponse.json({ ok: true, course });
+    }
+
+    if (action === "unpublish-course") {
+      const slug = String(body.slug ?? "").trim();
+      const existing = await getCourseAdmin(slug);
+      if (!existing) {
+        return NextResponse.json({ error: "Course not found" }, { status: 404 });
+      }
+      existing.publishedAt = null;
+      const course = await upsertCourse(existing);
+      revalidateCoursePaths(course.slug);
+      return NextResponse.json({ ok: true, course });
+    }
+
+    if (action === "import-static-courses") {
+      const course = await importStaticCourses();
+      revalidateCoursePaths(course.slug);
+      return NextResponse.json({ ok: true, course });
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });

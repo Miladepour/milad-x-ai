@@ -3,25 +3,21 @@
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import { countries, formatFullMobile, getDialCode } from "@/lib/countries";
-import {
-  COURSES_BASE_PATH,
-  formatCoursePrice,
-  getCourseBySlug,
-} from "@/lib/courses";
+import type { Course } from "@/lib/courses";
+import { COURSES_BASE_PATH, formatCoursePrice } from "@/lib/courses";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { cn } from "@/lib/utils";
 
 interface WaitlistFormProps {
-  courseSlug: string;
+  course: Course;
 }
 
-export default function WaitlistForm({ courseSlug }: WaitlistFormProps) {
+export default function WaitlistForm({ course }: WaitlistFormProps) {
   const { lang, href } = useLanguage();
   const t = useTranslation();
   const p = t.coursesPage;
   const w = p.waitlist;
-  const course = getCourseBySlug(courseSlug, lang);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -53,7 +49,7 @@ export default function WaitlistForm({ courseSlug }: WaitlistFormProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          courseSlug,
+          courseSlug: course.slug,
           fullName,
           email,
           mobile,

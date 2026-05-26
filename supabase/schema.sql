@@ -77,6 +77,40 @@ create index if not exists waitlist_submissions_course_slug_idx
   on public.waitlist_submissions (course_slug);
 
 -- ---------------------------------------------------------------------------
+-- Courses (bilingual CMS)
+-- ---------------------------------------------------------------------------
+create table if not exists public.courses (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null unique,
+  cover_image text not null,
+  price_usd numeric(10, 2) not null default 0,
+  sort_order int not null default 0,
+  published_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists courses_published_sort_idx
+  on public.courses (published_at desc nulls last, sort_order asc);
+
+create table if not exists public.course_locales (
+  id uuid primary key default gen_random_uuid(),
+  course_id uuid not null references public.courses (id) on delete cascade,
+  locale text not null check (locale in ('EN', 'FA')),
+  list_title text not null,
+  title text not null,
+  subtitle text not null,
+  excerpt text not null,
+  date text not null,
+  status text not null check (status in ('Live', 'Coming Soon', 'Closed')),
+  content jsonb not null default '{}'::jsonb,
+  unique (course_id, locale)
+);
+
+create index if not exists course_locales_course_id_idx
+  on public.course_locales (course_id);
+
+-- ---------------------------------------------------------------------------
 -- updated_at trigger for blog_posts
 -- ---------------------------------------------------------------------------
 create or replace function public.set_updated_at()
@@ -92,6 +126,12 @@ $$;
 drop trigger if exists blog_posts_set_updated_at on public.blog_posts;
 create trigger blog_posts_set_updated_at
   before update on public.blog_posts
+  for each row
+  execute function public.set_updated_at();
+
+drop trigger if exists courses_set_updated_at on public.courses;
+create trigger courses_set_updated_at
+  before update on public.courses
   for each row
   execute function public.set_updated_at();
 
@@ -122,6 +162,8 @@ alter table public.admin_profiles enable row level security;
 alter table public.blog_posts enable row level security;
 alter table public.contact_submissions enable row level security;
 alter table public.waitlist_submissions enable row level security;
+alter table public.courses enable row level security;
+alter table public.course_locales enable row level security;
 
 -- admin_profiles: admins can read their own row
 drop policy if exists "Admins read own profile" on public.admin_profiles;
@@ -194,6 +236,93 @@ create policy "Admins read waitlist"
   to authenticated
   using (public.is_admin());
 
+-- courses: public read published only
+drop policy if exists "Public read published courses" on public.courses;
+create policy "Public read published courses"
+  on public.courses
+  for select
+  to anon, authenticated
+  using (published_at is not null);
+
+-- courses: admins read all (including drafts)
+drop policy if exists "Admins manage courses" on public.courses;
+drop policy if exists "Admins read all courses" on public.courses;
+drop policy if exists "Admins insert courses" on public.courses;
+drop policy if exists "Admins update courses" on public.courses;
+drop policy if exists "Admins delete courses" on public.courses;
+
+create policy "Admins read all courses"
+  on public.courses
+  for select
+  to authenticated
+  using (public.is_admin());
+
+create policy "Admins insert courses"
+  on public.courses
+  for insert
+  to authenticated
+  with check (public.is_admin());
+
+create policy "Admins update courses"
+  on public.courses
+  for update
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+create policy "Admins delete courses"
+  on public.courses
+  for delete
+  to authenticated
+  using (public.is_admin());
+
+-- course_locales: public read when parent published
+drop policy if exists "Public read published course locales" on public.course_locales;
+create policy "Public read published course locales"
+  on public.course_locales
+  for select
+  to anon, authenticated
+  using (
+    exists (
+      select 1
+      from public.courses c
+      where c.id = course_id
+        and c.published_at is not null
+    )
+  );
+
+-- course_locales: admins read/write all
+drop policy if exists "Admins manage course locales" on public.course_locales;
+drop policy if exists "Admins read all course locales" on public.course_locales;
+drop policy if exists "Admins insert course locales" on public.course_locales;
+drop policy if exists "Admins update course locales" on public.course_locales;
+drop policy if exists "Admins delete course locales" on public.course_locales;
+
+create policy "Admins read all course locales"
+  on public.course_locales
+  for select
+  to authenticated
+  using (public.is_admin());
+
+create policy "Admins insert course locales"
+  on public.course_locales
+  for insert
+  to authenticated
+  with check (public.is_admin());
+
+create policy "Admins update course locales"
+  on public.course_locales
+  for update
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+create policy "Admins delete course locales"
+  on public.course_locales
+  for delete
+  to authenticated
+  using (public.is_admin());
+
 -- ---------------------------------------------------------------------------
 -- Grant table access to API roles
 -- ---------------------------------------------------------------------------
@@ -205,3 +334,7 @@ grant select on public.admin_profiles to authenticated;
 grant all on public.blog_posts to authenticated;
 grant select on public.contact_submissions to authenticated;
 grant select on public.waitlist_submissions to authenticated;
+grant select on public.courses to anon, authenticated;
+grant select on public.course_locales to anon, authenticated;
+grant all on public.courses to authenticated;
+grant all on public.course_locales to authenticated;

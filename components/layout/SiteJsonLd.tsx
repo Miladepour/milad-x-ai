@@ -4,7 +4,7 @@ export default function SiteJsonLd() {
     "@type": "Person",
     name: "Milad Pour",
     alternateName: "Milad X AI",
-    url: "https://mxaiacademy.com",
+    url: "https://www.mxaiacademy.com",
     jobTitle: "AI Artist & Educator",
     description:
       "AI content creation educator offering live workshops, private courses, and creative collaboration for brands and creators.",

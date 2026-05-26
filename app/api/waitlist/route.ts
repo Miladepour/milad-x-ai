@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCountryName } from "@/lib/countries";
-import { courseSlugs } from "@/lib/courses";
+import { isPublishedCourseSlug } from "@/lib/courses/store";
 import { createAnonClient } from "@/lib/supabase/server";
 
 function isValidEmail(email: string): boolean {
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     const country = String(body.country ?? "").trim();
     const locale = String(body.locale ?? "EN").trim();
 
-    if (!courseSlug || !courseSlugs.includes(courseSlug)) {
+    if (!courseSlug || !(await isPublishedCourseSlug(courseSlug))) {
       return NextResponse.json({ error: "Invalid course" }, { status: 400 });
     }
     if (fullName.length < 2) {

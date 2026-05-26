@@ -7,6 +7,13 @@ export type {
   CourseSection,
   CourseStatus,
 } from "./types";
+export type {
+  CourseAdminPayload,
+  CourseListItem,
+  CourseLocaleContent,
+  CourseLocaleInput,
+} from "./cms-types";
+export { COURSES_BASE_PATH } from "./constants";
 export {
   getCurriculumItems,
   getItemBlocks,
@@ -15,12 +22,6 @@ export {
   getSection,
   parseStructureModules,
 } from "./sections";
-export {
-  COURSES_BASE_PATH,
-  courseSlugs,
-  getCourses,
-  getCourseBySlug,
-  getWaitlistPath,
-  formatCoursePrice,
-} from "./data";
+export { getWaitlistPath, formatCoursePrice } from "./data/index";
 export type { WaitlistSubmission } from "./types";
+export { parseCourseAdminPayload, normalizeSlug, courseToAdminPayload } from "./validate";

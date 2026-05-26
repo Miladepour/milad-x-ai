@@ -1,23 +1,25 @@
 import WaitlistPage from "@/components/courses/WaitlistPage";
-import { courseSlugs, getCourseBySlug } from "@/lib/courses";
+import { getAllCourseSlugs, getCourseBySlug } from "@/lib/courses/store";
 import { locales, urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { pageAlternates } from "@/lib/i18n/metadata";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 interface PageProps {
   params: { locale: string; slug: string };
 }
 
-export function generateStaticParams() {
-  return locales.flatMap((locale) =>
-    courseSlugs.map((slug) => ({ locale, slug }))
-  );
+export const dynamic = "force-dynamic";
+
+export async function generateStaticParams() {
+  const slugs = await getAllCourseSlugs();
+  return locales.flatMap((locale) => slugs.map((slug) => ({ locale, slug })));
 }
 
-export function generateMetadata({ params }: PageProps): Metadata {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const locale = params.locale as UrlLocale;
   const internal = urlLocaleToInternal(locale);
-  const course = getCourseBySlug(params.slug, internal);
+  const course = await getCourseBySlug(params.slug, internal);
 
   if (!course) {
     return { title: internal === "FA" ? "لیست انتظار" : "Waiting list" };
@@ -35,6 +37,9 @@ export function generateMetadata({ params }: PageProps): Metadata {
   };
 }
 
-export default function CourseWaitlistPage({ params }: PageProps) {
-  return <WaitlistPage courseSlug={params.slug} />;
+export default async function CourseWaitlistPage({ params }: PageProps) {
+  const locale = urlLocaleToInternal(params.locale as UrlLocale);
+  const course = await getCourseBySlug(params.slug, locale);
+  if (!course) notFound();
+  return <WaitlistPage course={course} />;
 }

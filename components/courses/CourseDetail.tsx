@@ -1,7 +1,7 @@
 "use client";
 
-import { notFound } from "next/navigation";
-import { COURSES_BASE_PATH, getCourseBySlug, getWaitlistPath } from "@/lib/courses";
+import type { Course } from "@/lib/courses";
+import { COURSES_BASE_PATH, getWaitlistPath } from "@/lib/courses";
 import {
   getCurriculumItems,
   getItemBlocks,
@@ -23,17 +23,14 @@ import CourseStructureAccordion from "./CourseStructureAccordion";
 import CourseWhatYouLearn from "./CourseWhatYouLearn";
 
 interface CourseDetailProps {
-  slug: string;
+  course: Course;
 }
 
-export default function CourseDetail({ slug }: CourseDetailProps) {
+export default function CourseDetail({ course }: CourseDetailProps) {
   const { lang, href } = useLanguage();
   const t = useTranslation();
-  const course = getCourseBySlug(slug, lang);
   const p = t.coursesPage;
   const d = p.detail;
-
-  if (!course) notFound();
 
   const statusLabel = p.statusLabels[course.status];
 

@@ -1,10 +1,11 @@
 import { toLocaleDigits } from "@/lib/i18n/digits";
 import type { Locale } from "@/lib/i18n/translations";
 import type { Course } from "../types";
+import { COURSES_BASE_PATH } from "../constants";
 import { promptToContentCourseEn } from "./en";
 import { promptToContentCourseFa } from "./fa";
 
-export const COURSES_BASE_PATH = "/courses";
+export { COURSES_BASE_PATH } from "../constants";
 
 const coursesByLocale: Record<Locale, Course[]> = {
   EN: [promptToContentCourseEn],
@@ -13,6 +14,7 @@ const coursesByLocale: Record<Locale, Course[]> = {
 
 export const courseSlugs = coursesByLocale.EN.map((c) => c.slug);
 
+/** Static fallback — prefer async getters from lib/courses/store */
 export function getCourses(locale: Locale): Course[] {
   return coursesByLocale[locale];
 }

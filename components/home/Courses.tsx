@@ -6,16 +6,20 @@ import Link from 'next/link';
 import { useRef } from 'react';
 import { useLanguage } from '@/lib/i18n/context';
 import { useTranslation } from '@/lib/i18n/useTranslation';
-import { getCourses, COURSES_BASE_PATH } from '@/lib/courses';
+import type { Course } from '@/lib/courses';
+import { COURSES_BASE_PATH } from '@/lib/courses';
 
 const ease = [0.25, 0.46, 0.45, 0.94] as const;
 
-export default function Courses() {
+interface CoursesProps {
+  courses: Course[];
+}
+
+export default function Courses({ courses: catalog }: CoursesProps) {
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: '-40px' });
   const t = useTranslation();
-  const { lang, href } = useLanguage();
-  const catalog = getCourses(lang);
+  const { href } = useLanguage();
 
   const displayItems = catalog.map((course) => ({
     id: course.slug,

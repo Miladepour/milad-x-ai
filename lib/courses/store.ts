@@ -1,0 +1,259 @@
+import type {
+  CourseAdminPayload,
+  CourseListItem,
+  CourseLocaleContent,
+} from "./cms-types";
+import type { Course } from "./types";
+import type { Locale } from "@/lib/i18n/translations";
+import { joinCourseRow } from "@/lib/supabase/mappers";
+import type { CourseLocaleRow, CourseRow } from "@/lib/supabase/database.types";
+import { createAdminDbClient } from "@/lib/supabase/admin-client";
+import { createCatalogClient } from "@/lib/supabase/catalog-client";
+import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { getStaticCourseAdminPayload } from "./import-static";
+import { parseCourseAdminPayload } from "./validate";
+
+import {
+  getCourseBySlug as getStaticCourseBySlug,
+  getCourses as getStaticCourses,
+  courseSlugs as staticCourseSlugs,
+} from "./data/index";
+
+function useStaticFallback(): boolean {
+  return !isSupabaseConfigured();
+}
+
+/** Public reads fall back to static course data when DB is unavailable or not migrated yet. */
+async function withPublicReadFallback<T>(
+  query: () => Promise<T>,
+  fallback: () => T
+): Promise<T> {
+  if (useStaticFallback()) return fallback();
+  try {
+    return await query();
+  } catch {
+    return fallback();
+  }
+}
+
+async function fetchPublishedCourses(): Promise<
+  Array<CourseRow & { course_locales: CourseLocaleRow[] }>
+> {
+  const supabase = createCatalogClient();
+  const { data, error } = await supabase
+    .from("courses")
+    .select("*, course_locales(*)")
+    .not("published_at", "is", null)
+    .order("sort_order", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as Array<CourseRow & { course_locales: CourseLocaleRow[] }>;
+}
+
+export async function getCourses(locale: Locale): Promise<Course[]> {
+  return withPublicReadFallback(async () => {
+    const rows = await fetchPublishedCourses();
+    const localeCode = locale;
+
+    return rows
+      .map((row) => {
+        const localeRow = row.course_locales?.find((l) => l.locale === localeCode);
+        if (!localeRow) return null;
+        return joinCourseRow(row, localeRow);
+      })
+      .filter((c): c is Course => c !== null);
+  }, () => getStaticCourses(locale));
+}
+
+export async function getCourseBySlug(
+  slug: string,
+  locale: Locale
+): Promise<Course | undefined> {
+  return withPublicReadFallback(async () => {
+    const supabase = createCatalogClient();
+    const { data, error } = await supabase
+      .from("courses")
+      .select("*, course_locales(*)")
+      .eq("slug", slug)
+      .not("published_at", "is", null)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    if (!data) return undefined;
+
+    const row = data as CourseRow & { course_locales: CourseLocaleRow[] };
+    const localeRow = row.course_locales?.find((l) => l.locale === locale);
+    if (!localeRow) return undefined;
+    return joinCourseRow(row, localeRow);
+  }, () => getStaticCourseBySlug(slug, locale));
+}
+
+export async function getAllCourseSlugs(): Promise<string[]> {
+  return withPublicReadFallback(async () => {
+    const supabase = createCatalogClient();
+    const { data, error } = await supabase
+      .from("courses")
+      .select("slug")
+      .not("published_at", "is", null);
+
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((r) => r.slug);
+  }, () => staticCourseSlugs);
+}
+
+export async function isPublishedCourseSlug(slug: string): Promise<boolean> {
+  return withPublicReadFallback(async () => {
+    const supabase = createCatalogClient();
+    const { data, error } = await supabase
+      .from("courses")
+      .select("slug")
+      .eq("slug", slug)
+      .not("published_at", "is", null)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    return Boolean(data);
+  }, () => staticCourseSlugs.includes(slug));
+}
+
+export async function listCoursesAdmin(): Promise<CourseListItem[]> {
+  const supabase = createAdminDbClient();
+  const { data, error } = await supabase
+    .from("courses")
+    .select("*, course_locales(*)")
+    .order("sort_order", { ascending: true });
+
+  if (error) throw new Error(error.message);
+
+  return ((data ?? []) as Array<CourseRow & { course_locales: CourseLocaleRow[] }>).map(
+    (row) => {
+      const en = row.course_locales?.find((l) => l.locale === "EN");
+      const fa = row.course_locales?.find((l) => l.locale === "FA");
+      return {
+        slug: row.slug,
+        coverImage: row.cover_image,
+        priceUsd: Number(row.price_usd),
+        sortOrder: row.sort_order,
+        publishedAt: row.published_at,
+        enTitle: en?.list_title ?? "—",
+        enStatus: (en?.status ?? "Coming Soon") as CourseListItem["enStatus"],
+        faTitle: fa?.list_title ?? "—",
+        faStatus: (fa?.status ?? "Coming Soon") as CourseListItem["faStatus"],
+      };
+    }
+  );
+}
+
+export async function getCourseAdmin(slug: string): Promise<CourseAdminPayload | null> {
+  const supabase = createAdminDbClient();
+  const { data, error } = await supabase
+    .from("courses")
+    .select("*, course_locales(*)")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+
+  const row = data as CourseRow & { course_locales: CourseLocaleRow[] };
+  const en = row.course_locales?.find((l) => l.locale === "EN");
+  const fa = row.course_locales?.find((l) => l.locale === "FA");
+  if (!en || !fa) return null;
+
+  const enContent = en.content as unknown as CourseLocaleContent;
+  const faContent = fa.content as unknown as CourseLocaleContent;
+
+  return {
+    slug: row.slug,
+    coverImage: row.cover_image,
+    priceUsd: Number(row.price_usd),
+    sortOrder: row.sort_order,
+    publishedAt: row.published_at,
+    locales: {
+      EN: {
+        listTitle: en.list_title,
+        title: en.title,
+        subtitle: en.subtitle,
+        excerpt: en.excerpt,
+        date: en.date,
+        status: en.status as CourseAdminPayload["locales"]["EN"]["status"],
+        content: enContent,
+      },
+      FA: {
+        listTitle: fa.list_title,
+        title: fa.title,
+        subtitle: fa.subtitle,
+        excerpt: fa.excerpt,
+        date: fa.date,
+        status: fa.status as CourseAdminPayload["locales"]["FA"]["status"],
+        content: faContent,
+      },
+    },
+  };
+}
+
+export async function upsertCourse(raw: unknown): Promise<CourseAdminPayload> {
+  const payload = parseCourseAdminPayload(raw);
+  const supabase = createAdminDbClient();
+
+  const { data: existing } = await supabase
+    .from("courses")
+    .select("id")
+    .eq("slug", payload.slug)
+    .maybeSingle();
+
+  let courseId = existing?.id as string | undefined;
+
+  const courseRow = {
+    slug: payload.slug,
+    cover_image: payload.coverImage,
+    price_usd: payload.priceUsd,
+    sort_order: payload.sortOrder,
+    published_at: payload.publishedAt,
+  };
+
+  if (courseId) {
+    const { error } = await supabase
+      .from("courses")
+      .update(courseRow)
+      .eq("id", courseId);
+    if (error) throw new Error(error.message);
+  } else {
+    const { data, error } = await supabase
+      .from("courses")
+      .insert(courseRow)
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    courseId = data.id;
+  }
+
+  for (const locale of ["EN", "FA"] as const) {
+    const loc = payload.locales[locale];
+    const localeRow = {
+      course_id: courseId!,
+      locale,
+      list_title: loc.listTitle,
+      title: loc.title,
+      subtitle: loc.subtitle,
+      excerpt: loc.excerpt,
+      date: loc.date,
+      status: loc.status,
+      content: loc.content as unknown as Record<string, unknown>,
+    };
+
+    const { error } = await supabase.from("course_locales").upsert(localeRow, {
+      onConflict: "course_id,locale",
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  const saved = await getCourseAdmin(payload.slug);
+  if (!saved) throw new Error("Failed to load saved course");
+  return saved;
+}
+
+export async function importStaticCourses(): Promise<CourseAdminPayload> {
+  return upsertCourse(getStaticCourseAdminPayload());
+}
+

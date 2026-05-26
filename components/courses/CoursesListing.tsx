@@ -1,15 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { COURSES_BASE_PATH, getCourses } from "@/lib/courses";
+import type { Course } from "@/lib/courses";
+import { COURSES_BASE_PATH } from "@/lib/courses";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import CourseCard from "./CourseCard";
 
-export default function CoursesListing() {
-  const { lang, href } = useLanguage();
+interface CoursesListingProps {
+  courses: Course[];
+}
+
+export default function CoursesListing({ courses }: CoursesListingProps) {
+  const { href } = useLanguage();
   const t = useTranslation();
-  const courses = getCourses(lang);
   const p = t.coursesPage;
 
   return (

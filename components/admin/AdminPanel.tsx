@@ -6,8 +6,9 @@ import type { ContactSubmission } from "@/lib/contact/types";
 import type { WaitlistSubmission } from "@/lib/courses/types";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import CourseEditor from "@/components/admin/CourseEditor";
 
-type AdminTab = "blog" | "contact" | "waitlist";
+type AdminTab = "blog" | "contact" | "waitlist" | "courses";
 
 interface AdminSummary {
   email?: string;
@@ -281,6 +282,7 @@ export default function AdminPanel() {
         <div className="flex flex-wrap gap-2">
           {[
             ["blog", "Publish blog"],
+            ["courses", "Courses"],
             ["contact", `Contact forms (${summary.contactSubmissions.length})`],
             ["waitlist", `Waitlists (${summary.waitlistSubmissions.length})`],
           ].map(([value, label]) => (
@@ -299,6 +301,10 @@ export default function AdminPanel() {
         </div>
 
         {status && <p className="font-dm text-sm text-orange">{status}</p>}
+
+        {tab === "courses" && (
+          <CourseEditor adminRequest={adminRequest} onStatus={setStatus} />
+        )}
 
         {tab === "blog" && (
           <form onSubmit={handlePublish} className="grid gap-5 lg:grid-cols-[1fr_320px]">
