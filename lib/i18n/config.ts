@@ -9,7 +9,7 @@ export const defaultLocale: UrlLocale = "en";
 export const localePrefix: UrlLocale = "fa";
 
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "https://miladxai.com";
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "https://mxaiacademy.com";
 
 export function isValidLocale(value: string): value is UrlLocale {
   return locales.includes(value as UrlLocale);

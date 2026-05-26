@@ -77,7 +77,7 @@ export const portfolioApplications: PortfolioApplication[] = [
     title: "Milad X AI",
     description:
       "This website — bilingual courses, blog, contact, and portfolio powered by Next.js.",
-    href: "https://miladxai.com",
+    href: "https://mxaiacademy.com",
     tags: ["Next.js", "TypeScript", "Tailwind"],
   },
 ];

@@ -1,28 +1,10 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { NextResponse } from "next/server";
 import { getCountryName } from "@/lib/countries";
 import { courseSlugs } from "@/lib/courses";
-import type { WaitlistSubmission } from "@/lib/courses/types";
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const DATA_FILE = path.join(DATA_DIR, "waitlist-submissions.json");
+import { createAnonClient } from "@/lib/supabase/server";
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-async function appendSubmission(entry: WaitlistSubmission) {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  let existing: WaitlistSubmission[] = [];
-  try {
-    const raw = await fs.readFile(DATA_FILE, "utf-8");
-    existing = JSON.parse(raw) as WaitlistSubmission[];
-  } catch {
-    existing = [];
-  }
-  existing.push(entry);
-  await fs.writeFile(DATA_FILE, JSON.stringify(existing, null, 2), "utf-8");
 }
 
 export async function POST(request: Request) {
@@ -51,17 +33,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid country" }, { status: 400 });
     }
 
-    const entry: WaitlistSubmission = {
-      courseSlug,
-      fullName,
+    const supabase = createAnonClient();
+    const { error } = await supabase.from("waitlist_submissions").insert({
+      course_slug: courseSlug,
+      full_name: fullName,
       email,
       mobile,
       country,
       locale,
-      submittedAt: new Date().toISOString(),
-    };
+    });
 
-    await appendSubmission(entry);
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true });
   } catch {

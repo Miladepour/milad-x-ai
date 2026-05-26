@@ -1,13 +1,10 @@
-import { promises as fs } from "fs";
-import path from "path";
 import type { BlogPost } from "./types";
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const DATA_FILE = path.join(DATA_DIR, "blog-posts.json");
-
-interface BlogStore {
-  posts: BlogPost[];
-}
+import {
+  createAnonClient,
+  createClient,
+  isSupabaseConfigured,
+} from "@/lib/supabase/server";
+import { blogPostToRow, blogRowToPost } from "@/lib/supabase/mappers";
 
 function normalizeSlug(value: string): string {
   return value
@@ -18,29 +15,17 @@ function normalizeSlug(value: string): string {
     .slice(0, 90);
 }
 
-async function readStore(): Promise<BlogStore> {
-  try {
-    const raw = await fs.readFile(DATA_FILE, "utf-8");
-    const parsed = JSON.parse(raw) as BlogStore;
-    return { posts: Array.isArray(parsed.posts) ? parsed.posts : [] };
-  } catch {
-    return { posts: [] };
-  }
-}
-
-async function writeStore(store: BlogStore) {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(DATA_FILE, JSON.stringify(store, null, 2), "utf-8");
-}
-
 export async function getBlogPosts(locale: "EN" | "FA"): Promise<BlogPost[]> {
-  const store = await readStore();
-  return store.posts
-    .filter((post) => post.locale === locale)
-    .sort(
-      (a, b) =>
-        new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-    );
+  if (!isSupabaseConfigured()) return [];
+  const supabase = createAnonClient();
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .eq("locale", locale)
+    .order("published_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row) => blogRowToPost(row as import("@/lib/supabase/database.types").BlogPostRow));
 }
 
 export async function getBlogPostBySlug(
@@ -51,8 +36,12 @@ export async function getBlogPostBySlug(
 }
 
 export async function getAllBlogSlugs(): Promise<string[]> {
-  const store = await readStore();
-  return Array.from(new Set(store.posts.map((post) => post.slug)));
+  if (!isSupabaseConfigured()) return [];
+  const supabase = createAnonClient();
+  const { data, error } = await supabase.from("blog_posts").select("slug");
+
+  if (error) throw new Error(error.message);
+  return Array.from(new Set((data ?? []).map((row) => row.slug)));
 }
 
 export async function upsertBlogPost(input: {
@@ -87,17 +76,13 @@ export async function upsertBlogPost(input: {
     locale: input.locale,
   };
 
-  const store = await readStore();
-  const existingIndex = store.posts.findIndex(
-    (item) => item.slug === slug && item.locale === input.locale
-  );
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .upsert(blogPostToRow(post), { onConflict: "slug,locale" })
+    .select("*")
+    .single();
 
-  if (existingIndex >= 0) {
-    store.posts[existingIndex] = post;
-  } else {
-    store.posts.push(post);
-  }
-
-  await writeStore(store);
-  return post;
+  if (error) throw new Error(error.message);
+  return blogRowToPost(data as import("@/lib/supabase/database.types").BlogPostRow);
 }

@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@fontsource/vazirmatn": "^5.2.8",
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.106.2",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.14.0",
     "next": "14.2.35",

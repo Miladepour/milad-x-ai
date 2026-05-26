@@ -1,13 +1,16 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import type { BlogPost } from "@/lib/blog/types";
 import type { ContactSubmission } from "@/lib/contact/types";
 import type { WaitlistSubmission } from "@/lib/courses/types";
+import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 type AdminTab = "blog" | "contact" | "waitlist";
 
 interface AdminSummary {
+  email?: string;
   contactSubmissions: ContactSubmission[];
   waitlistSubmissions: WaitlistSubmission[];
 }
@@ -43,8 +46,11 @@ function slugify(value: string) {
 }
 
 export default function AdminPanel() {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [adminEmail, setAdminEmail] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [tab, setTab] = useState<AdminTab>("blog");
   const [status, setStatus] = useState("");
   const [summary, setSummary] = useState<AdminSummary>({
@@ -63,19 +69,25 @@ export default function AdminPanel() {
 
   const generatedSlug = useMemo(() => slugify(post.title), [post.title]);
 
-  async function adminRequest(action: string, payload = {}) {
+  const adminRequest = useCallback(async (action: string, payload = {}) => {
     const res = await fetch("/api/admin-console", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-admin-password": password,
-      },
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
       body: JSON.stringify({ action, ...payload }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Admin request failed");
     return data;
-  }
+  }, []);
+
+  const unlockWithSession = useCallback(async () => {
+    const data = (await adminRequest("login")) as AdminSummary;
+    setSummary(data);
+    setAdminEmail(data.email ?? "");
+    setIsUnlocked(true);
+    return data;
+  }, [adminRequest]);
 
   async function loadSummary() {
     const data = (await adminRequest("summary")) as AdminSummary;
@@ -84,16 +96,45 @@ export default function AdminPanel() {
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setStatus("Checking access...");
-    try {
-      const data = (await adminRequest("login")) as AdminSummary;
-      setSummary(data);
-      setIsUnlocked(true);
-      window.sessionStorage.setItem("milad-admin-password", password);
-      setStatus("Unlocked.");
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Could not unlock admin.");
+    if (!isSupabaseConfigured()) {
+      setStatus(
+        "Supabase env is misconfigured. Set NEXT_PUBLIC_SUPABASE_URL to https://YOUR_REF.supabase.co (Project URL, not a key)."
+      );
+      return;
     }
+    setStatus("Signing in...");
+    const supabase = createClient();
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    if (signInError) {
+      setStatus(signInError.message);
+      return;
+    }
+
+    try {
+      await unlockWithSession();
+      setStatus("Signed in.");
+    } catch (error) {
+      await supabase.auth.signOut();
+      setStatus(
+        error instanceof Error
+          ? error.message
+          : "Signed in but not authorized. Add your user to admin_profiles in Supabase."
+      );
+    }
+  }
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setIsUnlocked(false);
+    setAdminEmail("");
+    setPassword("");
+    setStatus("Signed out.");
   }
 
   async function handlePublish(event: FormEvent<HTMLFormElement>) {
@@ -117,9 +158,27 @@ export default function AdminPanel() {
   }
 
   useEffect(() => {
-    const stored = window.sessionStorage.getItem("milad-admin-password");
-    if (stored) setPassword(stored);
-  }, []);
+    if (!isSupabaseConfigured()) {
+      setAuthChecked(true);
+      return;
+    }
+
+    const supabase = createClient();
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) {
+        setAuthChecked(true);
+        return;
+      }
+      try {
+        await unlockWithSession();
+      } catch {
+        await supabase.auth.signOut();
+      } finally {
+        setAuthChecked(true);
+      }
+    });
+  }, [unlockWithSession]);
 
   useEffect(() => {
     if (!isUnlocked) return;
@@ -127,6 +186,14 @@ export default function AdminPanel() {
       setStatus(error instanceof Error ? error.message : "Could not refresh inbox.");
     });
   }, [isUnlocked]);
+
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-background px-6 py-28">
+        <p className="mx-auto max-w-md font-dm text-sm text-cream/70">Loading…</p>
+      </div>
+    );
+  }
 
   if (!isUnlocked) {
     return (
@@ -144,16 +211,34 @@ export default function AdminPanel() {
             </h1>
           </div>
           <input
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            type="email"
+            className="form-field"
+            placeholder="Email"
+            autoComplete="email"
+            required
+          />
+          <input
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             type="password"
             className="form-field"
-            placeholder="Admin password"
+            placeholder="Password"
             autoComplete="current-password"
+            required
           />
           <button className="bg-orange px-5 py-3 font-mono text-xs uppercase tracking-widest text-background transition-colors hover:bg-cream">
-            Unlock
+            Sign in
           </button>
+          {!isSupabaseConfigured() && (
+            <p className="font-dm text-sm text-orange leading-relaxed">
+              Supabase is not configured. In `.env.local`, set{" "}
+              <code className="text-cream">NEXT_PUBLIC_SUPABASE_URL</code> to your
+              Project URL (e.g. https://abcdefgh.supabase.co) from Supabase →
+              Settings → API — not a publishable key.
+            </p>
+          )}
           {status && <p className="font-dm text-sm text-cream/70">{status}</p>}
         </form>
       </div>
@@ -171,13 +256,26 @@ export default function AdminPanel() {
             <h1 className="mt-2 font-dm text-4xl font-semibold text-cream">
               Admin panel
             </h1>
+            {adminEmail && (
+              <p className="mt-2 font-dm text-sm text-cream/60">{adminEmail}</p>
+            )}
           </div>
-          <button
-            onClick={() => loadSummary()}
-            className="self-start border border-orange px-4 py-2 font-mono text-xs uppercase tracking-widest text-orange transition-colors hover:bg-orange hover:text-background"
-          >
-            Refresh inbox
-          </button>
+          <div className="flex flex-wrap gap-2 self-start">
+            <button
+              type="button"
+              onClick={() => loadSummary()}
+              className="border border-orange px-4 py-2 font-mono text-xs uppercase tracking-widest text-orange transition-colors hover:bg-orange hover:text-background"
+            >
+              Refresh inbox
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSignOut()}
+              className="border border-surface px-4 py-2 font-mono text-xs uppercase tracking-widest text-cream transition-colors hover:border-orange hover:text-orange"
+            >
+              Sign out
+            </button>
+          </div>
         </header>
 
         <div className="flex flex-wrap gap-2">

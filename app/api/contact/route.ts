@@ -1,29 +1,12 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { NextResponse } from "next/server";
 import { getCountryName } from "@/lib/countries";
-import type { ContactInquiryType, ContactSubmission } from "@/lib/contact/types";
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const DATA_FILE = path.join(DATA_DIR, "contact-submissions.json");
+import type { ContactInquiryType } from "@/lib/contact/types";
+import { createAnonClient } from "@/lib/supabase/server";
 
 const VALID_INQUIRY_TYPES: ContactInquiryType[] = ["private_course", "collaboration"];
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-async function appendSubmission(entry: ContactSubmission) {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  let existing: ContactSubmission[] = [];
-  try {
-    const raw = await fs.readFile(DATA_FILE, "utf-8");
-    existing = JSON.parse(raw) as ContactSubmission[];
-  } catch {
-    existing = [];
-  }
-  existing.push(entry);
-  await fs.writeFile(DATA_FILE, JSON.stringify(existing, null, 2), "utf-8");
 }
 
 export async function POST(request: Request) {
@@ -56,18 +39,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid message" }, { status: 400 });
     }
 
-    const entry: ContactSubmission = {
-      fullName,
+    const supabase = createAnonClient();
+    const { error } = await supabase.from("contact_submissions").insert({
+      full_name: fullName,
       email,
       mobile,
       country,
-      inquiryType,
+      inquiry_type: inquiryType,
       message,
       locale,
-      submittedAt: new Date().toISOString(),
-    };
+    });
 
-    await appendSubmission(entry);
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true });
   } catch {
