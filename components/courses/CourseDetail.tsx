@@ -2,6 +2,7 @@
 
 import type { Course } from "@/lib/courses";
 import { COURSES_BASE_PATH, getWaitlistPath } from "@/lib/courses";
+import { getCourseApplyUrl } from "@/lib/courses/registration";
 import {
   getCurriculumItems,
   getItemBlocks,
@@ -22,6 +23,14 @@ import CourseSectionNav, { type CourseSectionNavLink } from "./CourseSectionNav"
 import CourseStructureAccordion from "./CourseStructureAccordion";
 import CourseWhatYouLearn from "./CourseWhatYouLearn";
 import InstructorAboutSection from "@/components/shared/InstructorAboutSection";
+
+function resolveCourseCta(course: Course, waitlistHref: string) {
+  const applyUrl = getCourseApplyUrl(course);
+  if (applyUrl) {
+    return { href: applyUrl, external: true, useApplyNow: true };
+  }
+  return { href: waitlistHref, external: false, useApplyNow: false };
+}
 
 interface CourseDetailProps {
   course: Course;
@@ -49,6 +58,9 @@ export default function CourseDetail({ course }: CourseDetailProps) {
     .replace("{parts}", toLocaleDigits(String(course.meta.partsCount), lang))
     .replace("{topics}", toLocaleDigits(String(course.insights.topicsCount), lang))
     .replace("{hours}", toLocaleDigits(course.meta.totalHours, lang));
+
+  const waitlistHref = href(getWaitlistPath(course.slug));
+  const cta = resolveCourseCta(course, waitlistHref);
 
   const sectionNavLinks: CourseSectionNavLink[] = [
     { id: "curriculum", label: d.whatYouLearn },
@@ -82,10 +94,11 @@ export default function CourseDetail({ course }: CourseDetailProps) {
             <CoursePurchaseSidebar
               course={course}
               lang={lang}
-              waitlistHref={href(getWaitlistPath(course.slug))}
+              ctaHref={cta.href}
+              ctaExternal={cta.external}
               coursesIndexHref={href(COURSES_BASE_PATH)}
               labels={{
-                joinWaitingList: p.joinWaitingList,
+                primaryCta: cta.useApplyNow ? p.applyNow : p.joinWaitingList,
                 dateLabel: p.dateLabel,
                 session1: d.session1,
                 session2: d.session2,

@@ -12,6 +12,8 @@ import { createCatalogClient } from "@/lib/supabase/catalog-client";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { getAllStaticCourseAdminPayloads } from "./import-static";
 import { parseCourseAdminPayload } from "./validate";
+import { withResolvedApplyUrl } from "./apply-url";
+import { sortCoursesByDate } from "./sort";
 
 import {
   getCourseBySlug as getStaticCourseBySlug,
@@ -54,13 +56,15 @@ export async function getCourses(locale: Locale): Promise<Course[]> {
     const rows = await fetchPublishedCourses();
     const localeCode = locale;
 
-    return rows
+    const courses = rows
       .map((row) => {
         const localeRow = row.course_locales?.find((l) => l.locale === localeCode);
         if (!localeRow) return null;
-        return joinCourseRow(row, localeRow);
+        return withResolvedApplyUrl(joinCourseRow(row, localeRow));
       })
       .filter((c): c is Course => c !== null);
+
+    return sortCoursesByDate(courses);
   }, () => getStaticCourses(locale));
 }
 
@@ -83,8 +87,11 @@ export async function getCourseBySlug(
     const row = data as CourseRow & { course_locales: CourseLocaleRow[] };
     const localeRow = row.course_locales?.find((l) => l.locale === locale);
     if (!localeRow) return undefined;
-    return joinCourseRow(row, localeRow);
-  }, () => getStaticCourseBySlug(slug, locale));
+    return withResolvedApplyUrl(joinCourseRow(row, localeRow));
+  }, () => {
+    const course = getStaticCourseBySlug(slug, locale);
+    return course ? withResolvedApplyUrl(course) : undefined;
+  });
 }
 
 export async function getAllCourseSlugs(): Promise<string[]> {

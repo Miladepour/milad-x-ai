@@ -167,6 +167,23 @@ export default function CourseLocaleContentEditor({
               }
             />
           </label>
+          <label className="font-dm text-xs text-cream/70 sm:col-span-2">
+            Apply URL (optional)
+            <input
+              className="form-field mt-1 font-mono text-xs"
+              value={meta.applyUrl ?? ""}
+              onChange={(e) =>
+                onChange({
+                  ...content,
+                  meta: {
+                    ...meta,
+                    applyUrl: e.target.value.trim() || null,
+                  },
+                })
+              }
+              placeholder="https://t.me/mxaiacademy — replaces waitlist button when set"
+            />
+          </label>
         </div>
 
         <p className="font-mono text-[10px] uppercase tracking-widest text-cream/50">

@@ -15,10 +15,11 @@ const btnPrimary =
 interface CoursePurchaseSidebarProps {
   course: Course;
   lang: Locale;
-  waitlistHref: string;
+  ctaHref: string;
+  ctaExternal?: boolean;
   coursesIndexHref: string;
   labels: {
-    joinWaitingList: string;
+    primaryCta: string;
     dateLabel: string;
     session1: string;
     session2: string;
@@ -37,7 +38,8 @@ interface CoursePurchaseSidebarProps {
 export default function CoursePurchaseSidebar({
   course,
   lang,
-  waitlistHref,
+  ctaHref,
+  ctaExternal = false,
   coursesIndexHref,
   labels,
 }: CoursePurchaseSidebarProps) {
@@ -99,9 +101,20 @@ export default function CoursePurchaseSidebar({
             )}
           </div>
 
-          <Link href={waitlistHref} className={btnPrimary}>
-            {labels.joinWaitingList}
-          </Link>
+          {ctaExternal ? (
+            <a
+              href={ctaHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={btnPrimary}
+            >
+              {labels.primaryCta}
+            </a>
+          ) : (
+            <Link href={ctaHref} className={btnPrimary}>
+              {labels.primaryCta}
+            </Link>
+          )}
 
           <div className="border-t border-surface pt-4">
             <p className="font-mono text-xs text-orange uppercase tracking-widest rtl:tracking-normal mb-3">

@@ -39,6 +39,8 @@ export interface CourseMeta {
   partsCount: number;
   timezone: string;
   sessions: CourseSessionSchedule[];
+  /** When set, primary CTA opens this URL (e.g. Telegram) instead of the waitlist page. */
+  applyUrl?: string | null;
 }
 
 export interface CourseFaqItem {

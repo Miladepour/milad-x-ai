@@ -17,6 +17,7 @@ export const promptToWebsiteCourseEn: Course = {
     totalHours: "5 hours",
     partsCount: 2,
     timezone: "London, UK time",
+    applyUrl: "https://t.me/mxaiacademy",
     sessions: [
       { id: "1", date: "14 Jun 2026", time: "16:00", durationHours: 3 },
       { id: "2", date: "17 Jun 2026", time: "18:00", durationHours: 2 },
@@ -72,10 +73,10 @@ export const promptToWebsiteCourseEn: Course = {
         "No. This course is beginner friendly. You will learn how websites work and how to use AI tools to build them without writing code manually.",
     },
     {
-      id: "payment",
-      question: "How do I pay for the course?",
+      id: "register",
+      question: "How do I register for this course?",
       answer:
-        "After the waiting list closes, you will receive an email with a secure link to purchase the course online.",
+        "Click Apply Now on this page. You will be taken to our Telegram channel, where my team will reply and guide you step by step through registration and payment.",
     },
     {
       id: "tools",

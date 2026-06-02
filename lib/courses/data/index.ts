@@ -6,6 +6,8 @@ import { promptToContentCourseEn } from "./en";
 import { promptToContentCourseFa } from "./fa";
 import { promptToWebsiteCourseEn } from "./prompt-to-website-en";
 import { promptToWebsiteCourseFa } from "./prompt-to-website-fa";
+import { withResolvedApplyUrl } from "../apply-url";
+import { sortCoursesByDate } from "../sort";
 
 export { COURSES_BASE_PATH } from "../constants";
 
@@ -18,11 +20,12 @@ export const courseSlugs = coursesByLocale.EN.map((c) => c.slug);
 
 /** Static fallback — prefer async getters from lib/courses/store */
 export function getCourses(locale: Locale): Course[] {
-  return coursesByLocale[locale];
+  return sortCoursesByDate(coursesByLocale[locale].map(withResolvedApplyUrl));
 }
 
 export function getCourseBySlug(slug: string, locale: Locale): Course | undefined {
-  return coursesByLocale[locale].find((c) => c.slug === slug);
+  const course = coursesByLocale[locale].find((c) => c.slug === slug);
+  return course ? withResolvedApplyUrl(course) : undefined;
 }
 
 export function getWaitlistPath(slug: string): string {

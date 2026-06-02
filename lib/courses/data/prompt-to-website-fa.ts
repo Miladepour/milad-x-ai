@@ -18,6 +18,7 @@ export const promptToWebsiteCourseFa: Course = {
     totalHours: "۵ ساعت",
     partsCount: 2,
     timezone: "وقت لندن، انگلستان",
+    applyUrl: "https://t.me/mxaiacademy",
     sessions: [
       { id: "1", date: "۱۴ ژوئن ۲۰۲۶", time: "16:00", durationHours: 3 },
       { id: "2", date: "۱۷ ژوئن ۲۰۲۶", time: "18:00", durationHours: 2 },
@@ -73,10 +74,10 @@ export const promptToWebsiteCourseFa: Course = {
         "خیر. این دوره برای مبتدیان طراحی شده است. نحوه کار وب‌سایت‌ها و استفاده از ابزارهای AI برای ساخت آن‌ها را بدون نوشتن دستی کد یاد می‌گیرید.",
     },
     {
-      id: "payment",
-      question: "چطور باید هزینه دوره را پرداخت کنم؟",
+      id: "register",
+      question: "چطور در این دوره ثبت‌نام کنم؟",
       answer:
-        "پس از تکمیل لیست انتظار، ایمیلی برای شما ارسال می‌شود که شامل لینک امن خرید آنلاین دوره است.",
+        "روی دکمه «ثبت نام کنید» در همین صفحه بزنید. به کانال تلگرام ما هدایت می‌شوید و تیم من پاسخ می‌دهد و قدم‌به‌قدم شما را در ثبت‌نام و پرداخت راهنمایی می‌کند.",
     },
     {
       id: "tools",
