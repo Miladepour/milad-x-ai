@@ -108,12 +108,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, course });
     }
 
-    if (action === "publish-course") {
+    if (action === "save-course" || action === "publish-course") {
       const payload = body.course ?? body;
-      const publishNow = body.publishNow !== false;
+      const publishNow =
+        action === "publish-course" ? body.publishNow !== false : Boolean(body.publishNow);
+
       if (publishNow && (!payload.publishedAt || payload.publishedAt === null)) {
         payload.publishedAt = new Date().toISOString();
       }
+
       const course = await upsertCourse(payload);
       revalidateCoursePaths(course.slug);
       return NextResponse.json({ ok: true, course });
@@ -132,9 +135,11 @@ export async function POST(request: Request) {
     }
 
     if (action === "import-static-courses") {
-      const course = await importStaticCourses();
-      revalidateCoursePaths(course.slug);
-      return NextResponse.json({ ok: true, course });
+      const courses = await importStaticCourses();
+      for (const course of courses) {
+        revalidateCoursePaths(course.slug);
+      }
+      return NextResponse.json({ ok: true, courses });
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });

@@ -7,6 +7,7 @@ export const translations = {
       portfolio: "Portfolio",
       courses: "Courses",
       blog: "Blog",
+      consultation: "Consultation",
       contact: "Contact",
     },
     hero: {
@@ -96,9 +97,17 @@ export const translations = {
         Closed: "View Details",
       },
     },
+    instructorAbout: {
+      title: "About Milad",
+      paragraphs: [
+        "I’m Milad, an AI content creator, digital marketer and course tutor with a background in IT, web development and brand marketing.",
+        "After building and running my own marketing agency for nearly a decade, I moved to Manchester in 2022 and fully focused on AI, combining it with content creation, social media, design and web development.",
+        "Today, I help individuals and businesses use AI image generation, video creation and vibe coding to create better content, build stronger brands and turn ideas into real digital products.",
+      ],
+    },
     bookcall: {
       heading: "Let’s Build Something",
-      sub: "Book a free 30-min call",
+      sub: "Book a 30-minute 1:1 AI consultation — $30",
       cta: "Book a Call →",
     },
     coursesPage: {
@@ -134,6 +143,7 @@ export const translations = {
         languageEn: "English",
         languageFa: "Farsi",
         whatYouLearn: "What you'll learn",
+        courseTutor: "Course Tutor",
         courseContent: "Workshop structure",
         contentMeta: "{parts} parts · {topics} topics · {hours} total",
         expandAll: "Expand all",
@@ -171,7 +181,7 @@ export const translations = {
         submitting: "Submitting…",
         successTitle: "You're on the waiting list",
         successMessage:
-          "Thank you. We have received your details and will be in touch before the workshop on 05 Jun 2026.",
+          "Thank you. We have received your details and will be in touch before your workshop date.",
         backToCourse: "Back to course",
         errorGeneric: "Something went wrong. Please try again.",
       },
@@ -218,6 +228,26 @@ export const translations = {
         "Thank you for reaching out. I have received your message and will reply as soon as possible.",
       errorGeneric: "Something went wrong. Please try again.",
     },
+    consultationPage: {
+      backHome: "← Back to home",
+      label: "Consultation",
+      title: "1:1 AI Consultation",
+      duration: "30 minutes",
+      description:
+        "A focused 30 minute AI coaching consultation designed to understand your needs, whether you are an individual or a business, and give you a clear, practical plan for how AI can help you move forward.",
+      whatWeCover: "What we cover",
+      bullets: [
+        "Understanding your goals, challenges, and current situation",
+        "Identifying where AI can save time, improve quality, or create new opportunities",
+        "Exploring whether you need personal AI training, a structured learning course, or business AI solutions",
+        "Creating a clear plan tailored to your needs",
+        "Recommending practical next steps you can start using straight away",
+      ],
+      priceLabel: "Session fee",
+      bookCta: "Book your session",
+      bookHint:
+        "You will be redirected to Google Calendar to choose a time and complete your booking.",
+    },
     footer: {
       brandName: "Milad X AI",
       tagline: "AI artist · Educator · Creative entrepreneur",
@@ -226,6 +256,7 @@ export const translations = {
       exploreTitle: "Explore",
       offeringsTitle: "Offerings",
       offeringWorkshop: "Prompt to Content workshop",
+      offeringConsultation: "1:1 AI consultation",
       offeringPrivate: "Private courses",
       offeringCollaboration: "Project collaboration",
       connectTitle: "Connect",
@@ -242,6 +273,7 @@ export const translations = {
       portfolio: "نمونه‌کار",
       courses: "دوره",
       blog: "وبلاگ",
+      consultation: "مشاوره",
       contact: "تماس",
     },
     hero: {
@@ -337,10 +369,18 @@ export const translations = {
         Closed: "جزئیات دوره",
       },
     },
+    instructorAbout: {
+      title: "درباره من",
+      paragraphs: [
+        "من میلاد هستم؛ تولیدکننده محتوای هوش مصنوعی، دیجیتال مارکتر و مدرس دوره، با سابقه در حوزه آی‌تی، توسعه وب و برندسازی.",
+        "بعد از ساخت و مدیریت آژانس دیجیتال مارکتینگ خودم به مدت تقریباً یک دهه، در سال ۲۰۲۲ به منچستر مهاجرت کردم و تمرکزم را به‌صورت کامل روی هوش مصنوعی گذاشتم؛ جایی که تولید محتوا، شبکه‌های اجتماعی، طراحی و توسعه وب را با AI ترکیب کردم.",
+        "امروز به افراد و کسب‌وکارها کمک می‌کنم با استفاده از ساخت تصویر و ویدیو با هوش مصنوعی و وایب‌کدینگ، محتوای بهتر بسازند، برند قوی‌تری داشته باشند و ایده‌هایشان را به محصولات دیجیتال واقعی تبدیل کنند.",
+      ],
+    },
     bookcall: {
       heading: "بیا با هم چیزی بسازیم",
-      sub: "یک گفت‌وگوی ۳۰ دقیقه‌ای رایگان رزرو کن",
-      cta: "شروع گفتگو",
+      sub: "رزرو مشاوره ۳۰ دقیقه‌ای یک‌به‌یک — ۳۰ دلار",
+      cta: "رزرو جلسه",
     },
     coursesPage: {
       backHome: "→ بازگشت به خانه",
@@ -375,6 +415,7 @@ export const translations = {
         languageEn: "انگلیسی",
         languageFa: "فارسی",
         whatYouLearn: "آنچه یاد می‌گیرید",
+        courseTutor: "مدرس دوره",
         courseContent: "ساختار ورکشاپ",
         contentMeta: "{parts} بخش · {topics} موضوع · {hours} مجموع",
         expandAll: "باز کردن همه",
@@ -412,7 +453,7 @@ export const translations = {
         submitting: "در حال ارسال…",
         successTitle: "در لیست انتظار ثبت شدید",
         successMessage:
-          "متشکریم. اطلاعات شما دریافت شد و قبل از ورکشاپ در تاریخ ۵ ژوئن ۲۰۲۶ با شما تماس خواهیم گرفت.",
+          "متشکریم. اطلاعات شما دریافت شد و قبل از تاریخ ورکشاپ با شما تماس خواهیم گرفت.",
         backToCourse: "بازگشت به دوره",
         errorGeneric: "خطایی رخ داد. لطفاً دوباره تلاش کنید.",
       },
@@ -459,6 +500,26 @@ export const translations = {
         "متشکریم. پیام شما را دریافت کردم و به زودی پاسخ می‌دهم.",
       errorGeneric: "خطایی رخ داد. لطفاً دوباره تلاش کنید.",
     },
+    consultationPage: {
+      backHome: "← بازگشت به خانه",
+      label: "مشاوره",
+      title: "مشاوره خصوصی هوش مصنوعی",
+      duration: "۳۰ دقیقه",
+      description:
+        "یک جلسه مشاوره متمرکز ۳۰ دقیقه‌ای برای درک نیازهای شما — چه فرد باشید چه کسب‌وکار — و ارائه یک برنامه روشن و عملی برای اینکه هوش مصنوعی چطور می‌تواند شما را جلو ببرد.",
+      whatWeCover: "در این جلسه چه می‌پوشانیم",
+      bullets: [
+        "درک اهداف، چالش‌ها و وضعیت فعلی شما",
+        "شناسایی جاهایی که هوش مصنوعی می‌تواند زمان صرفه‌جویی کند، کیفیت را بالا ببرد یا فرصت‌های جدید بسازد",
+        "بررسی اینکه به آموزش شخصی، دوره ساختارمند یا راه‌حل‌های هوش مصنوعی برای کسب‌وکار نیاز دارید",
+        "طراحی برنامه‌ای شفاف و متناسب با نیاز شما",
+        "پیشنهاد گام‌های عملی که می‌توانید همان‌روز شروع کنید",
+      ],
+      priceLabel: "هزینه جلسه",
+      bookCta: "رزرو جلسه",
+      bookHint:
+        "برای انتخاب زمان و تکمیل رزرو به تقویم گوگل هدایت می‌شوید.",
+    },
     footer: {
       brandName: "Milad X AI",
       tagline: "هنرمند هوش مصنوعی · مدرّس · تولید کننده محتوا",
@@ -467,6 +528,7 @@ export const translations = {
       exploreTitle: "صفحات",
       offeringsTitle: "خدمات",
       offeringWorkshop: "ورکشاپ Prompt to Content",
+      offeringConsultation: "مشاوره یک‌به‌یک هوش مصنوعی",
       offeringPrivate: "دوره خصوصی",
       offeringCollaboration: "همکاری پروژه",
       connectTitle: "ارتباط",

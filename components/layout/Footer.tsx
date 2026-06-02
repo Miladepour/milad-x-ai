@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CONSULTATION_BASE_PATH } from "@/lib/consultation/constants";
 import { COURSES_BASE_PATH } from "@/lib/courses";
 import { PORTFOLIO_BASE_PATH } from "@/lib/portfolio/constants";
 import { toLocaleDigits } from "@/lib/i18n/digits";
@@ -53,6 +54,7 @@ export default function Footer() {
     { href: href(PORTFOLIO_BASE_PATH), label: n.portfolio },
     { href: href(COURSES_BASE_PATH), label: n.courses },
     { href: href("/blog"), label: n.blog },
+    { href: href(CONSULTATION_BASE_PATH), label: n.consultation },
     { href: href("/contact"), label: n.contact },
   ];
 
@@ -61,6 +63,7 @@ export default function Footer() {
       href: href(`${COURSES_BASE_PATH}/${WORKSHOP_SLUG}`),
       label: f.offeringWorkshop,
     },
+    { href: href(CONSULTATION_BASE_PATH), label: f.offeringConsultation },
     { href: href("/contact"), label: f.offeringPrivate },
     { href: href("/contact"), label: f.offeringCollaboration },
   ];

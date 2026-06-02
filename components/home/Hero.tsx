@@ -123,7 +123,7 @@ export default function Hero() {
             transition={{ duration: 0.7, delay: 0.88, ease: 'easeOut' }}
             className="flex flex-wrap items-center gap-4 mt-8 rtl:mt-6"
           >
-            <Button variant="primary" size="lg" href={href("/contact")}>
+            <Button variant="primary" size="lg" href={href("/consultation")}>
               {t.hero.cta1}
             </Button>
             <Button variant="outline" size="lg" href={href("/portfolio")}>

@@ -10,6 +10,7 @@ import {
   payloadToJsonString,
   parseJsonToPayload,
 } from "@/lib/courses/editor-defaults";
+import CourseLocaleContentEditor from "./CourseLocaleContentEditor";
 
 type EditorMode = "form" | "json";
 
@@ -146,81 +147,10 @@ function LocaleFields({
           }
         />
       </label>
-      <label className="font-dm text-xs text-cream/70">
-        FAQ JSON
-        <textarea
-          className="form-field mt-1 min-h-28 font-mono text-xs"
-          value={JSON.stringify(data.content.faq, null, 2)}
-          onChange={(e) => {
-            try {
-              const faq = JSON.parse(e.target.value) as CourseAdminPayload["locales"]["EN"]["content"]["faq"];
-              onChange({ ...data, content: { ...data.content, faq } });
-            } catch {
-              // ignore while typing
-            }
-          }}
-          onBlur={(e) => {
-            try {
-              const faq = JSON.parse(e.target.value);
-              onChange({ ...data, content: { ...data.content, faq } });
-            } catch {
-              /* validation on publish */
-            }
-          }}
-        />
-      </label>
-      <label className="font-dm text-xs text-cream/70">
-        Sections JSON
-        <textarea
-          className="form-field mt-1 min-h-40 font-mono text-xs"
-          value={JSON.stringify(data.content.sections, null, 2)}
-          onBlur={(e) => {
-            try {
-              const sections = JSON.parse(e.target.value);
-              onChange({ ...data, content: { ...data.content, sections } });
-            } catch {
-              /* validation on publish */
-            }
-          }}
-          onChange={(e) => {
-            try {
-              const sections = JSON.parse(e.target.value);
-              onChange({ ...data, content: { ...data.content, sections } });
-            } catch {
-              /* ignore */
-            }
-          }}
-        />
-      </label>
-      <label className="font-dm text-xs text-cream/70">
-        Meta & insights JSON
-        <textarea
-          className="form-field mt-1 min-h-32 font-mono text-xs"
-          value={JSON.stringify(
-            { meta: data.content.meta, insights: data.content.insights },
-            null,
-            2
-          )}
-          onBlur={(e) => {
-            try {
-              const parsed = JSON.parse(e.target.value) as {
-                meta: typeof data.content.meta;
-                insights: typeof data.content.insights;
-              };
-              onChange({
-                ...data,
-                content: {
-                  ...data.content,
-                  meta: parsed.meta,
-                  insights: parsed.insights,
-                },
-              });
-            } catch {
-              /* validation on publish */
-            }
-          }}
-        />
-      </label>
+      <CourseLocaleContentEditor
+        content={data.content}
+        onChange={(content) => onChange({ ...data, content })}
+      />
     </div>
   );
 }
@@ -288,24 +218,56 @@ export default function CourseEditor({ adminRequest, onStatus }: CourseEditorPro
     setMode(next);
   };
 
+  const resolvePayloadForSave = (): CourseAdminPayload => {
+    const raw = mode === "json" ? parseJsonToPayload(jsonText) : payload;
+    return parseCourseAdminPayload(raw);
+  };
+
+  const persistCourse = async (
+    options: { publishNow: boolean; stayOnPage: boolean }
+  ) => {
+    const parsed = resolvePayloadForSave();
+    const publishedAt =
+      options.publishNow || parsed.publishedAt
+        ? parsed.publishedAt ?? new Date().toISOString()
+        : null;
+
+    const data = (await adminRequest("save-course", {
+      course: { ...parsed, publishedAt },
+      publishNow: options.publishNow,
+    })) as { course: CourseAdminPayload };
+
+    setPayload(data.course);
+    setJsonText(payloadToJsonString(data.course));
+    setSlugEdited(true);
+    await loadList();
+
+    if (options.stayOnPage) {
+      onStatus(
+        options.publishNow
+          ? `Saved & published — live site updated (${data.course.slug})`
+          : `Saved — live site updated (${data.course.slug})`
+      );
+    } else {
+      onStatus(`Published: ${data.course.slug}`);
+      setView("list");
+    }
+  };
+
+  const handleSave = async () => {
+    onStatus("Saving course...");
+    try {
+      await persistCourse({ publishNow: false, stayOnPage: true });
+    } catch (e) {
+      onStatus(e instanceof Error ? e.message : "Could not save course");
+    }
+  };
+
   const handlePublish = async (event: FormEvent) => {
     event.preventDefault();
     onStatus("Publishing course...");
     try {
-      let toPublish = payload;
-      if (mode === "json") {
-        toPublish = parseJsonToPayload(jsonText);
-      }
-      parseCourseAdminPayload(toPublish);
-      const data = (await adminRequest("publish-course", {
-        course: { ...toPublish, publishedAt: new Date().toISOString() },
-        publishNow: true,
-      })) as { course: CourseAdminPayload };
-      setPayload(data.course);
-      setJsonText(payloadToJsonString(data.course));
-      onStatus(`Published: ${data.course.slug}`);
-      await loadList();
-      setView("list");
+      await persistCourse({ publishNow: true, stayOnPage: false });
     } catch (e) {
       onStatus(e instanceof Error ? e.message : "Could not publish course");
     }
@@ -315,7 +277,7 @@ export default function CourseEditor({ adminRequest, onStatus }: CourseEditorPro
     onStatus("Importing from codebase...");
     try {
       await adminRequest("import-static-courses");
-      onStatus("Imported prompt-to-content course.");
+      onStatus("Imported all courses from codebase.");
       await loadList();
     } catch (e) {
       onStatus(e instanceof Error ? e.message : "Import failed");
@@ -557,12 +519,26 @@ export default function CourseEditor({ adminRequest, onStatus }: CourseEditorPro
         </div>
       )}
 
-      <button
-        type="submit"
-        className="self-start bg-orange px-6 py-3 font-mono text-xs uppercase tracking-widest text-background"
-      >
-        Publish course (EN + FA)
-      </button>
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          onClick={() => handleSave()}
+          className="border border-orange px-6 py-3 font-mono text-xs uppercase tracking-widest text-orange hover:bg-orange hover:text-background"
+        >
+          Save & update website
+        </button>
+        <button
+          type="submit"
+          className="bg-orange px-6 py-3 font-mono text-xs uppercase tracking-widest text-background"
+        >
+          Publish course (EN + FA)
+        </button>
+      </div>
+      <p className="font-dm text-xs text-cream/50 max-w-xl">
+        Use <strong className="text-cream/70">Save & update website</strong> after
+        editing sections — changes go live immediately when the course is already
+        published. Publish sets the course live if it was a draft.
+      </p>
     </form>
   );
 }

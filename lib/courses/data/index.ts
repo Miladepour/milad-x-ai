@@ -4,12 +4,14 @@ import type { Course } from "../types";
 import { COURSES_BASE_PATH, IRAN_TOMAN_PRICE_NOTE_FA } from "../constants";
 import { promptToContentCourseEn } from "./en";
 import { promptToContentCourseFa } from "./fa";
+import { promptToWebsiteCourseEn } from "./prompt-to-website-en";
+import { promptToWebsiteCourseFa } from "./prompt-to-website-fa";
 
 export { COURSES_BASE_PATH } from "../constants";
 
 const coursesByLocale: Record<Locale, Course[]> = {
-  EN: [promptToContentCourseEn],
-  FA: [promptToContentCourseFa],
+  EN: [promptToContentCourseEn, promptToWebsiteCourseEn],
+  FA: [promptToContentCourseFa, promptToWebsiteCourseFa],
 };
 
 export const courseSlugs = coursesByLocale.EN.map((c) => c.slug);

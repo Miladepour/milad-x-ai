@@ -46,7 +46,7 @@ export default function BookCall() {
           className="flex-shrink-0"
         >
           <Link
-            href={href("/contact")}
+            href={href("/consultation")}
             className="font-mono uppercase tracking-widest rtl:tracking-normal text-sm px-8 py-4 inline-block transition-opacity duration-200 hover:opacity-80"
             style={{
               backgroundColor: '#0D0D0D',

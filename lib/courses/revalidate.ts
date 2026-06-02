@@ -14,9 +14,11 @@ export function revalidateCoursePaths(slug: string) {
     "/fa/courses",
     `/fa/courses/${slug}`,
     `/fa/courses/${slug}/waitlist`,
+    "/sitemap.xml",
   ];
 
   for (const path of paths) {
-    revalidatePath(path);
+    revalidatePath(path, "layout");
+    revalidatePath(path, "page");
   }
 }

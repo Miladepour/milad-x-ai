@@ -21,6 +21,7 @@ import CourseSectionCard from "./CourseSectionCard";
 import CourseSectionNav, { type CourseSectionNavLink } from "./CourseSectionNav";
 import CourseStructureAccordion from "./CourseStructureAccordion";
 import CourseWhatYouLearn from "./CourseWhatYouLearn";
+import InstructorAboutSection from "@/components/shared/InstructorAboutSection";
 
 interface CourseDetailProps {
   course: Course;
@@ -51,6 +52,7 @@ export default function CourseDetail({ course }: CourseDetailProps) {
 
   const sectionNavLinks: CourseSectionNavLink[] = [
     { id: "curriculum", label: d.whatYouLearn },
+    { id: "instructor", label: d.courseTutor },
     { id: "structure", label: d.courseContent },
     { id: "includes", label: d.courseIncludes },
     { id: "audience", label: d.whoIsFor },
@@ -106,6 +108,8 @@ export default function CourseDetail({ course }: CourseDetailProps) {
               showAllLabel={d.showAll}
               showLessLabel={d.showLess}
             />
+
+            <InstructorAboutSection title={d.courseTutor} />
 
             <CourseStructureAccordion
               id="structure"

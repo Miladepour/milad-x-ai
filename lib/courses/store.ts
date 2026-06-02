@@ -10,7 +10,7 @@ import type { CourseLocaleRow, CourseRow } from "@/lib/supabase/database.types";
 import { createAdminDbClient } from "@/lib/supabase/admin-client";
 import { createCatalogClient } from "@/lib/supabase/catalog-client";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
-import { getStaticCourseAdminPayload } from "./import-static";
+import { getAllStaticCourseAdminPayloads } from "./import-static";
 import { parseCourseAdminPayload } from "./validate";
 
 import {
@@ -23,17 +23,16 @@ function useStaticFallback(): boolean {
   return !isSupabaseConfigured();
 }
 
-/** Public reads fall back to static course data when DB is unavailable or not migrated yet. */
+/**
+ * Public reads use Supabase when configured. Static data is only used when
+ * Supabase env vars are missing (local dev without DB).
+ */
 async function withPublicReadFallback<T>(
   query: () => Promise<T>,
   fallback: () => T
 ): Promise<T> {
   if (useStaticFallback()) return fallback();
-  try {
-    return await query();
-  } catch {
-    return fallback();
-  }
+  return query();
 }
 
 async function fetchPublishedCourses(): Promise<
@@ -260,7 +259,12 @@ export async function upsertCourse(raw: unknown): Promise<CourseAdminPayload> {
   return saved;
 }
 
-export async function importStaticCourses(): Promise<CourseAdminPayload> {
-  return upsertCourse(getStaticCourseAdminPayload());
+export async function importStaticCourses(): Promise<CourseAdminPayload[]> {
+  const payloads = getAllStaticCourseAdminPayloads();
+  const saved: CourseAdminPayload[] = [];
+  for (const payload of payloads) {
+    saved.push(await upsertCourse(payload));
+  }
+  return saved;
 }
 

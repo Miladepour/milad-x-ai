@@ -8,6 +8,7 @@ import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { localizedPath } from "@/lib/i18n/paths";
 import { COURSES_BASE_PATH } from "@/lib/courses";
+import { CONSULTATION_BASE_PATH } from "@/lib/consultation/constants";
 import { PORTFOLIO_BASE_PATH } from "@/lib/portfolio/constants";
 import type { UrlLocale } from "@/lib/i18n/config";
 
@@ -97,6 +98,15 @@ export default function Navbar() {
               {t.navbar.blog}
             </Link>
             <Link
+              href={href(CONSULTATION_BASE_PATH)}
+              className={navLinkClass(
+                isNavActive(pathname, CONSULTATION_BASE_PATH, urlLocale),
+                "desktop"
+              )}
+            >
+              {t.navbar.consultation}
+            </Link>
+            <Link
               href={href("/contact")}
               className={navLinkClass(isNavActive(pathname, "/contact", urlLocale), "desktop")}
             >
@@ -141,7 +151,7 @@ export default function Navbar() {
 
       <div
         className={`md:hidden overflow-hidden transition-all duration-300 ${
-          menuOpen ? "max-h-64 border-b border-surface" : "max-h-0"
+          menuOpen ? "max-h-80 border-b border-surface" : "max-h-0"
         } bg-background/95 backdrop-blur-md`}
       >
         <div className="flex flex-col px-8 py-4 gap-5">
@@ -178,6 +188,16 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
           >
             {t.navbar.blog}
+          </Link>
+          <Link
+            href={href(CONSULTATION_BASE_PATH)}
+            className={navLinkClass(
+              isNavActive(pathname, CONSULTATION_BASE_PATH, urlLocale),
+              "mobile"
+            )}
+            onClick={() => setMenuOpen(false)}
+          >
+            {t.navbar.consultation}
           </Link>
           <Link
             href={href("/contact")}
