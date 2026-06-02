@@ -12,7 +12,7 @@ export function parseJsonToPayload(raw: string): CourseAdminPayload {
 export function emptyCourseAdminPayload(): CourseAdminPayload {
   return {
     slug: "",
-    coverImage: "/images/milad-ai-prompt-to-content-master-class.jpeg",
+    coverImage: "",
     priceUsd: 0,
     sortOrder: 0,
     publishedAt: null,
@@ -24,6 +24,7 @@ export function emptyCourseAdminPayload(): CourseAdminPayload {
         excerpt: "",
         date: "",
         status: "Coming Soon",
+        priceToman: null,
         content: {
           meta: {
             instructor: "Milad",
@@ -52,6 +53,7 @@ export function emptyCourseAdminPayload(): CourseAdminPayload {
         excerpt: "",
         date: "",
         status: "Coming Soon",
+        priceToman: null,
         content: {
           meta: {
             instructor: "میلاد",

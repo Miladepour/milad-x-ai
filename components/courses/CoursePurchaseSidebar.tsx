@@ -1,7 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Course } from "@/lib/courses/types";
-import { formatCoursePrice } from "@/lib/courses";
+import {
+  formatCoursePrice,
+  formatCoursePriceTomanAmount,
+  IRAN_TOMAN_PRICE_NOTE_FA,
+} from "@/lib/courses";
 import type { Locale } from "@/lib/i18n/translations";
 import { toLocaleDigits } from "@/lib/i18n/digits";
 
@@ -55,9 +59,23 @@ export default function CoursePurchaseSidebar({
 
         <div className="p-5 md:p-6 border-t border-surface space-y-5">
           <div>
-            <p className="font-dm text-3xl font-bold text-cream leading-none">
-              {formatCoursePrice(course.priceUsd, lang)}
-            </p>
+            <div className="space-y-1">
+              <p className="font-dm text-3xl font-bold text-cream leading-none">
+                {formatCoursePrice(course.priceUsd, lang)}
+              </p>
+              {lang === "FA" &&
+                course.priceToman != null &&
+                course.priceToman > 0 && (
+                  <div className="space-y-1 pt-1">
+                    <p className="font-dm text-xs text-cream/65 leading-relaxed">
+                      {IRAN_TOMAN_PRICE_NOTE_FA}
+                    </p>
+                    <p className="font-dm text-xl font-semibold text-orange leading-tight">
+                      {formatCoursePriceTomanAmount(course.priceToman, lang)}
+                    </p>
+                  </div>
+                )}
+            </div>
             <p className="font-dm text-sm text-cream/70 mt-2">
               {labels.dateLabel}: {toLocaleDigits(course.date, lang)}
             </p>

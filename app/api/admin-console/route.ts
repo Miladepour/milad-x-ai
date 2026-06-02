@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { upsertBlogPost } from "@/lib/blog/store";
+import { revalidatePath } from "next/cache";
+import { getBlogPostAdmin, listBlogPostsAdmin, upsertBlogPost } from "@/lib/blog/store";
 import type { BlogPost } from "@/lib/blog/types";
 import {
   getCourseAdmin,
@@ -54,13 +55,42 @@ export async function POST(request: Request) {
       const post: BlogPost = await upsertBlogPost({
         locale,
         title: String(body.title ?? ""),
+        author: String(body.author ?? "Milad"),
         slug: String(body.slug ?? ""),
+        coverImage: body.coverImage ? String(body.coverImage) : null,
         excerpt: String(body.excerpt ?? ""),
         content: String(body.content ?? ""),
         date: String(body.date ?? ""),
         publishedAt: String(body.publishedAt ?? ""),
       });
 
+      // Refresh blog listing/detail and sitemap immediately after publish.
+      const blogPaths = [
+        "/blog",
+        `/blog/${post.slug}`,
+        "/en/blog",
+        `/en/blog/${post.slug}`,
+        "/fa/blog",
+        `/fa/blog/${post.slug}`,
+        "/sitemap.xml",
+      ];
+      for (const path of blogPaths) revalidatePath(path);
+
+      return NextResponse.json({ ok: true, post });
+    }
+
+    if (action === "list-posts") {
+      const posts = await listBlogPostsAdmin();
+      return NextResponse.json({ ok: true, posts });
+    }
+
+    if (action === "get-post") {
+      const slug = String(body.slug ?? "").trim();
+      const locale = body.locale === "FA" ? "FA" : "EN";
+      if (!slug) {
+        return NextResponse.json({ error: "slug is required" }, { status: 400 });
+      }
+      const post = await getBlogPostAdmin(slug, locale);
       return NextResponse.json({ ok: true, post });
     }
 

@@ -23,6 +23,8 @@ export interface CourseLocaleInput {
   excerpt: string;
   date: string;
   status: CourseStatus;
+  /** Iran display price in millions of Toman (FA only, e.g. 2.5). */
+  priceToman?: number | null;
   content: CourseLocaleContent;
 }
 

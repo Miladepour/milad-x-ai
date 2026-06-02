@@ -8,6 +8,8 @@ interface BlogPageProps {
   params: { locale: string };
 }
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: BlogPageProps): Promise<Metadata> {
   const locale = params.locale as UrlLocale;
   const internal = urlLocaleToInternal(locale);

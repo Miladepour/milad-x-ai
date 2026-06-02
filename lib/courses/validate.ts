@@ -81,6 +81,16 @@ function parseLocaleInput(value: unknown, label: string): CourseLocaleInput {
   const contentSource =
     value.content && isRecord(value.content) ? value.content : value;
 
+  const rawToman = value.priceToman;
+  const priceToman =
+    label === "FA" &&
+    rawToman !== null &&
+    rawToman !== undefined &&
+    rawToman !== "" &&
+    Number(rawToman) > 0
+      ? Math.round(Number(rawToman) * 100) / 100
+      : null;
+
   return {
     listTitle: requireString(value.listTitle, `${label} listTitle`),
     title: requireString(value.title, `${label} title`),
@@ -88,6 +98,7 @@ function parseLocaleInput(value: unknown, label: string): CourseLocaleInput {
     excerpt: requireString(value.excerpt, `${label} excerpt`),
     date: requireString(value.date, `${label} date`),
     status,
+    priceToman,
     content: parseLocaleContent(contentSource, label),
   };
 }
@@ -131,6 +142,7 @@ export function courseToAdminPayload(course: {
   slug: string;
   coverImage: string;
   priceUsd: number;
+  priceToman?: number | null;
   listTitle: string;
   title: string;
   subtitle: string;
@@ -150,6 +162,7 @@ export function courseToAdminPayload(course: {
     excerpt: course.excerpt,
     date: course.date,
     status: course.status,
+    priceToman: course.priceToman ?? null,
     content: {
       meta: course.meta,
       includes: course.includes,

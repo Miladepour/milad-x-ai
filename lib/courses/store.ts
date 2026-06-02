@@ -177,6 +177,7 @@ export async function getCourseAdmin(slug: string): Promise<CourseAdminPayload |
         excerpt: en.excerpt,
         date: en.date,
         status: en.status as CourseAdminPayload["locales"]["EN"]["status"],
+        priceToman: null,
         content: enContent,
       },
       FA: {
@@ -186,6 +187,8 @@ export async function getCourseAdmin(slug: string): Promise<CourseAdminPayload |
         excerpt: fa.excerpt,
         date: fa.date,
         status: fa.status as CourseAdminPayload["locales"]["FA"]["status"],
+        priceToman:
+          fa.price_toman != null ? Number(fa.price_toman) : null,
         content: faContent,
       },
     },
@@ -239,6 +242,10 @@ export async function upsertCourse(raw: unknown): Promise<CourseAdminPayload> {
       excerpt: loc.excerpt,
       date: loc.date,
       status: loc.status,
+      price_toman:
+        locale === "FA" && loc.priceToman != null && loc.priceToman > 0
+          ? loc.priceToman
+          : null,
       content: loc.content as unknown as Record<string, unknown>,
     };
 

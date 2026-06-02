@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Course } from "@/lib/courses/types";
-import { COURSES_BASE_PATH, formatCoursePrice } from "@/lib/courses";
+import { COURSES_BASE_PATH, formatCoursePriceDisplay } from "@/lib/courses";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
@@ -56,7 +56,7 @@ export default function CourseCard({ course }: CourseCardProps) {
           <span>
             <span className="text-cream/80">{p.priceLabel}: </span>
             <span className="text-orange font-semibold">
-              {formatCoursePrice(course.priceUsd, lang)}
+              {formatCoursePriceDisplay(course, lang)}
             </span>
           </span>
         </div>

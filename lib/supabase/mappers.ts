@@ -15,6 +15,8 @@ export function blogRowToPost(row: BlogPostRow): BlogPost {
   return {
     slug: row.slug,
     title: row.title,
+    author: row.author,
+    coverImage: row.cover_image,
     excerpt: row.excerpt,
     content: row.content,
     date: row.date,
@@ -30,6 +32,8 @@ export function blogPostToRow(
     slug: post.slug,
     locale: post.locale,
     title: post.title,
+    author: post.author,
+    cover_image: post.coverImage ?? null,
     excerpt: post.excerpt,
     content: post.content,
     date: post.date,
@@ -79,6 +83,8 @@ export function joinCourseRow(
     date: localeRow.date,
     coverImage: course.cover_image,
     priceUsd: Number(course.price_usd),
+    priceToman:
+      localeRow.price_toman != null ? Number(localeRow.price_toman) : null,
     meta: content.meta,
     includes: content.includes ?? [],
     insights: content.insights,

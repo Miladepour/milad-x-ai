@@ -58,6 +58,8 @@ export interface Course {
   date: string;
   coverImage: string;
   priceUsd: number;
+  /** Optional Iran price in millions of Toman (FA pages only). */
+  priceToman?: number | null;
   meta: CourseMeta;
   includes: CourseInclude[];
   insights: CourseInsights;

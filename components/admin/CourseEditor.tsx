@@ -1,9 +1,10 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import Image from "next/image";
+import { FormEvent, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type { CourseAdminPayload, CourseListItem } from "@/lib/courses/cms-types";
 import type { CourseStatus } from "@/lib/courses/types";
-import { parseCourseAdminPayload } from "@/lib/courses/validate";
+import { normalizeSlug, parseCourseAdminPayload } from "@/lib/courses/validate";
 import {
   emptyCourseAdminPayload,
   payloadToJsonString,
@@ -19,6 +20,26 @@ interface CourseEditorProps {
 
 const STATUSES: CourseStatus[] = ["Live", "Coming Soon", "Closed"];
 
+function LabeledField({
+  label,
+  hint,
+  children,
+  className = "",
+}: {
+  label: string;
+  hint?: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <label className={`flex flex-col gap-1.5 font-dm text-xs text-cream/80 ${className}`}>
+      <span className="font-mono text-[10px] uppercase tracking-widest text-orange">{label}</span>
+      {hint ? <span className="text-cream/50 normal-case tracking-normal">{hint}</span> : null}
+      {children}
+    </label>
+  );
+}
+
 function LocaleFields({
   label,
   locale,
@@ -33,49 +54,78 @@ function LocaleFields({
   return (
     <div className="flex flex-col gap-3 border border-surface bg-surface/20 p-4">
       <h3 className="font-mono text-xs uppercase tracking-widest text-orange">{label}</h3>
-      <input
-        className="form-field"
-        placeholder="List title"
-        value={data.listTitle}
-        onChange={(e) => onChange({ ...data, listTitle: e.target.value })}
-      />
-      <input
-        className="form-field"
-        placeholder="Page title"
-        value={data.title}
-        onChange={(e) => onChange({ ...data, title: e.target.value })}
-      />
-      <input
-        className="form-field"
-        placeholder="Subtitle"
-        value={data.subtitle}
-        onChange={(e) => onChange({ ...data, subtitle: e.target.value })}
-      />
-      <textarea
-        className="form-field min-h-20"
-        placeholder="Excerpt"
-        value={data.excerpt}
-        onChange={(e) => onChange({ ...data, excerpt: e.target.value })}
-      />
-      <input
-        className="form-field"
-        placeholder="Display date"
-        value={data.date}
-        onChange={(e) => onChange({ ...data, date: e.target.value })}
-      />
-      <select
-        className="form-field"
-        value={data.status}
-        onChange={(e) =>
-          onChange({ ...data, status: e.target.value as CourseStatus })
-        }
-      >
-        {STATUSES.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
+      <LabeledField label="List title (card / menu)">
+        <input
+          className="form-field"
+          value={data.listTitle}
+          onChange={(e) => onChange({ ...data, listTitle: e.target.value })}
+        />
+      </LabeledField>
+      <LabeledField label="Page title">
+        <input
+          className="form-field"
+          value={data.title}
+          onChange={(e) => onChange({ ...data, title: e.target.value })}
+        />
+      </LabeledField>
+      <LabeledField label="Subtitle">
+        <input
+          className="form-field"
+          value={data.subtitle}
+          onChange={(e) => onChange({ ...data, subtitle: e.target.value })}
+        />
+      </LabeledField>
+      <LabeledField label="Excerpt">
+        <textarea
+          className="form-field min-h-20"
+          value={data.excerpt}
+          onChange={(e) => onChange({ ...data, excerpt: e.target.value })}
+        />
+      </LabeledField>
+      <LabeledField label="Display date">
+        <input
+          className="form-field"
+          value={data.date}
+          onChange={(e) => onChange({ ...data, date: e.target.value })}
+        />
+      </LabeledField>
+      <LabeledField label="Status">
+        <select
+          className="form-field"
+          value={data.status}
+          onChange={(e) =>
+            onChange({ ...data, status: e.target.value as CourseStatus })
+          }
+        >
+          {STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </LabeledField>
+      {locale === "FA" && (
+        <LabeledField
+          label="Price (million Toman, Iran)"
+          hint="Optional. Enter millions, e.g. 2.5 for 2.5 million Toman. USD is set above."
+        >
+          <input
+            type="number"
+            min={0}
+            step={0.1}
+            className="form-field"
+            value={data.priceToman ?? ""}
+            onChange={(e) => {
+              const raw = e.target.value.trim();
+              onChange({
+                ...data,
+                priceToman:
+                  raw === "" ? null : Math.round(Number(raw) * 100) / 100,
+              });
+            }}
+          />
+        </LabeledField>
+      )}
       <label className="font-dm text-xs text-cream/70">
         Includes (one per line)
         <textarea
@@ -181,6 +231,9 @@ export default function CourseEditor({ adminRequest, onStatus }: CourseEditorPro
   const [mode, setMode] = useState<EditorMode>("form");
   const [payload, setPayload] = useState<CourseAdminPayload>(emptyCourseAdminPayload());
   const [jsonText, setJsonText] = useState(payloadToJsonString(emptyCourseAdminPayload()));
+  const [slugEdited, setSlugEdited] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadList = useCallback(async () => {
     const data = (await adminRequest("list-courses")) as { courses: CourseListItem[] };
@@ -197,6 +250,7 @@ export default function CourseEditor({ adminRequest, onStatus }: CourseEditorPro
     const empty = emptyCourseAdminPayload();
     setPayload(empty);
     setJsonText(payloadToJsonString(empty));
+    setSlugEdited(false);
     setMode("form");
     setView("edit");
   };
@@ -212,6 +266,7 @@ export default function CourseEditor({ adminRequest, onStatus }: CourseEditorPro
     }
     setPayload(data.course);
     setJsonText(payloadToJsonString(data.course));
+    setSlugEdited(true); // existing course — don't auto-overwrite slug
     setMode("form");
     setView("edit");
     onStatus("");
@@ -359,36 +414,116 @@ export default function CourseEditor({ adminRequest, onStatus }: CourseEditorPro
       </div>
 
       <div className="grid gap-4 border border-surface bg-surface/20 p-4 md:grid-cols-2">
-        <input
-          className="form-field md:col-span-2"
-          placeholder="slug (url)"
-          value={payload.slug}
-          onChange={(e) => setPayload({ ...payload, slug: e.target.value })}
-        />
-        <input
-          className="form-field"
-          placeholder="Cover image path"
-          value={payload.coverImage}
-          onChange={(e) => setPayload({ ...payload, coverImage: e.target.value })}
-        />
-        <input
-          type="number"
-          className="form-field"
-          placeholder="Price USD"
-          value={payload.priceUsd}
-          onChange={(e) =>
-            setPayload({ ...payload, priceUsd: Number(e.target.value) })
-          }
-        />
-        <input
-          type="number"
-          className="form-field"
-          placeholder="Sort order"
-          value={payload.sortOrder}
-          onChange={(e) =>
-            setPayload({ ...payload, sortOrder: Number(e.target.value) })
-          }
-        />
+        {/* Slug — auto-generated from EN list title, editable */}
+        <LabeledField
+          label="Slug (URL)"
+          hint="Auto-filled from English title. Edit if needed."
+          className="md:col-span-2"
+        >
+          <input
+            className="form-field font-mono"
+            value={payload.slug}
+            onChange={(e) => {
+              setSlugEdited(true);
+              setPayload({ ...payload, slug: e.target.value });
+            }}
+          />
+        </LabeledField>
+
+        {/* Cover image upload */}
+        <LabeledField
+          label="Cover image"
+          hint="Upload a JPEG, PNG or WebP (max 5 MB). The URL is saved automatically."
+          className="md:col-span-2"
+        >
+          <div className="flex flex-col gap-3">
+            {/* Preview */}
+            {payload.coverImage && (
+              <div className="relative h-36 w-full overflow-hidden rounded-sm border border-surface bg-background">
+                <Image
+                  src={payload.coverImage}
+                  alt="Cover preview"
+                  fill
+                  className="object-cover"
+                  sizes="600px"
+                  unoptimized={payload.coverImage.startsWith("http")}
+                />
+              </div>
+            )}
+
+            {/* Upload button */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setImageUploading(true);
+                onStatus("Uploading image…");
+                try {
+                  const form = new FormData();
+                  form.append("file", file);
+                  form.append("slug", payload.slug || "course");
+                  const res = await fetch("/api/admin-upload", {
+                    method: "POST",
+                    body: form,
+                  });
+                  const json = (await res.json()) as { ok?: boolean; url?: string; error?: string };
+                  if (!res.ok || !json.url) throw new Error(json.error ?? "Upload failed");
+                  setPayload((prev) => ({ ...prev, coverImage: json.url! }));
+                  onStatus("Image uploaded ✓");
+                } catch (err) {
+                  onStatus(err instanceof Error ? err.message : "Upload failed");
+                } finally {
+                  setImageUploading(false);
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }
+              }}
+            />
+            <div className="flex gap-2 items-center flex-wrap">
+              <button
+                type="button"
+                disabled={imageUploading}
+                onClick={() => fileInputRef.current?.click()}
+                className="border border-orange px-4 py-2 font-mono text-xs uppercase tracking-widest text-orange hover:bg-orange hover:text-background disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {imageUploading ? "Uploading…" : payload.coverImage ? "Replace image" : "Upload image"}
+              </button>
+              {/* Manual URL override */}
+              <input
+                className="form-field flex-1 min-w-0 font-mono text-xs"
+                placeholder="Or paste a URL / path"
+                value={payload.coverImage}
+                onChange={(e) => setPayload({ ...payload, coverImage: e.target.value })}
+              />
+            </div>
+          </div>
+        </LabeledField>
+
+        <LabeledField label="Price (USD)" hint="Shown on EN and FA pages">
+          <input
+            type="number"
+            min={0}
+            step={1}
+            className="form-field"
+            value={payload.priceUsd}
+            onChange={(e) =>
+              setPayload({ ...payload, priceUsd: Number(e.target.value) })
+            }
+          />
+        </LabeledField>
+        <LabeledField label="Sort order" hint="Lower numbers appear first in listings">
+          <input
+            type="number"
+            className="form-field"
+            value={payload.sortOrder}
+            onChange={(e) =>
+              setPayload({ ...payload, sortOrder: Number(e.target.value) })
+            }
+          />
+        </LabeledField>
       </div>
 
       {mode === "json" ? (
@@ -404,7 +539,14 @@ export default function CourseEditor({ adminRequest, onStatus }: CourseEditorPro
             label="English"
             locale="EN"
             data={payload.locales.EN}
-            onChange={(EN) => setPayload({ ...payload, locales: { ...payload.locales, EN } })}
+            onChange={(EN) => {
+              // Auto-generate slug from English list title unless user has manually edited it
+              const next: CourseAdminPayload = { ...payload, locales: { ...payload.locales, EN } };
+              if (!slugEdited) {
+                next.slug = normalizeSlug(EN.listTitle);
+              }
+              setPayload(next);
+            }}
           />
           <LocaleFields
             label="Farsi"

@@ -1,12 +1,15 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BlogPost } from "@/lib/blog/types";
 import type { ContactSubmission } from "@/lib/contact/types";
 import type { WaitlistSubmission } from "@/lib/courses/types";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import CourseEditor from "@/components/admin/CourseEditor";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
 
 type AdminTab = "blog" | "contact" | "waitlist" | "courses";
 
@@ -62,11 +65,32 @@ export default function AdminPanel() {
     locale: "EN",
     title: "",
     slug: "",
+    author: "Milad",
+    coverImage: "",
     excerpt: "",
     content: "",
     date: todayLabel(),
     publishedAt: new Date().toISOString().slice(0, 10),
   });
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+
+  const editor = useEditor({
+    extensions: [StarterKit, Image],
+    content: post.content || "<p></p>",
+    editorProps: {
+      attributes: {
+        class:
+          "min-h-[360px] rounded-sm border border-surface bg-background/20 p-4 font-dm text-base leading-relaxed text-cream focus:outline-none",
+      },
+    },
+    onUpdate({ editor }) {
+      setPost((current) => ({ ...current, content: editor.getHTML() }));
+    },
+  });
+
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const inlineImageInputRef = useRef<HTMLInputElement>(null);
+  const [blogImageUploading, setBlogImageUploading] = useState(false);
 
   const generatedSlug = useMemo(() => slugify(post.title), [post.title]);
 
@@ -90,10 +114,15 @@ export default function AdminPanel() {
     return data;
   }, [adminRequest]);
 
-  async function loadSummary() {
+  const loadSummary = useCallback(async () => {
     const data = (await adminRequest("summary")) as AdminSummary;
     setSummary(data);
-  }
+  }, [adminRequest]);
+
+  const loadBlogPosts = useCallback(async () => {
+    const data = (await adminRequest("list-posts")) as { posts: BlogPost[] };
+    setBlogPosts(data.posts ?? []);
+  }, [adminRequest]);
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -145,6 +174,7 @@ export default function AdminPanel() {
       const publishedAt = new Date(post.publishedAt).toISOString();
       const data = (await adminRequest("publish-post", {
         ...post,
+        coverImage: post.coverImage || null,
         slug: post.slug || generatedSlug,
         publishedAt,
       })) as { post: BlogPost };
@@ -152,9 +182,30 @@ export default function AdminPanel() {
         ...current,
         slug: data.post.slug,
       }));
+      await loadBlogPosts();
       setStatus(`Published: ${data.post.title}`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not publish post.");
+    }
+  }
+
+  async function uploadBlogImage(file: File, kind: "cover" | "inline") {
+    setBlogImageUploading(true);
+    setStatus("Uploading image…");
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("slug", post.slug || generatedSlug || "blog");
+      form.append("bucket", "blog-images");
+      form.append("kind", kind);
+      const res = await fetch("/api/admin-upload", { method: "POST", body: form });
+      const json = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok || !json.url) throw new Error(json.error || "Upload failed");
+      setStatus("Image uploaded ✓");
+      return json.url;
+    } finally {
+      setBlogImageUploading(false);
+      window.setTimeout(() => setStatus(""), 900);
     }
   }
 
@@ -183,10 +234,19 @@ export default function AdminPanel() {
 
   useEffect(() => {
     if (!isUnlocked) return;
-    loadSummary().catch((error) => {
+    Promise.all([loadSummary(), loadBlogPosts()]).catch((error) => {
       setStatus(error instanceof Error ? error.message : "Could not refresh inbox.");
     });
-  }, [isUnlocked]);
+  }, [isUnlocked, loadBlogPosts, loadSummary]);
+
+  useEffect(() => {
+    if (!editor) return;
+    const current = editor.getHTML();
+    const next = post.content || "<p></p>";
+    if (current !== next) {
+      editor.commands.setContent(next, { emitUpdate: false });
+    }
+  }, [editor, post.content]);
 
   if (!authChecked) {
     return (
@@ -325,6 +385,52 @@ export default function AdminPanel() {
                 className="form-field"
                 placeholder={`Slug, blank uses ${generatedSlug || "post-title"}`}
               />
+              <div className="grid gap-3 md:grid-cols-2">
+                <input
+                  value={post.author}
+                  onChange={(event) =>
+                    setPost((current) => ({ ...current, author: event.target.value }))
+                  }
+                  className="form-field"
+                  placeholder="Author (e.g. Milad)"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    disabled={blogImageUploading}
+                    onClick={() => coverInputRef.current?.click()}
+                    className="border border-orange px-4 py-2 font-mono text-xs uppercase tracking-widest text-orange hover:bg-orange hover:text-background disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {blogImageUploading ? "Uploading…" : "Upload cover"}
+                  </button>
+                  <input
+                    value={post.coverImage}
+                    onChange={(event) =>
+                      setPost((current) => ({ ...current, coverImage: event.target.value }))
+                    }
+                    className="form-field flex-1 font-mono text-xs"
+                    placeholder="Cover image URL (optional)"
+                  />
+                  <input
+                    ref={coverInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        const url = await uploadBlogImage(file, "cover");
+                        setPost((c) => ({ ...c, coverImage: url }));
+                      } catch (err) {
+                        setStatus(err instanceof Error ? err.message : "Upload failed");
+                      } finally {
+                        if (coverInputRef.current) coverInputRef.current.value = "";
+                      }
+                    }}
+                  />
+                </div>
+              </div>
               <textarea
                 value={post.excerpt}
                 onChange={(event) =>
@@ -333,23 +439,139 @@ export default function AdminPanel() {
                 className="form-field min-h-28"
                 placeholder="Short excerpt for the blog listing"
               />
-              <textarea
-                value={post.content}
-                onChange={(event) =>
-                  setPost((current) => ({ ...current, content: event.target.value }))
-                }
-                className="form-field min-h-[360px]"
-                placeholder="Full post content. Separate paragraphs with blank lines."
-              />
+              <div className="border border-surface rounded-sm bg-surface/20">
+                <div className="flex flex-wrap gap-2 border-b border-surface p-3">
+                  <button
+                    type="button"
+                    className="border border-surface px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-cream hover:border-orange hover:text-orange"
+                    onClick={() => editor?.chain().focus().toggleBold().run()}
+                  >
+                    Bold
+                  </button>
+                  <button
+                    type="button"
+                    className="border border-surface px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-cream hover:border-orange hover:text-orange"
+                    onClick={() => editor?.chain().focus().toggleItalic().run()}
+                  >
+                    Italic
+                  </button>
+                  <button
+                    type="button"
+                    className="border border-surface px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-cream hover:border-orange hover:text-orange"
+                    onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
+                  >
+                    H2
+                  </button>
+                  <button
+                    type="button"
+                    className="border border-surface px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-cream hover:border-orange hover:text-orange"
+                    onClick={() => editor?.chain().focus().toggleBulletList().run()}
+                  >
+                    List
+                  </button>
+                  <button
+                    type="button"
+                    className="border border-surface px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-cream hover:border-orange hover:text-orange"
+                    onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+                  >
+                    1-2-3
+                  </button>
+                  <button
+                    type="button"
+                    disabled={blogImageUploading}
+                    className="border border-orange px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-orange hover:bg-orange hover:text-background disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => inlineImageInputRef.current?.click()}
+                  >
+                    Image
+                  </button>
+                  <input
+                    ref={inlineImageInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        const url = await uploadBlogImage(file, "inline");
+                        editor?.chain().focus().setImage({ src: url }).run();
+                      } catch (err) {
+                        setStatus(err instanceof Error ? err.message : "Upload failed");
+                      } finally {
+                        if (inlineImageInputRef.current) inlineImageInputRef.current.value = "";
+                      }
+                    }}
+                  />
+                </div>
+                <EditorContent editor={editor} />
+              </div>
             </div>
 
             <aside className="flex flex-col gap-4 border border-surface bg-surface/30 p-5">
+              <button
+                type="button"
+                onClick={() => {
+                  setPost({
+                    locale: "EN",
+                    title: "",
+                    slug: "",
+                    author: "Milad",
+                    coverImage: "",
+                    excerpt: "",
+                    content: "",
+                    date: todayLabel(),
+                    publishedAt: new Date().toISOString().slice(0, 10),
+                  });
+                  setStatus("Ready for a new post.");
+                }}
+                className="border border-surface px-4 py-2 font-mono text-xs uppercase tracking-widest text-cream hover:border-orange hover:text-orange"
+              >
+                New post
+              </button>
+              <div className="max-h-64 overflow-auto border border-surface bg-background/30">
+                {blogPosts.length === 0 ? (
+                  <p className="p-3 font-dm text-xs text-cream/60">No published posts yet.</p>
+                ) : (
+                  <ul className="divide-y divide-surface">
+                    {blogPosts.map((item) => (
+                      <li key={`${item.slug}-${item.locale}`}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPost({
+                              locale: item.locale,
+                              title: item.title,
+                              slug: item.slug,
+                              author: item.author,
+                              coverImage: item.coverImage ?? "",
+                              excerpt: item.excerpt,
+                              content: item.content,
+                              date: item.date,
+                              publishedAt: item.publishedAt.slice(0, 10),
+                            });
+                            setStatus(`Loaded: ${item.title} (${item.locale})`);
+                          }}
+                          className="w-full px-3 py-2 text-left hover:bg-surface/40"
+                        >
+                          <p className="font-dm text-sm text-cream">{item.title}</p>
+                          <p className="font-mono text-[10px] uppercase tracking-widest text-cream/60">
+                            {item.locale} · {item.slug}
+                          </p>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
               <label className="flex flex-col gap-2 font-dm text-sm text-cream/80">
                 Language
                 <select
                   value={post.locale}
                   onChange={(event) =>
-                    setPost((current) => ({ ...current, locale: event.target.value }))
+                    setPost((current) => ({
+                      ...current,
+                      locale: (event.target.value === "FA" ? "FA" : "EN") as "EN" | "FA",
+                    }))
                   }
                   className="form-field"
                 >

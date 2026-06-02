@@ -47,6 +47,8 @@ export async function getAllBlogSlugs(): Promise<string[]> {
 export async function upsertBlogPost(input: {
   slug?: string;
   title: string;
+  author: string;
+  coverImage?: string | null;
   excerpt: string;
   content: string;
   date: string;
@@ -54,12 +56,14 @@ export async function upsertBlogPost(input: {
   locale: "EN" | "FA";
 }): Promise<BlogPost> {
   const title = input.title.trim();
+  const author = input.author.trim();
   const excerpt = input.excerpt.trim();
   const content = input.content.trim();
   const date = input.date.trim();
   const slug = normalizeSlug(input.slug || title);
 
   if (title.length < 3) throw new Error("Title is too short");
+  if (author.length < 2) throw new Error("Author is required");
   if (!slug) throw new Error("Slug is required");
   if (excerpt.length < 10) throw new Error("Excerpt is too short");
   if (content.length < 20) throw new Error("Content is too short");
@@ -69,6 +73,8 @@ export async function upsertBlogPost(input: {
   const post: BlogPost = {
     slug,
     title,
+    author,
+    coverImage: input.coverImage ?? null,
     excerpt,
     content,
     date,
@@ -84,5 +90,35 @@ export async function upsertBlogPost(input: {
     .single();
 
   if (error) throw new Error(error.message);
+  return blogRowToPost(data as import("@/lib/supabase/database.types").BlogPostRow);
+}
+
+export async function listBlogPostsAdmin(): Promise<BlogPost[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .order("published_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row) =>
+    blogRowToPost(row as import("@/lib/supabase/database.types").BlogPostRow)
+  );
+}
+
+export async function getBlogPostAdmin(
+  slug: string,
+  locale: "EN" | "FA"
+): Promise<BlogPost | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .eq("slug", slug)
+    .eq("locale", locale)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!data) return null;
   return blogRowToPost(data as import("@/lib/supabase/database.types").BlogPostRow);
 }

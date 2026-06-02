@@ -13,6 +13,8 @@ export interface BlogPostRow {
   slug: string;
   locale: LocaleCode;
   title: string;
+  author: string;
+  cover_image: string | null;
   excerpt: string;
   content: string;
   date: string;
@@ -66,6 +68,7 @@ export interface CourseLocaleRow {
   date: string;
   status: string;
   content: Record<string, unknown>;
+  price_toman: number | null;
 }
 
 type TableDef<Row, Insert, Update> = {

@@ -13,7 +13,7 @@ export type {
   CourseLocaleContent,
   CourseLocaleInput,
 } from "./cms-types";
-export { COURSES_BASE_PATH } from "./constants";
+export { COURSES_BASE_PATH, IRAN_TOMAN_PRICE_NOTE_FA } from "./constants";
 export {
   getCurriculumItems,
   getItemBlocks,
@@ -22,6 +22,12 @@ export {
   getSection,
   parseStructureModules,
 } from "./sections";
-export { getWaitlistPath, formatCoursePrice } from "./data/index";
+export {
+  getWaitlistPath,
+  formatCoursePrice,
+  formatCoursePriceToman,
+  formatCoursePriceTomanAmount,
+  formatCoursePriceDisplay,
+} from "./data/index";
 export type { WaitlistSubmission } from "./types";
 export { parseCourseAdminPayload, normalizeSlug, courseToAdminPayload } from "./validate";

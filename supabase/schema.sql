@@ -26,6 +26,8 @@ create table if not exists public.blog_posts (
   slug text not null,
   locale text not null check (locale in ('EN', 'FA')),
   title text not null,
+  author text not null default 'Milad',
+  cover_image text,
   excerpt text not null,
   content text not null,
   date text not null,
@@ -104,6 +106,7 @@ create table if not exists public.course_locales (
   date text not null,
   status text not null check (status in ('Live', 'Coming Soon', 'Closed')),
   content jsonb not null default '{}'::jsonb,
+  price_toman numeric(10, 2),
   unique (course_id, locale)
 );
 
