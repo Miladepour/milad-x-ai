@@ -9,9 +9,8 @@ export const promptToWebsiteCourseFa: Course = {
     "دوره‌ای مناسب مبتدیان برای ساخت وب‌سایت‌های مدرن نمونه‌کار و کسب‌وکار با AI — بدون نیاز به پیش‌زمینه برنامه‌نویسی. وایب‌کدینگ با Claude Code، GitHub، انتشار رایگان، دامنه اختصاصی و تبدیل این مهارت به درآمد.",
   status: "Live",
   date: "۱۴ ژوئن ۲۰۲۶",
-  coverImage: "/images/milad-hero2.jpg",
-  priceUsd: 59,
-  priceToman: 10,
+  coverImage: "/images/prompt-to-website-cover.png",
+  priceUsd: 75,
   meta: {
     instructor: "میلاد",
     format: "دوره آنلاین زنده",

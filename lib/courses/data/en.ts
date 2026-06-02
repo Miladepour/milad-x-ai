@@ -9,8 +9,8 @@ export const promptToContentCourseEn: Course = {
     "A hands-on intensive workshop to learn AI content creation the right way — from ideation and prompt writing to images, video, ads, and automation with Claude AI.",
   status: "Live",
   date: "21 Jun 2026",
-  coverImage: "/images/milad-ai-prompt-to-content-master-class.jpeg",
-  priceUsd: 59,
+  coverImage: "/images/prompt-to-content-cover.png",
+  priceUsd: 75,
   meta: {
     instructor: "Milad",
     format: "Live online workshop",

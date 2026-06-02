@@ -9,6 +9,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import type { PortfolioReel } from "@/lib/portfolio/media";
+import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const CARD_WIDTH = 220;
@@ -55,6 +56,8 @@ export default function ReelCoverFlowCarousel({
 }: ReelCoverFlowCarouselProps) {
   const t = useTranslation();
   const w = t.aiwork;
+  const { lang } = useLanguage();
+  const isRtl = lang === "FA";
   const [activeIndex, setActiveIndex] = useState(0);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [dragX, setDragX] = useState(0);
@@ -149,36 +152,53 @@ export default function ReelCoverFlowCarousel({
   if (reels.length === 0) return null;
 
   const arrowClass =
-    "absolute top-1/2 z-40 flex h-11 w-11 md:h-12 md:w-12 -translate-y-1/2 items-center justify-center rounded-full border-2 border-orange bg-orange/15 text-orange shadow-[0_0_20px_rgba(255,92,0,0.25)] backdrop-blur-sm transition-all duration-200 hover:bg-orange hover:text-background hover:shadow-[0_0_24px_rgba(255,92,0,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+    "pointer-events-auto absolute top-1/2 z-50 flex h-11 w-11 md:h-12 md:w-12 -translate-y-1/2 items-center justify-center rounded-full border-2 border-orange bg-background/90 text-orange shadow-[0_0_20px_rgba(255,92,0,0.25)] backdrop-blur-sm transition-all duration-200 hover:bg-orange hover:text-background hover:shadow-[0_0_24px_rgba(255,92,0,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    goPrev();
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    goNext();
+  };
 
   return (
-    <div className="relative w-full select-none" aria-label={ariaLabel}>
+    <div className="relative w-full overflow-visible select-none" aria-label={ariaLabel}>
       <button
         type="button"
-        onClick={goPrev}
-        className={`${arrowClass} left-0 md:-left-2`}
+        onClick={handlePrev}
+        className={`${arrowClass} start-0 -ms-1 md:-ms-2`}
         aria-label={w.scrollPrev}
       >
-        <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" aria-hidden />
+        {isRtl ? (
+          <ChevronRight className="h-5 w-5 md:h-6 md:w-6" aria-hidden />
+        ) : (
+          <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" aria-hidden />
+        )}
       </button>
 
       <button
         type="button"
-        onClick={goNext}
-        className={`${arrowClass} right-0 md:-right-2`}
+        onClick={handleNext}
+        className={`${arrowClass} end-0 -me-1 md:-me-2`}
         aria-label={w.scrollNext}
       >
-        <ChevronRight className="h-5 w-5 md:h-6 md:w-6" aria-hidden />
+        {isRtl ? (
+          <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" aria-hidden />
+        ) : (
+          <ChevronRight className="h-5 w-5 md:h-6 md:w-6" aria-hidden />
+        )}
       </button>
 
       <div
-        className="relative mx-auto h-[min(72vh,520px)] max-h-[520px] w-full cursor-grab active:cursor-grabbing touch-pan-y px-12 md:px-14"
+        className="relative mx-auto h-[min(72vh,520px)] max-h-[520px] w-full cursor-grab active:cursor-grabbing touch-pan-x px-12 md:px-14"
         style={{ perspective: "1400px" }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        onPointerLeave={onPointerUp}
       >
         <div
           className="absolute inset-0 flex items-center justify-center"

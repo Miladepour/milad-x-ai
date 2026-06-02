@@ -24,7 +24,7 @@ export default function AIWork() {
       ref={ref}
       className="w-full bg-background py-28 px-8 md:px-12 lg:px-16"
     >
-      <div className="max-w-6xl mx-auto overflow-visible">
+      <div className="max-w-6xl mx-auto overflow-visible px-1">
 
         <div className="mb-14">
           <motion.span

@@ -12,7 +12,7 @@ export default function PortfolioPageContent() {
 
   return (
     <div className="flex-1 w-full bg-background text-cream">
-      <div className="max-w-6xl mx-auto px-8 md:px-12 lg:px-16 pt-32 pb-24">
+      <div className="max-w-6xl mx-auto overflow-visible px-8 md:px-12 lg:px-16 pt-32 pb-24">
         <Link
           href={href("/")}
           className="font-dm text-sm text-muted hover:text-cream transition-colors mb-10 inline-block"

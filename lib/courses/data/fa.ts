@@ -9,8 +9,8 @@ export const promptToContentCourseFa: Course = {
     "ورکشاپ عملی و فشرده برای یادگیری اصولی تولید محتوا با هوش مصنوعی — از ایده‌پردازی و پرامپت‌نویسی تا تصویر، ویدیو، تبلیغات و اتوماتیک‌سازی با Claude AI.",
   status: "Live",
   date: "۲۱ ژوئن ۲۰۲۶",
-  coverImage: "/images/milad-ai-prompt-to-content-master-class.jpeg",
-  priceUsd: 59,
+  coverImage: "/images/prompt-to-content-cover.png",
+  priceUsd: 75,
   meta: {
     instructor: "میلاد",
     format: "ورکشاپ آنلاین زنده",

@@ -9,8 +9,8 @@ export const promptToWebsiteCourseEn: Course = {
     "A beginner-friendly course for anyone who wants to create modern portfolio and business websites using AI — no coding background needed. Learn vibe coding with Claude Code, GitHub, free publishing, custom domains, and how to turn this skill into income.",
   status: "Live",
   date: "14 Jun 2026",
-  coverImage: "/images/milad-hero2.jpg",
-  priceUsd: 59,
+  coverImage: "/images/prompt-to-website-cover.png",
+  priceUsd: 75,
   meta: {
     instructor: "Milad",
     format: "Live online course",

@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Course } from "@/lib/courses/types";
-import { COURSES_BASE_PATH, formatCoursePriceDisplay } from "@/lib/courses";
+import { COURSES_BASE_PATH, formatCoursePrice } from "@/lib/courses";
+import CourseIranTelegramNote from "./CourseIranTelegramNote";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
@@ -48,17 +49,20 @@ export default function CourseCard({ course }: CourseCardProps) {
           </span>
         </div>
 
-        <div className="flex flex-wrap gap-4 font-dm text-sm text-cream">
-          <span>
-            <span className="text-cream/80">{p.dateLabel}: </span>
-            {course.date}
-          </span>
-          <span>
-            <span className="text-cream/80">{p.priceLabel}: </span>
-            <span className="text-orange font-semibold">
-              {formatCoursePriceDisplay(course, lang)}
+        <div className="flex flex-col gap-2 font-dm text-sm text-cream">
+          <div className="flex flex-wrap gap-4">
+            <span>
+              <span className="text-cream/80">{p.dateLabel}: </span>
+              {course.date}
             </span>
-          </span>
+            <span>
+              <span className="text-cream/80">{p.priceLabel}: </span>
+              <span className="text-orange font-semibold">
+                {formatCoursePrice(course.priceUsd, lang)}
+              </span>
+            </span>
+          </div>
+          <CourseIranTelegramNote lang={lang} />
         </div>
 
         <h2 className="type-course-card-title font-dm font-semibold text-cream group-hover:text-orange transition-colors">

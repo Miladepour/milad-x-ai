@@ -126,6 +126,8 @@ export const translations = {
       readyCta: "Ready to join the first workshop?",
       dateLabel: "Date",
       priceLabel: "Price",
+      iranJoinHint: "Joining from Iran?",
+      iranJoinTelegram: "Message us on Telegram",
       insights: {
         audienceTitle: "Good for",
         topicsTitle: "Topics",
@@ -399,6 +401,8 @@ export const translations = {
       readyCta: "آماده عضویت در ورکشاپ اول هستید؟",
       dateLabel: "تاریخ",
       priceLabel: "قیمت",
+      iranJoinHint: "برای ثبت‌نام از ایران،",
+      iranJoinTelegram: "در تلگرام به ما پیام دهید",
       insights: {
         audienceTitle: "مناسب برای",
         topicsTitle: "موضوعات",
