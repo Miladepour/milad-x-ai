@@ -8,7 +8,7 @@ export const promptToContentCourseFa: Course = {
   excerpt:
     "ورکشاپ عملی و فشرده برای یادگیری اصولی تولید محتوا با هوش مصنوعی — از ایده‌پردازی و پرامپت‌نویسی تا تصویر، ویدیو، تبلیغات و اتوماتیک‌سازی با Claude AI.",
   status: "Live",
-  date: "۲۱ ژوئن ۲۰۲۶",
+  date: "۲۸ ژوئن ۲۰۲۶",
   coverImage: "/images/prompt-to-content-cover.png",
   priceUsd: 75,
   meta: {
@@ -18,8 +18,8 @@ export const promptToContentCourseFa: Course = {
     partsCount: 2,
     timezone: "وقت لندن، انگلستان",
     sessions: [
-      { id: "1", date: "۲۱ ژوئن ۲۰۲۶", time: "16:00", durationHours: 4 },
-      { id: "2", date: "۲۴ ژوئن ۲۰۲۶", time: "18:00", durationHours: 2 },
+      { id: "1", date: "۲۸ ژوئن ۲۰۲۶", time: "16:00", durationHours: 4 },
+      { id: "2", date: "۱ ژوئیه ۲۰۲۶", time: "18:00", durationHours: 2 },
     ],
   },
   includes: [

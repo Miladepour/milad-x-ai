@@ -8,7 +8,7 @@ export const promptToWebsiteCourseEn: Course = {
   excerpt:
     "A beginner-friendly course for anyone who wants to create modern portfolio and business websites using AI — no coding background needed. Learn vibe coding with Claude Code, GitHub, free publishing, custom domains, and how to turn this skill into income.",
   status: "Live",
-  date: "14 Jun 2026",
+  date: "21 Jun 2026",
   coverImage: "/images/prompt-to-website-cover.png",
   priceUsd: 75,
   meta: {
@@ -19,8 +19,8 @@ export const promptToWebsiteCourseEn: Course = {
     timezone: "London, UK time",
     applyUrl: "https://t.me/mxaiacademy",
     sessions: [
-      { id: "1", date: "14 Jun 2026", time: "16:00", durationHours: 3 },
-      { id: "2", date: "17 Jun 2026", time: "18:00", durationHours: 2 },
+      { id: "1", date: "21 Jun 2026", time: "16:00", durationHours: 3 },
+      { id: "2", date: "24 Jun 2026", time: "18:00", durationHours: 2 },
     ],
   },
   includes: [

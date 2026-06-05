@@ -14,6 +14,7 @@ import { getAllStaticCourseAdminPayloads } from "./import-static";
 import { parseCourseAdminPayload } from "./validate";
 import { withResolvedApplyUrl } from "./apply-url";
 import { sortCoursesByDate } from "./sort";
+import { mergeWithStaticCatalog } from "./sync-static";
 
 import {
   getCourseBySlug as getStaticCourseBySlug,
@@ -60,7 +61,11 @@ export async function getCourses(locale: Locale): Promise<Course[]> {
       .map((row) => {
         const localeRow = row.course_locales?.find((l) => l.locale === localeCode);
         if (!localeRow) return null;
-        return withResolvedApplyUrl(joinCourseRow(row, localeRow));
+        const course = mergeWithStaticCatalog(
+          joinCourseRow(row, localeRow),
+          localeCode
+        );
+        return withResolvedApplyUrl(course);
       })
       .filter((c): c is Course => c !== null);
 
@@ -87,7 +92,8 @@ export async function getCourseBySlug(
     const row = data as CourseRow & { course_locales: CourseLocaleRow[] };
     const localeRow = row.course_locales?.find((l) => l.locale === locale);
     if (!localeRow) return undefined;
-    return withResolvedApplyUrl(joinCourseRow(row, localeRow));
+    const course = mergeWithStaticCatalog(joinCourseRow(row, localeRow), locale);
+    return withResolvedApplyUrl(course);
   }, () => {
     const course = getStaticCourseBySlug(slug, locale);
     return course ? withResolvedApplyUrl(course) : undefined;

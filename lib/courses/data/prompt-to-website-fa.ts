@@ -8,7 +8,7 @@ export const promptToWebsiteCourseFa: Course = {
   excerpt:
     "دوره‌ای مناسب مبتدیان برای ساخت وب‌سایت‌های مدرن نمونه‌کار و کسب‌وکار با AI — بدون نیاز به پیش‌زمینه برنامه‌نویسی. وایب‌کدینگ با Claude Code، GitHub، انتشار رایگان، دامنه اختصاصی و تبدیل این مهارت به درآمد.",
   status: "Live",
-  date: "۱۴ ژوئن ۲۰۲۶",
+  date: "۲۱ ژوئن ۲۰۲۶",
   coverImage: "/images/prompt-to-website-cover.png",
   priceUsd: 75,
   meta: {
@@ -19,8 +19,8 @@ export const promptToWebsiteCourseFa: Course = {
     timezone: "وقت لندن، انگلستان",
     applyUrl: "https://t.me/mxaiacademy",
     sessions: [
-      { id: "1", date: "۱۴ ژوئن ۲۰۲۶", time: "16:00", durationHours: 3 },
-      { id: "2", date: "۱۷ ژوئن ۲۰۲۶", time: "18:00", durationHours: 2 },
+      { id: "1", date: "۲۱ ژوئن ۲۰۲۶", time: "16:00", durationHours: 3 },
+      { id: "2", date: "۲۴ ژوئن ۲۰۲۶", time: "18:00", durationHours: 2 },
     ],
   },
   includes: [
