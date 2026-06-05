@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import { Cormorant_Garamond, Poppins, Space_Mono } from "next/font/google";
+import { SITE_URL } from "@/lib/i18n/config";
 import "./globals.css";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  verification: {
+    google: "nEdTgGDkDJexhPrlCgE2yYIk6Jd3XoO46OKzDBqEQ3s",
+  },
+};
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],

@@ -8,7 +8,12 @@ const ADMIN_ACCESS_HEADER = "x-milad-admin-access";
 function handleRequest(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith("/api") || pathname.startsWith("/_next")) {
+  if (
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname === "/sitemap.xml" ||
+    pathname === "/robots.txt"
+  ) {
     return NextResponse.next();
   }
 
@@ -50,5 +55,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|images|fonts).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|images|fonts|sitemap.xml|robots.txt).*)",
+  ],
 };
