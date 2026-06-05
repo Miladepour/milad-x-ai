@@ -17,6 +17,11 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: "/favicon.ico",
+        destination: "/icon",
+        permanent: false,
+      },
+      {
         source: "/%D8%AF%D9%88%D8%B1%D9%87",
         destination: "/courses",
         permanent: true,

@@ -61,13 +61,13 @@ export default function Footer() {
   ];
 
   const offeringLinks = [
+    { href: href(TUTORIALS_BASE_PATH), label: f.offeringTutorials },
     {
       href: href(`${COURSES_BASE_PATH}/${WORKSHOP_SLUG}`),
       label: f.offeringWorkshop,
     },
+    { href: href(COURSES_BASE_PATH), label: f.offeringPrivate },
     { href: href(CONSULTATION_BASE_PATH), label: f.offeringConsultation },
-    { href: href("/contact"), label: f.offeringPrivate },
-    { href: href("/contact"), label: f.offeringCollaboration },
   ];
 
   const socialLinks = [
@@ -105,6 +105,7 @@ export default function Footer() {
               {f.description}
             </p>
             <p className="font-dm text-xs text-muted mt-4">{f.location}</p>
+            <p className="font-dm text-xs text-muted mt-1">{f.locationSecondary}</p>
           </div>
 
           <nav aria-label={f.exploreTitle}>

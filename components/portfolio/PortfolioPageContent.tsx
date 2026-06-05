@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import PortfolioSections from "@/components/portfolio/PortfolioSections";
+import ConsultationCtaBanner from "@/components/shared/ConsultationCtaBanner";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
@@ -29,6 +30,8 @@ export default function PortfolioPageContent() {
         </p>
 
         <PortfolioSections />
+
+        <ConsultationCtaBanner embedded className="mt-14 md:mt-16" />
       </div>
     </div>
   );

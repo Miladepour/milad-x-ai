@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import type { Course } from "@/lib/courses";
-import { COURSES_BASE_PATH } from "@/lib/courses";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import ConsultationCtaBanner from "@/components/shared/ConsultationCtaBanner";
 import CourseCard from "./CourseCard";
 
 interface CoursesListingProps {
@@ -39,6 +39,8 @@ export default function CoursesListing({ courses }: CoursesListingProps) {
             <CourseCard key={course.slug} course={course} />
           ))}
         </div>
+
+        <ConsultationCtaBanner embedded className="mt-14 md:mt-16" />
       </div>
     </div>
   );

@@ -12,7 +12,12 @@ function handleRequest(request: NextRequest): NextResponse {
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
     pathname === "/sitemap.xml" ||
-    pathname === "/robots.txt"
+    pathname === "/robots.txt" ||
+    pathname === "/favicon.ico" ||
+    pathname === "/icon" ||
+    pathname.startsWith("/icon?") ||
+    pathname === "/apple-icon" ||
+    pathname.startsWith("/apple-icon?")
   ) {
     return NextResponse.next();
   }
@@ -56,6 +61,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|images|fonts|sitemap.xml|robots.txt).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icon|apple-icon|images|fonts|sitemap.xml|robots.txt).*)",
   ],
 };

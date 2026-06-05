@@ -26,7 +26,7 @@ export default function TutorialCardCover({
         }}
         aria-hidden
       />
-      <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-[#FFB800] via-orange to-[#E84D00]" />
+      <div className="absolute bottom-0 start-0 h-1 w-[30%] bg-gradient-to-r from-[#FFB800] via-orange to-[#E84D00]" />
 
       <div className="relative flex h-full min-h-[168px] sm:min-h-0 flex-col gap-3 p-4 sm:p-4 md:p-5">
         <div className="flex shrink-0 items-start justify-between gap-2">
