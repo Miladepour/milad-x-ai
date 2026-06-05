@@ -24,33 +24,32 @@ export default function CourseCard({ course }: CourseCardProps) {
   const p = t.coursesPage;
   const statusLabel = p.statusLabels[course.status];
 
-  return (
-    <Link
-      href={href(`${COURSES_BASE_PATH}/${course.slug}`)}
-      className="group flex flex-col bg-surface rounded-sm overflow-hidden border border-transparent hover:border-orange/40 transition-colors duration-200"
-    >
-      <div className="h-48 bg-background flex-shrink-0 relative overflow-hidden">
-        <Image
-          src={course.coverImage}
-          alt={course.listTitle}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-          sizes="(max-width: 768px) 100vw, 400px"
-        />
-      </div>
+  const courseHref = href(`${COURSES_BASE_PATH}/${course.slug}`);
 
-      <div className="flex flex-col flex-1 p-6 gap-4">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <span
-            className={`type-badge font-mono border px-2 py-1 ${statusClass[course.status]}`}
-            style={{ borderRadius: "2px" }}
-          >
-            {statusLabel}
-          </span>
+  return (
+    <article className="group flex flex-col bg-surface rounded-sm overflow-hidden border border-transparent hover:border-orange/40 transition-colors duration-200">
+      <Link href={courseHref} className="flex flex-col flex-1">
+        <div className="h-48 bg-background flex-shrink-0 relative overflow-hidden">
+          <Image
+            src={course.coverImage}
+            alt={course.listTitle}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            sizes="(max-width: 768px) 100vw, 400px"
+          />
         </div>
 
-        <div className="flex flex-col gap-2 font-dm text-sm text-cream">
-          <div className="flex flex-wrap gap-4">
+        <div className="flex flex-col flex-1 p-6 gap-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <span
+              className={`type-badge font-mono border px-2 py-1 ${statusClass[course.status]}`}
+              style={{ borderRadius: "2px" }}
+            >
+              {statusLabel}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-4 font-dm text-sm text-cream">
             <span>
               <span className="text-cream/80">{p.dateLabel}: </span>
               {course.date}
@@ -62,19 +61,22 @@ export default function CourseCard({ course }: CourseCardProps) {
               </span>
             </span>
           </div>
-          <CourseIranTelegramNote lang={lang} />
+
+          <h2 className="type-course-card-title font-dm font-semibold text-cream group-hover:text-orange transition-colors">
+            {course.listTitle}
+          </h2>
+
+          <p className="type-card-body font-dm text-cream leading-relaxed flex-1 line-clamp-3">
+            {course.excerpt}
+          </p>
+
+          <span className="font-mono text-xs text-orange">{t.coursesPage.viewDetails}</span>
         </div>
+      </Link>
 
-        <h2 className="type-course-card-title font-dm font-semibold text-cream group-hover:text-orange transition-colors">
-          {course.listTitle}
-        </h2>
-
-        <p className="type-card-body font-dm text-cream leading-relaxed flex-1 line-clamp-3">
-          {course.excerpt}
-        </p>
-
-        <span className="font-mono text-xs text-orange">{t.coursesPage.viewDetails}</span>
+      <div className="px-6 pb-6 -mt-2">
+        <CourseIranTelegramNote lang={lang} />
       </div>
-    </Link>
+    </article>
   );
 }
