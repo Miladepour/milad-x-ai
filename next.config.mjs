@@ -7,6 +7,11 @@ const nextConfig = {
         hostname: "res.cloudinary.com",
         pathname: "/dbwrh0pfu/**",
       },
+      {
+        protocol: "https",
+        hostname: "i.ytimg.com",
+        pathname: "/vi/**",
+      },
     ],
   },
   async redirects() {

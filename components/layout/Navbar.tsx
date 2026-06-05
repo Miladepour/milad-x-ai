@@ -10,6 +10,7 @@ import { localizedPath } from "@/lib/i18n/paths";
 import { COURSES_BASE_PATH } from "@/lib/courses";
 import { CONSULTATION_BASE_PATH } from "@/lib/consultation/constants";
 import { PORTFOLIO_BASE_PATH } from "@/lib/portfolio/constants";
+import { TUTORIALS_BASE_PATH } from "@/lib/tutorials/constants";
 import type { UrlLocale } from "@/lib/i18n/config";
 
 function isNavActive(
@@ -90,6 +91,15 @@ export default function Navbar() {
               )}
             >
               {t.navbar.courses}
+            </Link>
+            <Link
+              href={href(TUTORIALS_BASE_PATH)}
+              className={navLinkClass(
+                isNavActive(pathname, TUTORIALS_BASE_PATH, urlLocale),
+                "desktop"
+              )}
+            >
+              {t.navbar.tutorials}
             </Link>
             <Link
               href={href("/blog")}
@@ -181,6 +191,16 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
           >
             {t.navbar.courses}
+          </Link>
+          <Link
+            href={href(TUTORIALS_BASE_PATH)}
+            className={navLinkClass(
+              isNavActive(pathname, TUTORIALS_BASE_PATH, urlLocale),
+              "mobile"
+            )}
+            onClick={() => setMenuOpen(false)}
+          >
+            {t.navbar.tutorials}
           </Link>
           <Link
             href={href("/blog")}

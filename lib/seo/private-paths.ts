@@ -16,6 +16,7 @@ export const PUBLIC_SITEMAP_PATHS = [
   "/blog",
   "/courses",
   "/portfolio",
+  "/free-ai-tutorials",
 ] as const;
 
 export function getRobotsDisallowPaths(): string[] {

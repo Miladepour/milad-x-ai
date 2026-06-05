@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getAllBlogSlugs } from "@/lib/blog/store";
+import { getTutorialSlugs } from "@/lib/tutorials/data";
 import { getAllCourseSlugs } from "@/lib/courses/store";
 import { courseSlugs as staticCourseSlugs } from "@/lib/courses/data/index";
 import { locales, SITE_URL, type UrlLocale } from "@/lib/i18n/config";
@@ -75,6 +76,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     for (const slug of blogSlugs) {
       addEntry(entries, `/blog/${slug}`, locale);
+    }
+
+    for (const slug of getTutorialSlugs()) {
+      addEntry(entries, `/free-ai-tutorials/${slug}`, locale);
     }
   }
 

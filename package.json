@@ -16,6 +16,7 @@
     "@tiptap/react": "^3.23.6",
     "@tiptap/starter-kit": "^3.23.6",
     "framer-motion": "^12.38.0",
+    "lottie-react": "^2.4.1",
     "lucide-react": "^1.14.0",
     "next": "14.2.35",
     "react": "^18",

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CONSULTATION_BASE_PATH } from "@/lib/consultation/constants";
 import { COURSES_BASE_PATH } from "@/lib/courses";
 import { PORTFOLIO_BASE_PATH } from "@/lib/portfolio/constants";
+import { TUTORIALS_BASE_PATH } from "@/lib/tutorials/constants";
 import { toLocaleDigits } from "@/lib/i18n/digits";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -53,6 +54,7 @@ export default function Footer() {
     { href: href("/"), label: n.home },
     { href: href(PORTFOLIO_BASE_PATH), label: n.portfolio },
     { href: href(COURSES_BASE_PATH), label: n.courses },
+    { href: href(TUTORIALS_BASE_PATH), label: n.tutorials },
     { href: href("/blog"), label: n.blog },
     { href: href(CONSULTATION_BASE_PATH), label: n.consultation },
     { href: href("/contact"), label: n.contact },

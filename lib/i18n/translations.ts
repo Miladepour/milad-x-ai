@@ -6,6 +6,7 @@ export const translations = {
       home: "Home",
       portfolio: "Portfolio",
       courses: "Courses",
+      tutorials: "Free Tutorials",
       blog: "Blog",
       consultation: "Consultation",
       contact: "Contact",
@@ -189,6 +190,50 @@ export const translations = {
         errorGeneric: "Something went wrong. Please try again.",
       },
     },
+    tutorialsPage: {
+      backHome: "← Back to home",
+      label: "Learn for free",
+      title: "Free AI Tutorials",
+      introLead:
+        "AI is reshaping content, business, and technology faster than ever. Here you will find free AI tutorials in clear, practical English — built from real-world experience.",
+      introMore: {
+        title: "About these tutorials",
+        paragraphs: [
+          "Every lesson draws on hands-on work in content creation, digital marketing, design, video, and everyday AI tools — no technical background required.",
+          "You get video walkthroughs, step-by-step guides, practical tips, and regularly updated lessons on the latest AI tools and techniques.",
+          "Whether you are starting from zero, exploring new AI apps, boosting productivity, or growing a business, this is a solid place to begin.",
+        ],
+      },
+      whyFollow: {
+        title: "Why follow these tutorials?",
+        items: [
+          "Completely free and open to everyone",
+          "Clear English with real-world examples",
+          "Great for beginners, creators, freelancers, and business owners",
+          "Covers the latest AI tools and trends",
+          "Video lessons plus practical written notes",
+        ],
+      },
+      learningSimple: {
+        title: "Learn AI in plain language",
+        paragraphs: [
+          "Whether you are brand new to AI or already use different tools, you will find tutorials here that help you use AI effectively and keep your skills aligned with how fast this technology moves.",
+        ],
+      },
+      expandLabel: "Read more",
+      collapseLabel: "Close",
+      tutorialsHeading: "Video tutorials",
+      emptyLabel: "Coming soon",
+      emptyTitle: "First lessons on the way",
+      emptyMessage:
+        "New free tutorials are being added. Check back soon — or explore live workshops and courses in the meantime.",
+      watchTutorial: "Watch tutorial →",
+      freeBadge: "Free",
+      ctaTitle: "Ready to go deeper?",
+      ctaDescription:
+        "Free tutorials are a great start. For hands-on live training, step-by-step projects, and direct feedback, explore our paid workshops and courses.",
+      ctaButton: "View courses",
+    },
     blogPage: {
       backHome: "← Back to home",
       label: "Insights",
@@ -275,6 +320,7 @@ export const translations = {
       home: "خانه",
       portfolio: "نمونه‌کار",
       courses: "دوره",
+      tutorials: "آموزش رایگان",
       blog: "وبلاگ",
       consultation: "مشاوره",
       contact: "تماس",
@@ -463,6 +509,50 @@ export const translations = {
         backToCourse: "بازگشت به دوره",
         errorGeneric: "خطایی رخ داد. لطفاً دوباره تلاش کنید.",
       },
+    },
+    tutorialsPage: {
+      backHome: "← بازگشت به خانه",
+      label: "یادگیری رایگان",
+      title: "آموزش رایگان هوش مصنوعی",
+      introLead:
+        "هوش مصنوعی با سرعتی بی‌سابقه در حال تغییر دنیای محتوا، کسب‌وکار و فناوری است. در این بخش می‌توانید به مجموعه‌ای از آموزش‌های رایگان هوش مصنوعی دسترسی داشته باشید که به زبان فارسی و به شکلی ساده و کاربردی تهیه شده‌اند.",
+      introMore: {
+        title: "درباره این آموزش‌ها",
+        paragraphs: [
+          "تمام آموزش‌ها بر اساس تجربه واقعی در تولید محتوا، بازاریابی دیجیتال، طراحی، ساخت ویدیو و استفاده روزمره از ابزارهای هوش مصنوعی آماده شده‌اند. هدف این است که بدون نیاز به دانش فنی یا تجربه قبلی، بتوانید از ابزارهای جدید هوش مصنوعی در کار، تحصیل یا پروژه‌های شخصی خود استفاده کنید.",
+          "در این صفحه به ویدیوهای آموزشی، راهنماهای گام‌به‌گام، نکات کاربردی و آموزش‌های به‌روز دسترسی خواهید داشت. محتوای آموزشی به صورت مداوم به‌روزرسانی می‌شود تا بتوانید با جدیدترین ابزارها، قابلیت‌ها و تکنیک‌های هوش مصنوعی آشنا شوید.",
+          "اگر به دنبال یادگیری هوش مصنوعی از صفر، آشنایی با ابزارهای جدید AI، افزایش بهره‌وری، تولید محتوای حرفه‌ای یا استفاده از هوش مصنوعی برای رشد کسب‌وکار خود هستید، این بخش نقطه شروع مناسبی برای شما خواهد بود.",
+        ],
+      },
+      whyFollow: {
+        title: "چرا این آموزش‌ها را دنبال کنید؟",
+        items: [
+          "کاملاً رایگان و در دسترس برای همه",
+          "آموزش‌ها به زبان فارسی و با مثال‌های واقعی ارائه می‌شوند",
+          "مناسب برای مبتدیان، تولیدکنندگان محتوا، فریلنسرها و صاحبان کسب‌وکار",
+          "شامل جدیدترین ابزارها و ترندهای هوش مصنوعی",
+          "ترکیبی از آموزش ویدیویی و توضیحات کاربردی",
+        ],
+      },
+      learningSimple: {
+        title: "یادگیری هوش مصنوعی به زبان ساده",
+        paragraphs: [
+          "مهم نیست که تازه وارد دنیای هوش مصنوعی شده باشید یا قبلاً با ابزارهای مختلف کار کرده باشید. در این بخش می‌توانید آموزش‌های متنوعی را پیدا کنید که به شما کمک می‌کنند از هوش مصنوعی به شکل عملی و مؤثر استفاده کنید و مهارت‌های خود را همگام با پیشرفت سریع این فناوری توسعه دهید.",
+        ],
+      },
+      expandLabel: "ادامه مطلب",
+      collapseLabel: "بستن",
+      tutorialsHeading: "ویدیوهای آموزشی",
+      emptyLabel: "به زودی",
+      emptyTitle: "اولین درس‌ها در راه هستند",
+      emptyMessage:
+        "آموزش‌های رایگان جدید به زودی اضافه می‌شوند. به زودی سر بزنید — یا همین حالا ورکشاپ‌ها و دوره‌های زنده را ببینید.",
+      watchTutorial: "مشاهده آموزش ←",
+      freeBadge: "رایگان",
+      ctaTitle: "آماده‌ای عمیق‌تر یاد بگیری؟",
+      ctaDescription:
+        "آموزش‌های رایگان نقطه شروع خوبی هستند. برای آموزش زنده، پروژه گام‌به‌گام و بازخورد مستقیم، دوره‌های آکادمی ما را ببینید.",
+      ctaButton: "مشاهده دوره‌ها",
     },
     blogPage: {
       backHome: "← بازگشت به خانه",
