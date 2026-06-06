@@ -62,7 +62,7 @@ export default function CoursePurchaseSidebar({
               <p className="font-dm text-3xl font-bold text-cream leading-none">
                 {formatCoursePrice(course.priceUsd, lang)}
               </p>
-              <CourseIranTelegramNote lang={lang} className="pt-2" />
+              <CourseIranTelegramNote lang={lang} className="pt-2" prominent />
             </div>
             <p className="font-dm text-sm text-cream/70 mt-2">
               {labels.dateLabel}: {toLocaleDigits(course.date, lang)}
