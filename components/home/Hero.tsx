@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Button from '@/components/ui/Button';
+import { COURSES_BASE_PATH } from '@/lib/courses';
 import { useLanguage } from '@/lib/i18n/context';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 
@@ -126,7 +127,7 @@ export default function Hero() {
             <Button variant="primary" size="lg" href={href("/consultation")}>
               {t.hero.cta1}
             </Button>
-            <Button variant="outline" size="lg" href={href("/portfolio")}>
+            <Button variant="outline" size="lg" href={href(COURSES_BASE_PATH)}>
               {t.hero.cta2}
             </Button>
           </motion.div>

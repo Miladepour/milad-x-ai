@@ -21,7 +21,7 @@ export const translations = {
       description:
         "I’m Milad, an AI artist, educator and creative entrepreneur. I help individuals and businesses use artificial intelligence to create, grow and build new income streams. Your transformation starts here.",
       cta1: "Book a Call",
-      cta2: "View My Work",
+      cta2: "View Courses",
       scroll: "SCROLL",
     },
     about: {
@@ -341,7 +341,7 @@ export const translations = {
       description:
         "من میلادم. به تولیدکننده‌های محتوا و کسب‌وکارها کمک می‌کنم با هوش مصنوعی، محتوای حرفه‌ای‌تر بسازن، برندشون رو قوی‌تر کنن و از ایده‌هاشون درآمد واقعی خلق کنن. اگه آماده‌ای AI رو درست یاد بگیری و باهاش چیزی بسازی، از همین‌جا شروع می‌کنیم.",
       cta1: "رزرو جلسه",
-      cta2: "نمونه‌ کارها",
+      cta2: "دوره‌ها",
       scroll: "پایین",
     },
     about: {
