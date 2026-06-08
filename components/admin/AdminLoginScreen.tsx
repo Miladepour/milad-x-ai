@@ -6,6 +6,7 @@ import TurnstileWidget, {
 } from "@/components/shared/TurnstileWidget";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { isTurnstileSiteKeyConfigured } from "@/lib/security/turnstile-client";
 import {
   enrollTotpFactor,
   getMfaAssurance,
@@ -15,7 +16,7 @@ import {
   verifyTotpEnrollment,
 } from "@/lib/supabase/admin-mfa";
 
-const turnstileRequired = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim());
+const turnstileRequired = isTurnstileSiteKeyConfigured();
 
 interface AdminLoginScreenProps {
   onAuthenticated: () => Promise<void>;
@@ -103,6 +104,13 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
       return;
     }
 
+    if (!turnstileRequired && process.env.NODE_ENV === "development") {
+      setStatus(
+        "Turnstile is not loaded in this dev session. Save .env.local with NEXT_PUBLIC_TURNSTILE_SITE_KEY, restart npm run dev, then sign in again."
+      );
+      return;
+    }
+
     setLoading(true);
     setStatus("Signing in…");
     const supabase = createClient();
@@ -114,7 +122,10 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
     });
 
     if (signInError) {
-      setStatus(signInError.message);
+      const message = signInError.message.toLowerCase().includes("captcha")
+        ? "Supabase requires captcha but Turnstile is not loaded. Save NEXT_PUBLIC_TURNSTILE_SITE_KEY in .env.local, restart npm run dev, complete the check, then sign in."
+        : signInError.message;
+      setStatus(message);
       resetCaptcha();
       setLoading(false);
       return;

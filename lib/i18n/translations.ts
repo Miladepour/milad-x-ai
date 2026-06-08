@@ -296,6 +296,16 @@ export const translations = {
       bookHint:
         "You will be redirected to Google Calendar to choose a time and complete your booking.",
     },
+    notFound: {
+      label: "404 — Page not found",
+      title: "This page doesn't exist.",
+      description:
+        "The link may be broken, outdated, or the page was moved. Head back home or explore courses and tutorials.",
+      homeCta: "Back to home",
+      coursesCta: "Browse courses",
+      tutorialsCta: "Free tutorials",
+      contactCta: "Contact",
+    },
     footer: {
       brandName: "MX AI Academy",
       tagline: "Practical AI education in Farsi",
@@ -616,6 +626,16 @@ export const translations = {
       bookCta: "رزرو جلسه",
       bookHint:
         "برای انتخاب زمان و تکمیل رزرو به تقویم گوگل هدایت می‌شوید.",
+    },
+    notFound: {
+      label: "۴۰۴ — صفحه پیدا نشد",
+      title: "این صفحه وجود ندارد.",
+      description:
+        "لینک ممکن است اشتباه یا قدیمی باشد، یا صفحه جابه‌جا شده باشد. به خانه برگردید یا دوره‌ها و آموزش‌های رایگان را ببینید.",
+      homeCta: "بازگشت به خانه",
+      coursesCta: "مشاهده دوره‌ها",
+      tutorialsCta: "آموزش رایگان",
+      contactCta: "تماس",
     },
     footer: {
       brandName: "MX AI Academy",

@@ -10,17 +10,15 @@ export interface MfaAssurance {
 export async function getMfaAssurance(
   supabase: SupabaseClient
 ): Promise<MfaAssurance> {
-  const { data: aal, error: aalError } =
-    await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  const [aalResult, factorsResult] = await Promise.all([
+    supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+    supabase.auth.mfa.listFactors(),
+  ]);
 
-  if (aalError || !aal) {
-    return { needsVerification: false, hasVerifiedTotp: false };
-  }
+  const { data: aal, error: aalError } = aalResult;
+  const { data: factors, error: factorsError } = factorsResult;
 
-  const { data: factors, error: factorsError } =
-    await supabase.auth.mfa.listFactors();
-
-  if (factorsError || !factors) {
+  if (aalError || !aal || factorsError || !factors) {
     return { needsVerification: false, hasVerifiedTotp: false };
   }
 

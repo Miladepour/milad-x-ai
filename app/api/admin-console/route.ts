@@ -27,6 +27,31 @@ export async function POST(request: Request) {
     const action = String(body.action ?? "");
     const supabase = createClient();
 
+    if (action === "bootstrap") {
+      const [contactResult, waitlistResult, posts] = await Promise.all([
+        supabase
+          .from("contact_submissions")
+          .select("*")
+          .order("submitted_at", { ascending: false }),
+        supabase
+          .from("waitlist_submissions")
+          .select("*")
+          .order("submitted_at", { ascending: false }),
+        listBlogPostsAdmin(),
+      ]);
+
+      if (contactResult.error) throw new Error(contactResult.error.message);
+      if (waitlistResult.error) throw new Error(waitlistResult.error.message);
+
+      return NextResponse.json({
+        ok: true,
+        email: admin.email,
+        contactSubmissions: (contactResult.data ?? []).map(contactRowToSubmission),
+        waitlistSubmissions: (waitlistResult.data ?? []).map(waitlistRowToSubmission),
+        posts,
+      });
+    }
+
     if (action === "summary" || action === "login") {
       const [contactResult, waitlistResult] = await Promise.all([
         supabase
