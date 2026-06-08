@@ -1,6 +1,9 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import TurnstileWidget, {
+  type TurnstileWidgetHandle,
+} from "@/components/shared/TurnstileWidget";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import {
@@ -11,6 +14,8 @@ import {
   verifyTotpCode,
   verifyTotpEnrollment,
 } from "@/lib/supabase/admin-mfa";
+
+const turnstileRequired = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim());
 
 interface AdminLoginScreenProps {
   onAuthenticated: () => Promise<void>;
@@ -26,7 +31,14 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
   const [enrollQr, setEnrollQr] = useState<string | null>(null);
   const [enrollSecret, setEnrollSecret] = useState<string | null>(null);
   const [enrollFactorId, setEnrollFactorId] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState("");
   const [loading, setLoading] = useState(false);
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
+
+  function resetCaptcha() {
+    setCaptchaToken("");
+    turnstileRef.current?.reset();
+  }
 
   useEffect(() => {
     if (!isSupabaseConfigured()) {
@@ -86,6 +98,11 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
       return;
     }
 
+    if (turnstileRequired && !captchaToken) {
+      setStatus("Complete the security check below.");
+      return;
+    }
+
     setLoading(true);
     setStatus("Signing in…");
     const supabase = createClient();
@@ -93,10 +110,12 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
+      options: captchaToken ? { captchaToken } : undefined,
     });
 
     if (signInError) {
       setStatus(signInError.message);
+      resetCaptcha();
       setLoading(false);
       return;
     }
@@ -122,6 +141,7 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
       setStatus("Signed in.");
     } catch (error) {
       await supabase.auth.signOut();
+      resetCaptcha();
       setStatus(
         error instanceof Error
           ? error.message
@@ -194,6 +214,7 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
     setEnrollQr(null);
     setEnrollSecret(null);
     setEnrollFactorId(null);
+    resetCaptcha();
     setStatus("Signed out.");
   }
 
@@ -236,8 +257,13 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
             autoComplete="current-password"
             required
           />
+          <TurnstileWidget
+            ref={turnstileRef}
+            onToken={setCaptchaToken}
+            onExpire={() => setCaptchaToken("")}
+          />
           <button
-            disabled={loading}
+            disabled={loading || (turnstileRequired && !captchaToken)}
             className="bg-orange px-5 py-3 font-mono text-xs uppercase tracking-widest text-background transition-colors hover:bg-cream disabled:opacity-60"
           >
             Sign in

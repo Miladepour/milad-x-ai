@@ -119,6 +119,17 @@ Column mapping:
 
 ## 9. Security checklist
 
+### Supabase Attack Protection (enable after deploy)
+
+1. Deploy this repo so admin login includes Turnstile + `captchaToken` on sign-in.
+2. Supabase Dashboard → **Authentication** → **Attack Protection**.
+3. Enable **Captcha protection**.
+4. Provider: **Cloudflare Turnstile**.
+5. Secret key: paste the same value as `TURNSTILE_SECRET_KEY` in Vercel (not the site key).
+6. Save, then test admin login at your secret admin URL — Turnstile must show and sign-in must succeed.
+
+If captcha is enabled before deploy, admin login will fail with a captcha error until the new code is live.
+
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` is only in `.env.local` / Vercel env — never committed.
 - [ ] Row Level Security is enabled (the schema does this).
 - [ ] Run `patch-form-insert-rls.sql` so contact/waitlist inserts go through API only.
@@ -126,6 +137,7 @@ Column mapping:
 - [ ] Set `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` in Vercel (Cloudflare Turnstile).
 - [ ] Only your email is in `admin_profiles`.
 - [ ] Enable **MFA (TOTP)** in Supabase → Authentication → Multi-Factor, then enroll on first admin sign-in (QR code in the login flow).
+- [ ] Enable **Attack Protection** in Supabase → Authentication → Attack Protection → Turnstile, using the same `TURNSTILE_SECRET_KEY` as Vercel (admin login sends `captchaToken` on sign-in).
 - [ ] Set `ADMIN_PATH_SEGMENT` in production; `/admin` must return 404 when visited directly.
 - [ ] Production **Site URL** and **Redirect URLs** match your real domain.
 - [ ] Upgrade to **Vercel Pro** when selling paid courses (Hobby = non-commercial only).
