@@ -125,7 +125,7 @@ Column mapping:
 - [ ] Run `patch-storage-policies.sql` for admin-only image uploads.
 - [ ] Set `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` in Vercel (Cloudflare Turnstile).
 - [ ] Only your email is in `admin_profiles`.
-- [ ] Enable **MFA** on your Supabase Auth admin user.
+- [ ] Enable **MFA (TOTP)** in Supabase → Authentication → Multi-Factor, then enroll on first admin sign-in (QR code in the login flow).
 - [ ] Set `ADMIN_PATH_SEGMENT` in production; `/admin` must return 404 when visited directly.
 - [ ] Production **Site URL** and **Redirect URLs** match your real domain.
 - [ ] Upgrade to **Vercel Pro** when selling paid courses (Hobby = non-commercial only).
