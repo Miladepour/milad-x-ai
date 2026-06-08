@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { getCountryName } from "@/lib/countries";
 import type { ContactInquiryType } from "@/lib/contact/types";
-import { createAnonClient } from "@/lib/supabase/server";
+import {
+  assertPublicFormAllowed,
+  clampField,
+  FORM_ERROR_MESSAGE,
+} from "@/lib/security/forms";
+import { createServiceClient } from "@/lib/supabase/server";
 
 const VALID_INQUIRY_TYPES: ContactInquiryType[] = ["private_course", "collaboration"];
 
@@ -11,14 +16,20 @@ function isValidEmail(email: string): boolean {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const fullName = String(body.fullName ?? "").trim();
-    const email = String(body.email ?? "").trim().toLowerCase();
-    const mobile = String(body.mobile ?? "").trim();
-    const country = String(body.country ?? "").trim();
+    const body = (await request.json()) as Record<string, unknown>;
+
+    const gate = await assertPublicFormAllowed(body, request);
+    if (!gate.ok) {
+      return NextResponse.json({ error: FORM_ERROR_MESSAGE }, { status: gate.status });
+    }
+
+    const fullName = clampField(String(body.fullName ?? ""), 200);
+    const email = clampField(String(body.email ?? ""), 320).toLowerCase();
+    const mobile = clampField(String(body.mobile ?? ""), 40);
+    const country = clampField(String(body.country ?? ""), 10);
     const inquiryType = String(body.inquiryType ?? "").trim() as ContactInquiryType;
-    const message = String(body.message ?? "").trim();
-    const locale = String(body.locale ?? "EN").trim();
+    const message = clampField(String(body.message ?? ""), 5000);
+    const locale = clampField(String(body.locale ?? "EN"), 10);
 
     if (fullName.length < 2) {
       return NextResponse.json({ error: "Invalid name" }, { status: 400 });
@@ -39,7 +50,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid message" }, { status: 400 });
     }
 
-    const supabase = createAnonClient();
+    const supabase = createServiceClient();
     const { error } = await supabase.from("contact_submissions").insert({
       full_name: fullName,
       email,
@@ -51,11 +62,13 @@ export async function POST(request: Request) {
     });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("[contact] insert failed:", error.message);
+      return NextResponse.json({ error: FORM_ERROR_MESSAGE }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  } catch (error) {
+    console.error("[contact] unexpected error:", error);
+    return NextResponse.json({ error: FORM_ERROR_MESSAGE }, { status: 500 });
   }
 }

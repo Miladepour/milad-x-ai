@@ -3,10 +3,14 @@ import { Cormorant_Garamond, Poppins, Space_Mono } from "next/font/google";
 import { SITE_URL } from "@/lib/i18n/config";
 import "./globals.css";
 
+const googleSiteVerification =
+  process.env.GOOGLE_SITE_VERIFICATION?.trim() ||
+  "nEdTgGDkDJexhPrlCgE2yYIk6Jd3XoO46OKzDBqEQ3s";
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   verification: {
-    google: "nEdTgGDkDJexhPrlCgE2yYIk6Jd3XoO46OKzDBqEQ3s",
+    google: googleSiteVerification,
   },
 };
 

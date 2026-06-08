@@ -121,8 +121,14 @@ Column mapping:
 
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` is only in `.env.local` / Vercel env — never committed.
 - [ ] Row Level Security is enabled (the schema does this).
+- [ ] Run `patch-form-insert-rls.sql` so contact/waitlist inserts go through API only.
+- [ ] Run `patch-storage-policies.sql` for admin-only image uploads.
+- [ ] Set `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` in Vercel (Cloudflare Turnstile).
 - [ ] Only your email is in `admin_profiles`.
+- [ ] Enable **MFA** on your Supabase Auth admin user.
+- [ ] Set `ADMIN_PATH_SEGMENT` in production; `/admin` must return 404 when visited directly.
 - [ ] Production **Site URL** and **Redirect URLs** match your real domain.
+- [ ] Upgrade to **Vercel Pro** when selling paid courses (Hobby = non-commercial only).
 
 ## What’s in the repo (for the next coding step)
 

@@ -3,8 +3,6 @@ import type { NextRequest } from "next/server";
 import { defaultLocale, localePrefix } from "@/lib/i18n/config";
 import { updateSession } from "@/lib/supabase/middleware";
 
-const ADMIN_ACCESS_HEADER = "x-milad-admin-access";
-
 function handleRequest(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
 
@@ -25,18 +23,11 @@ function handleRequest(request: NextRequest): NextResponse {
   const adminSegment = process.env.ADMIN_PATH_SEGMENT;
 
   if (adminSegment && pathname === `/${adminSegment}`) {
-    const headers = new Headers(request.headers);
-    headers.set(ADMIN_ACCESS_HEADER, "1");
-    return NextResponse.rewrite(new URL("/admin", request.url), {
-      request: { headers },
-    });
+    return NextResponse.rewrite(new URL("/admin", request.url));
   }
 
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
-    if (request.headers.get(ADMIN_ACCESS_HEADER) !== "1") {
-      return new NextResponse(null, { status: 404 });
-    }
-    return NextResponse.next();
+    return new NextResponse(null, { status: 404 });
   }
 
   if (pathname === `/${defaultLocale}` || pathname.startsWith(`/${defaultLocale}/`)) {

@@ -3,7 +3,13 @@ import { getAdminUser } from "@/lib/supabase/require-admin";
 import { createServiceClient } from "@/lib/supabase/server";
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"] as const;
+const MIME_TO_EXT: Record<(typeof ALLOWED_TYPES)[number], string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+};
 const ALLOWED_BUCKETS = ["course-images", "blog-images"] as const;
 
 export async function POST(request: Request) {
@@ -24,7 +30,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
-  if (!ALLOWED_TYPES.includes(file.type)) {
+  if (!(ALLOWED_TYPES as readonly string[]).includes(file.type)) {
     return NextResponse.json(
       { error: "Only JPEG, PNG, WebP and GIF images are allowed" },
       { status: 400 }
@@ -35,7 +41,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "File must be under 5 MB" }, { status: 400 });
   }
 
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const ext = MIME_TO_EXT[file.type as (typeof ALLOWED_TYPES)[number]];
+  const nameExt = file.name.split(".").pop()?.toLowerCase();
+  const allowedNameExts = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
+  if (nameExt && !allowedNameExts.has(nameExt)) {
+    return NextResponse.json({ error: "Invalid file extension" }, { status: 400 });
+  }
+  if (nameExt === "jpeg" && ext !== "jpg") {
+    return NextResponse.json({ error: "File type mismatch" }, { status: 400 });
+  }
+  if (nameExt && nameExt !== "jpeg" && nameExt !== ext) {
+    return NextResponse.json({ error: "File type mismatch" }, { status: 400 });
+  }
   const slug =
     String(formData.get("slug") ?? "")
       .trim()

@@ -2,12 +2,16 @@
 
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
+import HoneypotField from "@/components/shared/HoneypotField";
+import TurnstileWidget from "@/components/shared/TurnstileWidget";
 import { countries, formatFullMobile, getDialCode } from "@/lib/countries";
 import type { Course } from "@/lib/courses";
 import { COURSES_BASE_PATH, formatCoursePriceDisplay } from "@/lib/courses";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { cn } from "@/lib/utils";
+
+const turnstileRequired = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim());
 
 interface WaitlistFormProps {
   course: Course;
@@ -26,6 +30,7 @@ export default function WaitlistForm({ course }: WaitlistFormProps) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
     "idle"
   );
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   const dialCode = useMemo(() => getDialCode(country), [country]);
 
@@ -37,12 +42,15 @@ export default function WaitlistForm({ course }: WaitlistFormProps) {
     setCountry(code);
   }
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!country || !dialCode) return;
+    if (turnstileRequired && !turnstileToken) return;
 
     setStatus("loading");
     const mobile = formatFullMobile(dialCode, localMobile);
+    const formData = new FormData(e.currentTarget);
+    const website = String(formData.get("website") ?? "");
 
     try {
       const res = await fetch("/api/waitlist", {
@@ -55,6 +63,8 @@ export default function WaitlistForm({ course }: WaitlistFormProps) {
           mobile,
           country,
           locale: lang,
+          website,
+          turnstileToken: turnstileToken || undefined,
         }),
       });
 
@@ -106,7 +116,8 @@ export default function WaitlistForm({ course }: WaitlistFormProps) {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5 max-w-lg">
+      <form onSubmit={handleSubmit} className="relative flex flex-col gap-5 max-w-lg">
+        <HoneypotField />
         <div>
           <label htmlFor="fullName" className="block font-dm text-sm text-cream mb-2">
             {w.fullName}
@@ -191,13 +202,20 @@ export default function WaitlistForm({ course }: WaitlistFormProps) {
           </div>
         </div>
 
+        <TurnstileWidget
+          onToken={setTurnstileToken}
+          onExpire={() => setTurnstileToken("")}
+        />
+
         {status === "error" && (
           <p className="font-dm text-sm text-orange">{w.errorGeneric}</p>
         )}
 
         <button
           type="submit"
-          disabled={status === "loading" || !country}
+          disabled={
+            status === "loading" || !country || (turnstileRequired && !turnstileToken)
+          }
           className="font-mono text-sm px-8 py-4 bg-orange text-background border-2 border-orange hover:bg-orange-dim transition-colors rounded-sm disabled:opacity-60 disabled:cursor-not-allowed normal-case tracking-normal w-full sm:w-auto"
         >
           {status === "loading" ? w.submitting : w.submit}

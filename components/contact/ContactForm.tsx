@@ -2,11 +2,15 @@
 
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
+import HoneypotField from "@/components/shared/HoneypotField";
+import TurnstileWidget from "@/components/shared/TurnstileWidget";
 import type { ContactInquiryType } from "@/lib/contact/types";
 import { countries, formatFullMobile, getDialCode } from "@/lib/countries";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { cn } from "@/lib/utils";
+
+const turnstileRequired = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim());
 
 export default function ContactForm() {
   const { lang, href } = useLanguage();
@@ -22,15 +26,19 @@ export default function ContactForm() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
     "idle"
   );
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   const dialCode = useMemo(() => getDialCode(country), [country]);
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!country || !dialCode || !inquiryType) return;
+    if (turnstileRequired && !turnstileToken) return;
 
     setStatus("loading");
     const mobile = formatFullMobile(dialCode, localMobile);
+    const formData = new FormData(e.currentTarget);
+    const website = String(formData.get("website") ?? "");
 
     try {
       const res = await fetch("/api/contact", {
@@ -44,6 +52,8 @@ export default function ContactForm() {
           inquiryType,
           message,
           locale: lang,
+          website,
+          turnstileToken: turnstileToken || undefined,
         }),
       });
 
@@ -74,7 +84,8 @@ export default function ContactForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5 max-w-lg">
+    <form onSubmit={handleSubmit} className="relative flex flex-col gap-5 max-w-lg">
+      <HoneypotField />
       <fieldset className="space-y-3">
         <legend className="block font-dm text-sm text-cream mb-1">{p.inquiryLabel}</legend>
         <div className="flex flex-col sm:flex-row gap-3">
@@ -235,13 +246,23 @@ export default function ContactForm() {
         />
       </div>
 
+      <TurnstileWidget
+        onToken={setTurnstileToken}
+        onExpire={() => setTurnstileToken("")}
+      />
+
       {status === "error" && (
         <p className="font-dm text-sm text-orange">{p.errorGeneric}</p>
       )}
 
       <button
         type="submit"
-        disabled={status === "loading" || !country || !inquiryType}
+        disabled={
+          status === "loading" ||
+          !country ||
+          !inquiryType ||
+          (turnstileRequired && !turnstileToken)
+        }
         className="font-mono text-sm px-8 py-4 bg-orange text-background border-2 border-orange hover:bg-orange-dim transition-colors rounded-sm disabled:opacity-60 disabled:cursor-not-allowed normal-case tracking-normal w-full sm:w-auto"
       >
         {status === "loading" ? p.submitting : p.submit}
