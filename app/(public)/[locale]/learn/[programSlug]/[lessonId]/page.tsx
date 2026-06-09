@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import LessonContent from "@/components/members/LessonContent";
 import LessonPlayer from "@/components/members/LessonPlayer";
 import StudentGlassCard from "@/components/members/StudentGlassCard";
+import StudentPortalButton from "@/components/members/StudentPortalButton";
 import { learnLessonPath, learnProgramPath } from "@/lib/members/paths";
 import { getStudentLesson } from "@/lib/members/store";
 import { urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
@@ -40,14 +40,16 @@ export default async function LearnLessonPage({
   return (
     <div className="flex flex-col gap-5 pb-10 sm:gap-6">
       <StudentGlassCard>
-        <Link
+        <StudentPortalButton
           href={learnProgramPath(params.programSlug, locale)}
-          className="font-mono text-[10px] uppercase tracking-widest text-orange hover:text-cream"
+          variant="secondary"
         >
-          ← {data.program.title}
-        </Link>
-        <p className="mt-4 student-section-title">{data.program.title}</p>
-        <h1 className="mt-2 font-dm text-3xl font-semibold text-cream">{data.lesson.title}</h1>
+          {data.program.title}
+        </StudentPortalButton>
+        <p className="mt-5 student-section-title">{data.program.title}</p>
+        <h1 className="mt-2 font-dm text-4xl font-semibold text-cream sm:text-5xl">
+          {data.lesson.title}
+        </h1>
         <div className="lesson-content mt-4">
           <LessonContent content={data.lesson.description} />
         </div>
@@ -62,24 +64,24 @@ export default async function LearnLessonPage({
         />
       </StudentGlassCard>
 
-      <StudentGlassCard className="flex flex-wrap justify-between gap-3">
+      <StudentGlassCard className="flex flex-wrap items-center justify-between gap-3">
         {prev ? (
-          <Link
+          <StudentPortalButton
             href={learnLessonPath(params.programSlug, prev.id, locale)}
-            className="font-mono text-[10px] uppercase tracking-widest text-cream hover:text-orange"
+            variant="secondary"
           >
-            ← {t.memberPortal.previous}
-          </Link>
+            {t.memberPortal.previous}
+          </StudentPortalButton>
         ) : (
           <span />
         )}
         {next ? (
-          <Link
+          <StudentPortalButton
             href={learnLessonPath(params.programSlug, next.id, locale)}
-            className="font-mono text-[10px] uppercase tracking-widest text-orange hover:text-cream"
+            variant="primary"
           >
-            {t.memberPortal.next} →
-          </Link>
+            {t.memberPortal.next}
+          </StudentPortalButton>
         ) : null}
       </StudentGlassCard>
     </div>

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import StudentProgressRing from "@/components/members/StudentProgressRing";
 import { STUDENT_DASHBOARD_BANNER_URL } from "@/lib/members/dashboard-constants";
 
 interface StatItem {
@@ -14,6 +15,8 @@ interface StudentDashboardHeroProps {
   subtitle: string;
   initials: string;
   stats: StatItem[];
+  progressPercent: number;
+  progressLabel: string;
 }
 
 export default function StudentDashboardHero({
@@ -23,6 +26,8 @@ export default function StudentDashboardHero({
   subtitle,
   initials,
   stats,
+  progressPercent,
+  progressLabel,
 }: StudentDashboardHeroProps) {
   return (
     <section className="relative min-h-[240px] overflow-hidden rounded-3xl sm:min-h-[300px]">
@@ -58,11 +63,11 @@ export default function StudentDashboardHero({
           </div>
         </div>
 
-        <ul className="mt-6 flex flex-wrap gap-3">
+        <ul className="mt-6 flex flex-wrap items-stretch gap-3">
           {stats.map((stat) => (
             <li
               key={stat.label}
-              className="student-glass-pill min-w-[140px] flex-1 px-4 py-3 sm:max-w-[200px] sm:flex-none"
+              className="student-glass-pill min-h-[88px] min-w-[140px] flex-1 px-4 py-3 sm:max-w-[200px] sm:flex-none"
             >
               <p className="font-mono text-[10px] uppercase tracking-widest text-cream/50">
                 {stat.label}
@@ -75,6 +80,14 @@ export default function StudentDashboardHero({
               </p>
             </li>
           ))}
+          <li className="student-glass-pill flex min-h-[88px] min-w-[140px] flex-1 items-center justify-center px-3 py-2 sm:max-w-[200px] sm:flex-none sm:px-4">
+            <StudentProgressRing
+              percent={progressPercent}
+              label={progressLabel}
+              size={64}
+              compact
+            />
+          </li>
         </ul>
       </div>
     </section>

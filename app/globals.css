@@ -36,7 +36,24 @@
   }
 
   .student-section-title {
-    @apply font-mono text-[10px] uppercase tracking-[0.18em] text-orange;
+    @apply font-mono text-xs uppercase tracking-[0.14em] text-orange sm:text-sm;
+  }
+
+  @keyframes student-live-dot-pulse {
+    0%,
+    100% {
+      opacity: 1;
+      box-shadow: 0 0 0 0 rgba(255, 92, 0, 0.55);
+    }
+    50% {
+      opacity: 0.9;
+      box-shadow: 0 0 0 5px rgba(255, 92, 0, 0);
+    }
+  }
+
+  .student-live-dot {
+    @apply h-2 w-2 shrink-0 rounded-full bg-orange;
+    animation: student-live-dot-pulse 1.6s ease-in-out infinite;
   }
 }
 

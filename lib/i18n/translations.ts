@@ -337,6 +337,11 @@ export const translations = {
       statProgress: "Overall progress",
       noAnnouncements: "No announcements right now.",
       noUpcomingCourses: "No upcoming courses at the moment.",
+      upcomingCoursesSubtitle:
+        "Go further with live workshops. Join other students building real skills with AI.",
+      upcomingCoursesFooter:
+        "New sessions open regularly. Browse all courses and find your next step.",
+      viewCourse: "View course",
       viewAllCourses: "View all courses",
       myPrograms: "My programs",
       continueWatching: "Continue watching",
@@ -348,9 +353,13 @@ export const translations = {
       lessons: "lessons",
       continueCta: "Continue",
       viewProgram: "View program",
+      openProgram: "Open program",
+      openLesson: "Open lesson",
       lessonList: "Lessons",
       markComplete: "Mark complete",
       completed: "Completed",
+      progressHintEmbed:
+        "After you finish watching, tap Mark complete to save your progress.",
       previous: "Previous",
       next: "Next",
       accessEndedTitle: "Access ended",
@@ -721,6 +730,11 @@ export const translations = {
       statProgress: "پیشرفت کلی",
       noAnnouncements: "فعلاً اعلانی وجود ندارد.",
       noUpcomingCourses: "در حال حاضر دوره پیش‌رویی نیست.",
+      upcomingCoursesSubtitle:
+        "با ورکشاپ‌های زنده یک قدم جلوتر بروید. به جمع دانشجویانی بپیوندید که با هوش مصنوعی مهارت واقعی می‌سازند.",
+      upcomingCoursesFooter:
+        "دوره‌های جدید به‌طور منظم اضافه می‌شوند. همه دوره‌ها را ببینید و قدم بعدی خود را انتخاب کنید.",
+      viewCourse: "مشاهده دوره",
       viewAllCourses: "مشاهده همه دوره‌ها",
       myPrograms: "برنامه‌های من",
       continueWatching: "ادامه تماشا",
@@ -732,9 +746,13 @@ export const translations = {
       lessons: "درس",
       continueCta: "ادامه",
       viewProgram: "مشاهده برنامه",
+      openProgram: "باز کردن برنامه",
+      openLesson: "باز کردن درس",
       lessonList: "درس‌ها",
       markComplete: "تکمیل شد",
       completed: "تکمیل شده",
+      progressHintEmbed:
+        "بعد از تماشای ویدیو، «تکمیل شد» را بزنید تا پیشرفت شما ثبت شود.",
       previous: "قبلی",
       next: "بعدی",
       accessEndedTitle: "دسترسی پایان یافت",

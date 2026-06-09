@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import StudentGlassCard from "@/components/members/StudentGlassCard";
+import StudentLessonCard from "@/components/members/StudentLessonCard";
+import StudentPortalButton from "@/components/members/StudentPortalButton";
 import { learnLessonPath, learnPath } from "@/lib/members/paths";
 import { getStudentProgram } from "@/lib/members/store";
 import { urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
@@ -27,13 +28,10 @@ export default async function LearnProgramPage({
   return (
     <div className="flex flex-col gap-5 pb-10 sm:gap-6">
       <StudentGlassCard>
-        <Link
-          href={learnPath(locale)}
-          className="font-mono text-[10px] uppercase tracking-widest text-orange hover:text-cream"
-        >
-          ← {t.memberPortal.backToDashboard}
-        </Link>
-        <h1 className="mt-4 font-dm text-3xl font-semibold text-cream sm:text-4xl">
+        <StudentPortalButton href={learnPath(locale)} variant="secondary">
+          {t.memberPortal.backToDashboard}
+        </StudentPortalButton>
+        <h1 className="mt-5 font-dm text-4xl font-semibold text-cream sm:text-5xl">
           {data.program.title}
         </h1>
         <p className="mt-3 font-dm text-cream/70">{data.program.description}</p>
@@ -54,17 +52,12 @@ export default async function LearnProgramPage({
       {data.program.usefulLinks.length > 0 && (
         <StudentGlassCard>
           <h2 className="student-section-title">{t.memberPortal.usefulLinks}</h2>
-          <ul className="mt-3 flex flex-col gap-2">
+          <ul className="mt-4 flex flex-wrap gap-2">
             {data.program.usefulLinks.map((link) => (
               <li key={link.url}>
-                <a
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-dm text-sm text-orange hover:underline"
-                >
-                  {link.label} ↗
-                </a>
+                <StudentPortalButton href={link.url} variant="secondary" external>
+                  {link.label}
+                </StudentPortalButton>
               </li>
             ))}
           </ul>
@@ -73,19 +66,16 @@ export default async function LearnProgramPage({
 
       <StudentGlassCard>
         <h2 className="student-section-title">{t.memberPortal.lessonList}</h2>
-        <ul className="mt-4 space-y-2">
+        <ul className="mt-4 space-y-3">
           {data.lessons.map((lesson, index) => (
             <li key={lesson.id}>
-              <Link
+              <StudentLessonCard
                 href={learnLessonPath(data.program.slug, lesson.id, locale)}
-                className="student-glass-pill flex items-center justify-between gap-4 px-4 py-3.5 transition-colors hover:border-orange/30"
-              >
-                <div>
-                  <p className="font-mono text-[10px] text-orange">#{index + 1}</p>
-                  <p className="font-dm text-cream">{lesson.title}</p>
-                </div>
-                <span className="font-mono text-orange">→</span>
-              </Link>
+                index={index}
+                title={lesson.title}
+                description={lesson.description}
+                openLabel={t.memberPortal.openLesson}
+              />
             </li>
           ))}
         </ul>

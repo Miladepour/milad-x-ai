@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import StudentDashboardShell from "@/components/members/StudentDashboardShell";
-import { accountLoginPath } from "@/lib/members/paths";
-import { syncExpiredEnrollments } from "@/lib/members/store";
+import { accountLoginPath, learnLessonPath } from "@/lib/members/paths";
+import { getStudentDashboard, syncExpiredEnrollments } from "@/lib/members/store";
 import { isValidLocale, urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { getStudentUser } from "@/lib/supabase/require-student";
 import { translations } from "@/lib/i18n/translations";
@@ -34,6 +34,9 @@ export default async function LearnLayout({
 
   await syncExpiredEnrollments();
 
+  const programs = await getStudentDashboard(student.user.id);
+  const continueItem = programs.find((p) => p.continueLesson);
+
   const displayName =
     student.profile.fullName?.trim() || student.profile.email.split("@")[0];
 
@@ -42,6 +45,21 @@ export default async function LearnLayout({
       <StudentDashboardShell
         locale={locale}
         studentName={displayName}
+        continueWatching={
+          continueItem?.continueLesson
+            ? {
+                href: learnLessonPath(
+                  continueItem.program.slug,
+                  continueItem.continueLesson.id,
+                  locale
+                ),
+                lessonTitle: continueItem.continueLesson.title,
+                programTitle: continueItem.program.title,
+                label: t.memberPortal.continueWatching,
+                cta: t.memberPortal.continueCta,
+              }
+            : null
+        }
         labels={{
           overview: t.memberPortal.navOverview,
           myPrograms: t.memberPortal.myPrograms,

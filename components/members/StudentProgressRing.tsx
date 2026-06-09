@@ -3,6 +3,7 @@ interface StudentProgressRingProps {
   label: string;
   sublabel?: string;
   size?: number;
+  compact?: boolean;
 }
 
 export default function StudentProgressRing({
@@ -10,14 +11,17 @@ export default function StudentProgressRing({
   label,
   sublabel,
   size = 120,
+  compact = false,
 }: StudentProgressRingProps) {
-  const stroke = 10;
+  const stroke = compact ? 8 : 10;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percent / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center gap-3 text-center">
+    <div
+      className={`flex flex-col items-center text-center ${compact ? "gap-1" : "gap-3"}`}
+    >
       <div className="relative" style={{ width: size, height: size }}>
         <svg
           width={size}
@@ -48,13 +52,27 @@ export default function StudentProgressRing({
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-dm text-2xl font-semibold text-cream">{percent}%</span>
+          <span
+            className={`font-dm font-semibold text-cream ${compact ? "text-base" : "text-2xl"}`}
+          >
+            {percent}%
+          </span>
         </div>
       </div>
-      <div>
-        <p className="font-dm text-sm font-medium text-cream">{label}</p>
-        {sublabel && <p className="mt-0.5 font-mono text-[10px] uppercase tracking-widest text-cream/45">{sublabel}</p>}
-      </div>
+      {compact ? (
+        <p className="max-w-[5.5rem] text-center font-mono text-[8px] uppercase leading-tight tracking-widest text-cream/50">
+          {label}
+        </p>
+      ) : (
+        <div>
+          <p className="font-dm text-sm font-medium text-cream">{label}</p>
+          {sublabel && (
+            <p className="mt-0.5 font-mono text-[10px] uppercase tracking-widest text-cream/45">
+              {sublabel}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -16,13 +16,43 @@ interface LessonPlayerProps {
   completed?: boolean;
 }
 
+function LessonProgressActions({
+  isComplete,
+  status,
+  onMarkComplete,
+}: {
+  isComplete: boolean;
+  status: string;
+  onMarkComplete: () => void;
+}) {
+  const t = useTranslation();
+
+  return (
+    <div className="flex flex-wrap items-center gap-3 border-t border-white/[0.08] px-4 py-4 sm:px-5">
+      <button
+        type="button"
+        disabled={isComplete}
+        onClick={onMarkComplete}
+        className="rounded-full border border-orange/50 px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-orange transition-colors hover:bg-orange hover:text-background disabled:opacity-50"
+      >
+        {isComplete ? t.memberPortal.completed : t.memberPortal.markComplete}
+      </button>
+      {status && <p className="font-dm text-sm text-orange">{status}</p>}
+      {!isComplete && (
+        <p className="font-dm text-xs text-cream/50">
+          {t.memberPortal.progressHintEmbed}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function LessonPlayer({
   lessonId,
   videoUrl,
   initialPosition = 0,
   completed = false,
 }: LessonPlayerProps) {
-  const t = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isComplete, setIsComplete] = useState(completed);
   const [status, setStatus] = useState("");
@@ -30,19 +60,27 @@ export default function LessonPlayer({
   const saveProgress = useCallback(
     async (opts: { lastPositionSeconds?: number; completed?: boolean }) => {
       try {
-        await fetch("/api/members/progress", {
+        const res = await fetch("/api/members/progress", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "same-origin",
           body: JSON.stringify({ lessonId, ...opts }),
         });
-        if (opts.completed) setIsComplete(true);
+        if (!res.ok) throw new Error("Save failed");
+        if (opts.completed) {
+          setIsComplete(true);
+          setStatus("");
+        }
       } catch {
         setStatus("Could not save progress.");
       }
     },
     [lessonId]
   );
+
+  const markComplete = useCallback(() => {
+    void saveProgress({ completed: true });
+  }, [saveProgress]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -86,15 +124,28 @@ export default function LessonPlayer({
 
   if (isYoutubeUrl(videoUrl)) {
     const embed = youtubeEmbedUrl(videoUrl);
-    if (!embed) return null;
+    if (!embed) {
+      return (
+        <div className="flex aspect-video items-center justify-center border border-surface bg-surface/30">
+          <p className="font-dm text-sm text-cream/60">Invalid YouTube link.</p>
+        </div>
+      );
+    }
     return (
-      <div className="aspect-video overflow-hidden border border-surface bg-black">
-        <iframe
-          src={embed}
-          title="Lesson video"
-          className="h-full w-full"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
+      <div className="flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.04]">
+        <div className="relative aspect-video overflow-hidden bg-black">
+          <iframe
+            src={embed}
+            title="Lesson video"
+            className="absolute inset-0 h-full w-full border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
+        </div>
+        <LessonProgressActions
+          isComplete={isComplete}
+          status={status}
+          onMarkComplete={markComplete}
         />
       </div>
     );
@@ -104,13 +155,20 @@ export default function LessonPlayer({
     const embed = vimeoEmbedUrl(videoUrl);
     if (!embed) return null;
     return (
-      <div className="aspect-video overflow-hidden border border-surface bg-black">
-        <iframe
-          src={embed}
-          title="Lesson video"
-          className="h-full w-full"
-          allow="autoplay; fullscreen; picture-in-picture"
-          allowFullScreen
+      <div className="flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.04]">
+        <div className="relative aspect-video overflow-hidden bg-black">
+          <iframe
+            src={embed}
+            title="Lesson video"
+            className="absolute inset-0 h-full w-full border-0"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+        <LessonProgressActions
+          isComplete={isComplete}
+          status={status}
+          onMarkComplete={markComplete}
         />
       </div>
     );
@@ -127,17 +185,11 @@ export default function LessonPlayer({
           className="h-full w-full"
         />
       </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          disabled={isComplete}
-          onClick={() => saveProgress({ completed: true })}
-          className="border border-orange px-4 py-2 font-mono text-xs uppercase tracking-widest text-orange hover:bg-orange hover:text-background disabled:opacity-50"
-        >
-          {isComplete ? t.memberPortal.completed : t.memberPortal.markComplete}
-        </button>
-        {status && <p className="font-dm text-xs text-orange">{status}</p>}
-      </div>
+      <LessonProgressActions
+        isComplete={isComplete}
+        status={status}
+        onMarkComplete={markComplete}
+      />
     </div>
   );
 }
