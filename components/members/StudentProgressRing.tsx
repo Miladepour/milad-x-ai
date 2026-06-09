@@ -57,20 +57,19 @@ export default function StudentProgressRing({
             className="transition-[stroke-dashoffset] duration-700 ease-out"
           />
         </g>
-        <foreignObject x={0} y={0} width={size} height={size}>
-          <div
-            xmlns="http://www.w3.org/1999/xhtml"
-            className="flex h-full w-full items-center justify-center"
-          >
-            <span
-              dir="ltr"
-              className="font-dm font-semibold leading-none tabular-nums text-cream"
-              style={{ fontSize, lineHeight: 1 }}
-            >
-              {percent}%
-            </span>
-          </div>
-        </foreignObject>
+        <text
+          x={center}
+          y={center}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fill="#F5F0E8"
+          fontSize={fontSize}
+          fontWeight={600}
+          fontFamily="var(--font-poppins), sans-serif"
+          style={{ fontVariantNumeric: "tabular-nums" }}
+        >
+          {percent}%
+        </text>
       </svg>
       {compact ? (
         !hideLabel && (
