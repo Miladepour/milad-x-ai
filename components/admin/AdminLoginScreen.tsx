@@ -15,6 +15,7 @@ import {
   verifyTotpCode,
   verifyTotpEnrollment,
 } from "@/lib/supabase/admin-mfa";
+import { requireAdminProfileClient } from "@/lib/supabase/require-admin-client";
 
 const turnstileRequired = isTurnstileSiteKeyConfigured();
 
@@ -41,6 +42,10 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
     turnstileRef.current?.reset();
   }
 
+  async function ensureAdminSession(supabase: ReturnType<typeof createClient>) {
+    await requireAdminProfileClient(supabase);
+  }
+
   useEffect(() => {
     if (!isSupabaseConfigured()) {
       setSessionChecked(true);
@@ -55,6 +60,8 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
       }
 
       try {
+        await ensureAdminSession(supabase);
+
         const assurance = await getMfaAssurance(supabase);
         if (assurance.needsVerification) {
           setStep("mfa_verify");
@@ -65,8 +72,13 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
         } else {
           await onAuthenticated();
         }
-      } catch {
-        await supabase.auth.signOut();
+      } catch (error) {
+        setStep("login");
+        setStatus(
+          error instanceof Error
+            ? error.message
+            : "This account cannot access the admin console."
+        );
       } finally {
         setSessionChecked(true);
       }
@@ -131,6 +143,19 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
       return;
     }
 
+    try {
+      await ensureAdminSession(supabase);
+    } catch (error) {
+      resetCaptcha();
+      setStatus(
+        error instanceof Error
+          ? error.message
+          : "This account is not authorized for admin access."
+      );
+      setLoading(false);
+      return;
+    }
+
     const assurance = await getMfaAssurance(supabase);
 
     if (assurance.needsVerification) {
@@ -172,6 +197,7 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
     const supabase = createClient();
 
     try {
+      await ensureAdminSession(supabase);
       const factor = await getVerifiedTotpFactor(supabase);
       await verifyTotpCode(supabase, factor.id, mfaCode);
       await onAuthenticated();
@@ -192,25 +218,12 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
     const supabase = createClient();
 
     try {
+      await ensureAdminSession(supabase);
       await verifyTotpEnrollment(supabase, enrollFactorId, mfaCode);
       await onAuthenticated();
       setStatus("MFA enabled. Signed in.");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Invalid verification code");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleSkipEnrollment() {
-    setLoading(true);
-    setStatus("Continuing without MFA…");
-    const supabase = createClient();
-    try {
-      await onAuthenticated();
-    } catch (error) {
-      await supabase.auth.signOut();
-      setStatus(error instanceof Error ? error.message : "Not authorized");
     } finally {
       setLoading(false);
     }
@@ -379,15 +392,6 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
             className="bg-orange px-5 py-3 font-mono text-xs uppercase tracking-widest text-background transition-colors hover:bg-cream disabled:opacity-60"
           >
             Enable MFA and continue
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSkipEnrollment}
-            disabled={loading}
-            className="font-mono text-xs uppercase tracking-widest text-cream/60 hover:text-orange disabled:opacity-60"
-          >
-            Skip for now
           </button>
 
           <button
