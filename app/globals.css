@@ -423,4 +423,50 @@ html.rtl .text-sm {
       font-size: 19px;
     }
   }
+
+  .lesson-content p {
+    margin-bottom: 0.75rem;
+  }
+
+  .lesson-content ul,
+  .lesson-content ol {
+    margin: 0.75rem 0;
+    padding-inline-start: 1.25rem;
+  }
+
+  .lesson-content strong,
+  .lesson-content b {
+    color: #f5f0e8;
+    font-weight: 600;
+  }
+
+  .lesson-content img {
+    margin: 1rem 0;
+    max-width: 100%;
+    height: auto;
+    border: 1px solid rgba(245, 240, 232, 0.15);
+  }
+
+  .lesson-content pre {
+    margin: 0;
+    overflow-x: auto;
+    border: 1px solid rgba(245, 240, 232, 0.2);
+    background: #141414;
+    padding: 1rem;
+    padding-top: 2.25rem;
+    font-family: ui-monospace, monospace;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: #f5f0e8;
+  }
+
+  .lesson-content code {
+    font-family: ui-monospace, monospace;
+  }
+
+  .lesson-content p code {
+    background: rgba(245, 240, 232, 0.08);
+    padding: 0.1rem 0.35rem;
+    font-size: 0.85em;
+  }
 }

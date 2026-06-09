@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import RichTextEditor from "@/components/shared/RichTextEditor";
 import type { MemberProgram, ProgramLesson, UsefulLink } from "@/lib/members/types";
 
 interface ProgramEditorProps {
@@ -16,6 +17,42 @@ function slugify(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function FieldLabel({
+  children,
+  htmlFor,
+  className = "",
+}: {
+  children: React.ReactNode;
+  htmlFor?: string;
+  className?: string;
+}) {
+  return (
+    <label
+      htmlFor={htmlFor}
+      className={`font-mono text-[10px] uppercase tracking-widest text-cream/45 ${className}`}
+    >
+      {children}
+    </label>
+  );
+}
+
+function Field({
+  label,
+  children,
+  className = "",
+}: {
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <label className={`flex flex-col gap-2 ${className}`}>
+      <FieldLabel>{label}</FieldLabel>
+      {children}
+    </label>
+  );
 }
 
 const emptyProgram = (): Omit<MemberProgram, "id" | "createdAt" | "updatedAt"> & {
@@ -48,6 +85,20 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
     );
   }, [loadList, onStatus]);
 
+  const uploadSlug = program.slug || slugify(program.title) || "member-lesson";
+
+  async function uploadLessonImage(file: File): Promise<string> {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("slug", uploadSlug);
+    form.append("bucket", "blog-images");
+    form.append("kind", "inline");
+    const res = await fetch("/api/admin-upload", { method: "POST", body: form });
+    const json = (await res.json()) as { url?: string; error?: string };
+    if (!res.ok || !json.url) throw new Error(json.error || "Upload failed");
+    return json.url;
+  }
+
   async function openProgram(idOrSlug: string) {
     setLoading(true);
     onStatus("Loading program…");
@@ -71,7 +122,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
     e.preventDefault();
     onStatus("Saving program…");
     try {
-      const data = (await membersRequest("save-program", {
+      await membersRequest("save-program", {
         program: {
           id: program.id,
           slug: program.slug || slugify(program.title),
@@ -82,9 +133,11 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
           status: program.status,
           usefulLinks: program.usefulLinks,
         },
-      })) as { program: MemberProgram };
-      setProgram(data.program);
+      });
       await loadList();
+      setView("list");
+      setProgram(emptyProgram());
+      setLessons([]);
       onStatus("Program saved.");
     } catch (err) {
       onStatus(err instanceof Error ? err.message : "Save failed");
@@ -179,7 +232,10 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
         ) : (
           <ul className="divide-y divide-surface border border-surface">
             {programs.map((p) => (
-              <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 p-4 hover:bg-surface/30">
+              <li
+                key={p.id}
+                className="flex flex-wrap items-center justify-between gap-3 p-4 hover:bg-surface/30"
+              >
                 <div>
                   <p className="font-dm text-cream">{p.title}</p>
                   <p className="font-mono text-[10px] uppercase tracking-widest text-cream/50">
@@ -215,72 +271,94 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
         ← Back to programs
       </button>
 
-      <form onSubmit={handleSaveProgram} className="grid gap-4 border border-surface bg-surface/20 p-5 lg:grid-cols-2">
-        <input
-          value={program.title}
-          onChange={(e) => setProgram((p) => ({ ...p, title: e.target.value }))}
-          className="form-field lg:col-span-2"
-          placeholder="Program title"
-          required
-        />
-        <input
-          value={program.slug}
-          onChange={(e) => setProgram((p) => ({ ...p, slug: e.target.value }))}
-          className="form-field"
-          placeholder={`Slug (default: ${slugify(program.title) || "program-slug"})`}
-        />
-        <select
-          value={program.status}
-          onChange={(e) =>
-            setProgram((p) => ({
-              ...p,
-              status: e.target.value === "published" ? "published" : "draft",
-            }))
-          }
-          className="form-field"
-        >
-          <option value="draft">Draft</option>
-          <option value="published">Published</option>
-        </select>
-        <input
-          type="number"
-          value={program.sortOrder}
-          onChange={(e) =>
-            setProgram((p) => ({ ...p, sortOrder: Number(e.target.value) || 0 }))
-          }
-          className="form-field"
-          placeholder="Sort order"
-        />
-        <input
-          value={program.coverImage ?? ""}
-          onChange={(e) =>
-            setProgram((p) => ({ ...p, coverImage: e.target.value || null }))
-          }
-          className="form-field"
-          placeholder="Cover image URL (optional)"
-        />
-        <textarea
-          value={program.description}
-          onChange={(e) => setProgram((p) => ({ ...p, description: e.target.value }))}
-          className="form-field min-h-24 lg:col-span-2"
-          placeholder="Program description"
-        />
+      <form
+        onSubmit={handleSaveProgram}
+        className="grid gap-4 border border-surface bg-surface/20 p-5 lg:grid-cols-2"
+      >
+        <Field label="Program title" className="lg:col-span-2">
+          <input
+            value={program.title}
+            onChange={(e) => setProgram((p) => ({ ...p, title: e.target.value }))}
+            className="form-field"
+            placeholder="e.g. Claude AI Webinar"
+            required
+          />
+        </Field>
+
+        <Field label="URL slug">
+          <input
+            value={program.slug}
+            onChange={(e) => setProgram((p) => ({ ...p, slug: e.target.value }))}
+            className="form-field"
+            placeholder={slugify(program.title) || "program-slug"}
+          />
+        </Field>
+
+        <Field label="Status">
+          <select
+            value={program.status}
+            onChange={(e) =>
+              setProgram((p) => ({
+                ...p,
+                status: e.target.value === "published" ? "published" : "draft",
+              }))
+            }
+            className="form-field"
+          >
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+          </select>
+        </Field>
+
+        <Field label="Sort order">
+          <input
+            type="number"
+            value={program.sortOrder}
+            onChange={(e) =>
+              setProgram((p) => ({ ...p, sortOrder: Number(e.target.value) || 0 }))
+            }
+            className="form-field"
+            placeholder="0"
+          />
+        </Field>
+
+        <Field label="Cover image URL (optional)">
+          <input
+            value={program.coverImage ?? ""}
+            onChange={(e) =>
+              setProgram((p) => ({ ...p, coverImage: e.target.value || null }))
+            }
+            className="form-field"
+            placeholder="https://…"
+          />
+        </Field>
+
+        <Field label="Program description" className="lg:col-span-2">
+          <textarea
+            value={program.description}
+            onChange={(e) => setProgram((p) => ({ ...p, description: e.target.value }))}
+            className="form-field min-h-24"
+            placeholder="Short summary shown on the student dashboard"
+          />
+        </Field>
 
         <div className="lg:col-span-2 flex flex-col gap-3">
-          <p className="font-mono text-xs uppercase tracking-widest text-orange">Useful links</p>
+          <FieldLabel>Useful links</FieldLabel>
           {program.usefulLinks.map((link, i) => (
-            <div key={i} className="flex flex-wrap gap-2">
+            <div key={i} className="grid gap-2 md:grid-cols-[1fr_2fr_auto]">
               <input
                 value={link.label}
                 onChange={(e) => updateLink(i, { label: e.target.value })}
-                className="form-field flex-1 min-w-[120px]"
-                placeholder="Label"
+                className="form-field"
+                placeholder="Link label"
+                aria-label={`Link ${i + 1} label`}
               />
               <input
                 value={link.url}
                 onChange={(e) => updateLink(i, { url: e.target.value })}
-                className="form-field flex-[2] min-w-[200px]"
-                placeholder="URL"
+                className="form-field"
+                placeholder="https://…"
+                aria-label={`Link ${i + 1} URL`}
               />
               <button
                 type="button"
@@ -351,7 +429,14 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
                   lesson={lesson}
                   index={index}
                   total={lessons.length}
-                  onSave={(patch) => saveLesson({ ...lesson, ...patch, published: patch.published ?? !!lesson.publishedAt })}
+                  onImageUpload={uploadLessonImage}
+                  onSave={(patch) =>
+                    saveLesson({
+                      ...lesson,
+                      ...patch,
+                      published: patch.published ?? !!lesson.publishedAt,
+                    })
+                  }
                   onMove={(dir) => moveLesson(index, dir)}
                   onDelete={() => removeLesson(lesson.id)}
                 />
@@ -368,6 +453,7 @@ function LessonRow({
   lesson,
   index,
   total,
+  onImageUpload,
   onSave,
   onMove,
   onDelete,
@@ -375,6 +461,7 @@ function LessonRow({
   lesson: ProgramLesson;
   index: number;
   total: number;
+  onImageUpload: (file: File) => Promise<string>;
   onSave: (patch: Partial<ProgramLesson> & { published?: boolean }) => void;
   onMove: (dir: -1 | 1) => void;
   onDelete: () => void;
@@ -395,8 +482,22 @@ function LessonRow({
     <li className="border border-surface bg-background/30 p-4">
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <span className="font-mono text-xs text-orange">#{index + 1}</span>
-        <button type="button" disabled={index === 0} onClick={() => onMove(-1)} className="font-mono text-xs text-cream/50 hover:text-orange disabled:opacity-30">↑</button>
-        <button type="button" disabled={index >= total - 1} onClick={() => onMove(1)} className="font-mono text-xs text-cream/50 hover:text-orange disabled:opacity-30">↓</button>
+        <button
+          type="button"
+          disabled={index === 0}
+          onClick={() => onMove(-1)}
+          className="font-mono text-xs text-cream/50 hover:text-orange disabled:opacity-30"
+        >
+          ↑
+        </button>
+        <button
+          type="button"
+          disabled={index >= total - 1}
+          onClick={() => onMove(1)}
+          className="font-mono text-xs text-cream/50 hover:text-orange disabled:opacity-30"
+        >
+          ↓
+        </button>
         <label className="ms-auto flex items-center gap-2 font-mono text-xs text-cream/70">
           <input
             type="checkbox"
@@ -406,11 +507,38 @@ function LessonRow({
           Published
         </label>
       </div>
-      <div className="grid gap-2">
-        <input value={title} onChange={(e) => setTitle(e.target.value)} className="form-field" placeholder="Lesson title" />
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="form-field min-h-20" placeholder="Description" />
-        <input value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className="form-field font-mono text-xs" placeholder="Video URL (YouTube, Vimeo, or direct link)" />
+
+      <div className="grid gap-4">
+        <Field label="Lesson title">
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="form-field"
+            placeholder="Lesson name"
+          />
+        </Field>
+
+        <Field label="Lesson materials (bold, images, copyable code)">
+          <RichTextEditor
+            key={lesson.id}
+            value={description}
+            onChange={setDescription}
+            onImageUpload={onImageUpload}
+            placeholder="Add notes, images, and code snippets for students…"
+            minHeightClassName="min-h-[200px]"
+          />
+        </Field>
+
+        <Field label="Video URL (YouTube, Vimeo, or direct link)">
+          <input
+            value={videoUrl}
+            onChange={(e) => setVideoUrl(e.target.value)}
+            className="form-field font-mono text-xs"
+            placeholder="https://www.youtube.com/watch?v=…"
+          />
+        </Field>
       </div>
+
       <div className="mt-3 flex gap-2">
         <button
           type="button"
@@ -421,7 +549,11 @@ function LessonRow({
         >
           Save lesson
         </button>
-        <button type="button" onClick={onDelete} className="border border-surface px-3 py-1.5 font-mono text-xs text-cream/50 hover:text-orange">
+        <button
+          type="button"
+          onClick={onDelete}
+          className="border border-surface px-3 py-1.5 font-mono text-xs text-cream/50 hover:text-orange"
+        >
           Delete
         </button>
       </div>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import LessonContent from "@/components/members/LessonContent";
 import LessonPlayer from "@/components/members/LessonPlayer";
 import MemberSignOutButton from "@/components/members/MemberSignOutButton";
 import { learnLessonPath, learnProgramPath } from "@/lib/members/paths";
@@ -55,11 +56,7 @@ export default async function LearnLessonPage({
         <h1 className="mt-2 font-dm text-3xl font-semibold text-cream">
           {data.lesson.title}
         </h1>
-        {data.lesson.description && (
-          <p className="mt-3 font-dm text-cream/70 whitespace-pre-wrap">
-            {data.lesson.description}
-          </p>
-        )}
+        <LessonContent content={data.lesson.description} />
       </header>
 
       <LessonPlayer
