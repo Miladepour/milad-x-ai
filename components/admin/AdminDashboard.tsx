@@ -7,7 +7,9 @@ import type { ContactSubmission } from "@/lib/contact/types";
 import type { WaitlistSubmission } from "@/lib/courses/types";
 import AdminInsightsPanel from "@/components/admin/AdminInsights";
 import AdminShell, { type AdminTab } from "@/components/admin/AdminShell";
+import { useNotifications } from "@/components/notifications/NotificationProvider";
 import type { AdminInsights } from "@/lib/admin/insights";
+import type { AppNotification } from "@/lib/notifications/types";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
@@ -94,7 +96,7 @@ export default function AdminDashboard({
   loadBlogPosts,
 }: AdminDashboardProps) {
   const [tab, setTab] = useState<AdminTab>("overview");
-  const [status, setStatus] = useState("");
+  const { notify } = useNotifications();
   const [post, setPost] = useState({
     locale: "EN",
     title: "",
@@ -129,7 +131,7 @@ export default function AdminDashboard({
 
   async function handlePublish(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setStatus("Publishing post...");
+    notify("Publishing post...", "info");
     try {
       const publishedAt = new Date(post.publishedAt).toISOString();
       const data = (await adminRequest("publish-post", {
@@ -143,15 +145,15 @@ export default function AdminDashboard({
         slug: data.post.slug,
       }));
       await loadBlogPosts();
-      setStatus(`Published: ${data.post.title}`);
+      notify(`Published: ${data.post.title}`, "success");
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Could not publish post.");
+      notify(error instanceof Error ? error.message : "Could not publish post.", "error");
     }
   }
 
   async function uploadBlogImage(file: File, kind: "cover" | "inline") {
     setBlogImageUploading(true);
-    setStatus("Uploading image…");
+    notify("Uploading image…", "info");
     try {
       const form = new FormData();
       form.append("file", file);
@@ -161,11 +163,10 @@ export default function AdminDashboard({
       const res = await fetch("/api/admin-upload", { method: "POST", body: form });
       const json = (await res.json()) as { url?: string; error?: string };
       if (!res.ok || !json.url) throw new Error(json.error || "Upload failed");
-      setStatus("Image uploaded ✓");
+      notify("Image uploaded", "success");
       return json.url;
     } finally {
       setBlogImageUploading(false);
-      window.setTimeout(() => setStatus(""), 900);
     }
   }
 
@@ -178,6 +179,16 @@ export default function AdminDashboard({
     }
   }, [editor, post.content]);
 
+  function handleNotificationClick(notification: AppNotification) {
+    if (notification.kind === "contact") {
+      setTab("contact");
+      return;
+    }
+    if (notification.kind === "waitlist") {
+      setTab("waitlist");
+    }
+  }
+
   return (
     <AdminShell
       adminEmail={adminEmail}
@@ -186,7 +197,7 @@ export default function AdminDashboard({
       onRefresh={() => void onRefresh()}
       onSignOut={() => void onSignOut()}
       isRefreshing={isBootstrapping}
-      status={status}
+      onNotificationClick={handleNotificationClick}
       navBadges={{
         contact: insights?.counts.unopenedContact ?? 0,
         waitlist: insights?.counts.unopenedWaitlist ?? 0,
@@ -208,19 +219,19 @@ export default function AdminDashboard({
 
       {tab === "courses" && (
         <div className="student-glass">
-          <CourseEditor adminRequest={adminRequest} onStatus={setStatus} />
+          <CourseEditor adminRequest={adminRequest} onStatus={notify} />
         </div>
       )}
 
       {tab === "programs" && (
         <div className="student-glass">
-          <ProgramEditor membersRequest={membersRequest} onStatus={setStatus} />
+          <ProgramEditor membersRequest={membersRequest} onStatus={notify} />
         </div>
       )}
 
       {tab === "students" && (
         <div className="student-glass">
-          <StudentManager membersRequest={membersRequest} onStatus={setStatus} />
+          <StudentManager membersRequest={membersRequest} onStatus={notify} />
         </div>
       )}
 
@@ -281,7 +292,7 @@ export default function AdminDashboard({
                         const url = await uploadBlogImage(file, "cover");
                         setPost((c) => ({ ...c, coverImage: url }));
                       } catch (err) {
-                        setStatus(err instanceof Error ? err.message : "Upload failed");
+                        notify(err instanceof Error ? err.message : "Upload failed", "error");
                       } finally {
                         if (coverInputRef.current) coverInputRef.current.value = "";
                       }
@@ -354,7 +365,7 @@ export default function AdminDashboard({
                         const url = await uploadBlogImage(file, "inline");
                         editor?.chain().focus().setImage({ src: url }).run();
                       } catch (err) {
-                        setStatus(err instanceof Error ? err.message : "Upload failed");
+                        notify(err instanceof Error ? err.message : "Upload failed", "error");
                       } finally {
                         if (inlineImageInputRef.current) inlineImageInputRef.current.value = "";
                       }
@@ -380,7 +391,7 @@ export default function AdminDashboard({
                     date: todayLabel(),
                     publishedAt: new Date().toISOString().slice(0, 10),
                   });
-                  setStatus("Ready for a new post.");
+                  notify("Ready for a new post.", "info");
                 }}
                 className="border border-surface px-4 py-2 font-mono text-xs uppercase tracking-widest text-cream hover:border-orange hover:text-orange"
               >
@@ -407,7 +418,7 @@ export default function AdminDashboard({
                               date: item.date,
                               publishedAt: item.publishedAt.slice(0, 10),
                             });
-                            setStatus(`Loaded: ${item.title} (${item.locale})`);
+                            notify(`Loaded: ${item.title} (${item.locale})`, "info");
                           }}
                           className="w-full px-3 py-2 text-left hover:bg-surface/40"
                         >

@@ -18,6 +18,12 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import StudentNavIcon from "@/components/members/StudentNavIcon";
+import NotificationBell from "@/components/notifications/NotificationBell";
+import {
+  NotificationProvider,
+  useNotifications,
+} from "@/components/notifications/NotificationProvider";
+import NotificationToasts from "@/components/notifications/NotificationToasts";
 import { learnPath } from "@/lib/members/paths";
 import { localizedPath } from "@/lib/i18n/paths";
 import type { UrlLocale } from "@/lib/i18n/config";
@@ -58,7 +64,16 @@ type NavItem = {
   icon: LucideIcon;
 };
 
-export default function StudentDashboardShell({
+export default function StudentDashboardShell(props: StudentDashboardShellProps) {
+  return (
+    <NotificationProvider>
+      <StudentDashboardShellInner {...props} />
+      <NotificationToasts />
+    </NotificationProvider>
+  );
+}
+
+function StudentDashboardShellInner({
   locale,
   studentName,
   labels,
@@ -67,6 +82,10 @@ export default function StudentDashboardShell({
 }: StudentDashboardShellProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { notifications } = useNotifications();
+  const announcementUnread = notifications.filter(
+    (item) => item.kind === "announcement" && !item.readAt
+  ).length;
 
   const dashboardHref = learnPath(locale);
   const isOnDashboard = pathname === dashboardHref || pathname === `${dashboardHref}/`;
@@ -107,10 +126,16 @@ export default function StudentDashboardShell({
   function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
     const active = isActive(item);
     const Icon = item.icon;
+    const badge = item.id === "announcements" ? announcementUnread : 0;
     return (
       <Link href={item.href} onClick={onNavigate} className={navRowClass(active)}>
         <StudentNavIcon icon={Icon} active={active} />
-        <span className="truncate">{item.label}</span>
+        <span className="flex-1 truncate">{item.label}</span>
+        {badge > 0 && (
+          <span className="rounded-full bg-orange/20 px-2 py-0.5 font-mono text-[10px] text-orange">
+            {badge}
+          </span>
+        )}
       </Link>
     );
   }
@@ -124,10 +149,15 @@ export default function StudentDashboardShell({
   const sidebar = (
     <div className="flex h-full flex-col">
       <div className="border-b border-white/[0.08] px-4 py-5">
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-orange">
-          {labels.portalTitle}
-        </p>
-        <p className="mt-1 truncate font-dm text-sm font-medium text-cream">{studentName}</p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-orange">
+              {labels.portalTitle}
+            </p>
+            <p className="mt-1 truncate font-dm text-sm font-medium text-cream">{studentName}</p>
+          </div>
+          <NotificationBell />
+        </div>
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
@@ -196,7 +226,7 @@ export default function StudentDashboardShell({
           {labels.menu}
         </button>
         <p className="truncate font-dm text-sm font-medium text-cream">{labels.portalTitle}</p>
-        <div className="w-[72px]" />
+        <NotificationBell />
       </div>
 
       {menuOpen && (

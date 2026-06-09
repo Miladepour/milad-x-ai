@@ -2,7 +2,22 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import {
+  BookOpen,
+  ClipboardList,
+  Globe,
+  GraduationCap,
+  LayoutDashboard,
+  Mail,
+  Menu,
+  PenLine,
+  X,
+  type LucideIcon,
+} from "lucide-react";
+import StudentNavIcon from "@/components/members/StudentNavIcon";
+import NotificationBell from "@/components/notifications/NotificationBell";
 import { ADMIN_DASHBOARD_BANNER_URL } from "@/lib/admin/dashboard-constants";
+import type { AppNotification } from "@/lib/notifications/types";
 
 export type AdminTab =
   | "overview"
@@ -16,7 +31,7 @@ export type AdminTab =
 interface NavItem {
   id: AdminTab;
   label: string;
-  icon: string;
+  icon: LucideIcon;
   badge?: number;
 }
 
@@ -27,9 +42,9 @@ interface AdminShellProps {
   onRefresh: () => void;
   onSignOut: () => void;
   isRefreshing?: boolean;
-  status?: string;
   children: React.ReactNode;
   navBadges?: Partial<Record<AdminTab, number>>;
+  onNotificationClick?: (notification: AppNotification) => void;
 }
 
 export default function AdminShell({
@@ -39,9 +54,9 @@ export default function AdminShell({
   onRefresh,
   onSignOut,
   isRefreshing,
-  status,
   children,
   navBadges = {},
+  onNotificationClick,
 }: AdminShellProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -50,13 +65,13 @@ export default function AdminShell({
     : "MX";
 
   const navItems: NavItem[] = [
-    { id: "overview", label: "Overview", icon: "◉" },
-    { id: "students", label: "Students", icon: "◎", badge: navBadges.students },
-    { id: "programs", label: "Member programs", icon: "▦" },
-    { id: "courses", label: "Public courses", icon: "◷" },
-    { id: "blog", label: "Blog", icon: "✎", badge: navBadges.blog },
-    { id: "contact", label: "Contact inbox", icon: "✉", badge: navBadges.contact },
-    { id: "waitlist", label: "Waitlists", icon: "☰", badge: navBadges.waitlist },
+    { id: "overview", label: "Overview", icon: LayoutDashboard },
+    { id: "students", label: "Students", icon: GraduationCap, badge: navBadges.students },
+    { id: "programs", label: "Member programs", icon: BookOpen },
+    { id: "courses", label: "Public courses", icon: Globe },
+    { id: "blog", label: "Blog", icon: PenLine, badge: navBadges.blog },
+    { id: "contact", label: "Contact inbox", icon: Mail, badge: navBadges.contact },
+    { id: "waitlist", label: "Waitlists", icon: ClipboardList, badge: navBadges.waitlist },
   ];
 
   function NavButton({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
@@ -68,19 +83,13 @@ export default function AdminShell({
           onTabChange(item.id);
           onNavigate?.();
         }}
-        className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-dm text-sm transition-all ${
+        className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-dm text-sm transition-all ${
           active
             ? "bg-orange/15 text-orange shadow-[inset_0_0_0_1px_rgba(255,92,0,0.25)]"
             : "text-cream/65 hover:bg-white/[0.05] hover:text-cream"
         }`}
       >
-        <span
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-mono text-sm ${
-            active ? "bg-orange/20 text-orange" : "bg-white/[0.06] text-cream/50"
-          }`}
-        >
-          {item.icon}
-        </span>
+        <StudentNavIcon icon={item.icon} active={active} />
         <span className="flex-1 truncate">{item.label}</span>
         {item.badge != null && item.badge > 0 && (
           <span className="rounded-full bg-orange/20 px-2 py-0.5 font-mono text-[10px] text-orange">
@@ -94,10 +103,15 @@ export default function AdminShell({
   const sidebar = (
     <div className="flex h-full flex-col">
       <div className="border-b border-white/[0.08] px-4 py-5">
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-orange">
-          MX Console
-        </p>
-        <p className="mt-1 truncate font-dm text-sm text-cream/80">{adminEmail}</p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-orange">
+              MX Console
+            </p>
+            <p className="mt-1 truncate font-dm text-sm text-cream/80">{adminEmail}</p>
+          </div>
+          <NotificationBell onNotificationClick={onNotificationClick} />
+        </div>
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
@@ -132,13 +146,17 @@ export default function AdminShell({
         <button
           type="button"
           onClick={() => setMenuOpen(true)}
-          className="student-glass-pill px-3 py-2 font-mono text-[10px] uppercase tracking-widest"
+          className="student-glass-pill flex items-center gap-2 px-3 py-2 font-mono text-[10px] uppercase tracking-widest"
         >
-          ☰ Menu
+          <Menu className="h-4 w-4" strokeWidth={1.75} />
+          Menu
         </button>
         <p className="font-dm text-sm font-medium">Admin console</p>
-        <div className="h-9 w-9 rounded-full border border-orange/50 bg-surface/80 text-center font-dm text-xs leading-9">
-          {initials}
+        <div className="flex items-center gap-2">
+          <NotificationBell onNotificationClick={onNotificationClick} />
+          <div className="h-9 w-9 rounded-full border border-orange/50 bg-surface/80 text-center font-dm text-xs leading-9">
+            {initials}
+          </div>
         </div>
       </div>
 
@@ -159,8 +177,13 @@ export default function AdminShell({
         >
           <div className="flex items-center justify-between border-b border-white/[0.08] px-4 py-3 lg:hidden">
             <span className="font-dm text-sm">Navigation</span>
-            <button type="button" onClick={() => setMenuOpen(false)} className="text-cream/60">
-              ✕
+            <button
+              type="button"
+              onClick={() => setMenuOpen(false)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-cream/60 transition-colors hover:bg-white/[0.06] hover:text-cream"
+              aria-label="Close menu"
+            >
+              <X className="h-5 w-5" strokeWidth={1.75} />
             </button>
           </div>
           {sidebar}
@@ -187,20 +210,19 @@ export default function AdminShell({
                 </h1>
                 <p className="mt-1 font-dm text-sm text-cream/60">{adminEmail}</p>
               </div>
-              <div
-                className="mt-4 flex h-12 w-12 shrink-0 items-center justify-center self-end rounded-full border-2 border-orange/70 bg-surface/80 font-dm text-sm font-semibold shadow-[0_0_24px_rgba(255,92,0,0.2)] backdrop-blur-md sm:mt-0 sm:h-14 sm:w-14"
-                title={adminEmail}
-              >
-                {initials}
+              <div className="mt-4 flex items-center gap-3 self-end sm:mt-0">
+                <div className="lg:hidden">
+                  <NotificationBell onNotificationClick={onNotificationClick} />
+                </div>
+                <div
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-orange/70 bg-surface/80 font-dm text-sm font-semibold shadow-[0_0_24px_rgba(255,92,0,0.2)] backdrop-blur-md sm:h-14 sm:w-14"
+                  title={adminEmail}
+                >
+                  {initials}
+                </div>
               </div>
             </div>
           </section>
-
-          {status && (
-            <p className="student-glass-accent student-glass px-4 py-3 font-dm text-sm text-orange">
-              {status}
-            </p>
-          )}
 
           {children}
         </main>

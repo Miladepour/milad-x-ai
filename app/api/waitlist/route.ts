@@ -7,6 +7,7 @@ import {
   FORM_ERROR_MESSAGE,
 } from "@/lib/security/forms";
 import { createServiceClient } from "@/lib/supabase/server";
+import { notifyAdminsOfWaitlistSubmission } from "@/lib/notifications/store";
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -45,19 +46,29 @@ export async function POST(request: Request) {
     }
 
     const supabase = createServiceClient();
-    const { error } = await supabase.from("waitlist_submissions").insert({
-      course_slug: courseSlug,
-      full_name: fullName,
-      email,
-      mobile,
-      country,
-      locale,
-    });
+    const { data, error } = await supabase
+      .from("waitlist_submissions")
+      .insert({
+        course_slug: courseSlug,
+        full_name: fullName,
+        email,
+        mobile,
+        country,
+        locale,
+      })
+      .select("id")
+      .single();
 
     if (error) {
       console.error("[waitlist] insert failed:", error.message);
       return NextResponse.json({ error: FORM_ERROR_MESSAGE }, { status: 500 });
     }
+
+    void notifyAdminsOfWaitlistSubmission({
+      id: data.id,
+      fullName,
+      courseSlug,
+    });
 
     return NextResponse.json({ ok: true });
   } catch (error) {

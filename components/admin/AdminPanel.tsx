@@ -6,6 +6,10 @@ import type { BlogPost } from "@/lib/blog/types";
 import type { ContactSubmission } from "@/lib/contact/types";
 import type { WaitlistSubmission } from "@/lib/courses/types";
 import AdminLoginScreen from "@/components/admin/AdminLoginScreen";
+import {
+  NotificationProvider,
+} from "@/components/notifications/NotificationProvider";
+import NotificationToasts from "@/components/notifications/NotificationToasts";
 import type { AdminInsights } from "@/lib/admin/insights";
 import { createClient } from "@/lib/supabase/client";
 
@@ -133,18 +137,21 @@ export default function AdminPanel() {
   }
 
   return (
-    <AdminDashboard
-      adminEmail={adminEmail}
-      summary={summary}
-      insights={insights}
-      blogPosts={blogPosts}
-      isBootstrapping={isBootstrapping}
-      onSignOut={handleSignOut}
-      onRefresh={refreshDashboard}
-      adminRequest={adminRequest}
-      membersRequest={membersRequest}
-      loadSummary={loadSummary}
-      loadBlogPosts={loadBlogPosts}
-    />
+    <NotificationProvider>
+      <AdminDashboard
+        adminEmail={adminEmail}
+        summary={summary}
+        insights={insights}
+        blogPosts={blogPosts}
+        isBootstrapping={isBootstrapping}
+        onSignOut={handleSignOut}
+        onRefresh={refreshDashboard}
+        adminRequest={adminRequest}
+        membersRequest={membersRequest}
+        loadSummary={loadSummary}
+        loadBlogPosts={loadBlogPosts}
+      />
+      <NotificationToasts />
+    </NotificationProvider>
   );
 }

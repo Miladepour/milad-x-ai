@@ -7,6 +7,7 @@ import {
   FORM_ERROR_MESSAGE,
 } from "@/lib/security/forms";
 import { createServiceClient } from "@/lib/supabase/server";
+import { notifyAdminsOfContactSubmission } from "@/lib/notifications/store";
 
 const VALID_INQUIRY_TYPES: ContactInquiryType[] = ["private_course", "collaboration"];
 
@@ -51,20 +52,30 @@ export async function POST(request: Request) {
     }
 
     const supabase = createServiceClient();
-    const { error } = await supabase.from("contact_submissions").insert({
-      full_name: fullName,
-      email,
-      mobile,
-      country,
-      inquiry_type: inquiryType,
-      message,
-      locale,
-    });
+    const { data, error } = await supabase
+      .from("contact_submissions")
+      .insert({
+        full_name: fullName,
+        email,
+        mobile,
+        country,
+        inquiry_type: inquiryType,
+        message,
+        locale,
+      })
+      .select("id")
+      .single();
 
     if (error) {
       console.error("[contact] insert failed:", error.message);
       return NextResponse.json({ error: FORM_ERROR_MESSAGE }, { status: 500 });
     }
+
+    void notifyAdminsOfContactSubmission({
+      id: data.id,
+      fullName,
+      inquiryType,
+    });
 
     return NextResponse.json({ ok: true });
   } catch (error) {

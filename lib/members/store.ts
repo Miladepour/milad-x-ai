@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { notifyStudentsForAnnouncement } from "@/lib/notifications/store";
 import { createServiceClient } from "@/lib/supabase/server";
 import {
   computeProgressPercent,
@@ -899,7 +900,11 @@ export async function upsertAnnouncementAdmin(
       if (isMissingAnnouncementsTable(error)) throw new Error(ANNOUNCEMENTS_SETUP_HINT);
       throw new Error(error.message);
     }
-    return announcementRowToAnnouncement(data as StudentAnnouncementRow);
+    const announcement = announcementRowToAnnouncement(data as StudentAnnouncementRow);
+    if (announcement.publishedAt) {
+      void notifyStudentsForAnnouncement(announcement);
+    }
+    return announcement;
   }
 
   const row = {
@@ -916,7 +921,11 @@ export async function upsertAnnouncementAdmin(
     if (isMissingAnnouncementsTable(error)) throw new Error(ANNOUNCEMENTS_SETUP_HINT);
     throw new Error(error.message);
   }
-  return announcementRowToAnnouncement(data as StudentAnnouncementRow);
+  const announcement = announcementRowToAnnouncement(data as StudentAnnouncementRow);
+  if (announcement.publishedAt) {
+    void notifyStudentsForAnnouncement(announcement);
+  }
+  return announcement;
 }
 
 export async function deleteAnnouncementAdmin(id: string): Promise<void> {

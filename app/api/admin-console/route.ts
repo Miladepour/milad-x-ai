@@ -15,6 +15,7 @@ import {
 } from "@/lib/supabase/mappers";
 import { createClient } from "@/lib/supabase/server";
 import { buildAdminInsights } from "@/lib/admin/insights";
+import { markNotificationsReadByReference } from "@/lib/notifications/store";
 import { getAdminUser } from "@/lib/supabase/require-admin";
 
 export async function POST(request: Request) {
@@ -57,6 +58,7 @@ export async function POST(request: Request) {
         .eq("id", id)
         .is("opened_at", null);
       if (error) throw new Error(error.message);
+      await markNotificationsReadByReference(admin.id, "contact", id);
       return NextResponse.json({ ok: true });
     }
 
@@ -71,6 +73,7 @@ export async function POST(request: Request) {
         .eq("id", id)
         .is("opened_at", null);
       if (error) throw new Error(error.message);
+      await markNotificationsReadByReference(admin.id, "waitlist", id);
       return NextResponse.json({ ok: true });
     }
 
