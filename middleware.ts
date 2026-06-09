@@ -45,8 +45,24 @@ function handleRequest(request: NextRequest): NextResponse {
   return NextResponse.rewrite(url);
 }
 
+function needsSessionRefresh(pathname: string): boolean {
+  const logical = pathname.replace(/^\/fa/, "") || "/";
+  const adminSegment = process.env.ADMIN_PATH_SEGMENT;
+  if (adminSegment && logical === `/${adminSegment}`) return true;
+  return (
+    logical === "/admin" ||
+    logical.startsWith("/admin/") ||
+    logical.startsWith("/learn") ||
+    logical.startsWith("/account") ||
+    logical.startsWith("/auth")
+  );
+}
+
 export async function middleware(request: NextRequest) {
   const response = handleRequest(request);
+  if (!needsSessionRefresh(request.nextUrl.pathname)) {
+    return response;
+  }
   return updateSession(request, response);
 }
 

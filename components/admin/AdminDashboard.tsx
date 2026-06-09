@@ -15,7 +15,25 @@ const CourseEditor = dynamic(() => import("@/components/admin/CourseEditor"), {
   ),
 });
 
-type AdminTab = "blog" | "contact" | "waitlist" | "courses";
+const ProgramEditor = dynamic(() => import("@/components/admin/ProgramEditor"), {
+  loading: () => (
+    <p className="font-dm text-sm text-cream/70">Loading programs…</p>
+  ),
+});
+
+const StudentManager = dynamic(() => import("@/components/admin/StudentManager"), {
+  loading: () => (
+    <p className="font-dm text-sm text-cream/70">Loading students…</p>
+  ),
+});
+
+type AdminTab =
+  | "blog"
+  | "contact"
+  | "waitlist"
+  | "courses"
+  | "programs"
+  | "students";
 
 interface AdminSummary {
   contactSubmissions: ContactSubmission[];
@@ -43,6 +61,7 @@ interface AdminDashboardProps {
   isBootstrapping: boolean;
   onSignOut: () => Promise<void>;
   adminRequest: (action: string, payload?: Record<string, unknown>) => Promise<unknown>;
+  membersRequest: (action: string, payload?: Record<string, unknown>) => Promise<unknown>;
   loadSummary: () => Promise<void>;
   loadBlogPosts: () => Promise<void>;
 }
@@ -70,6 +89,7 @@ export default function AdminDashboard({
   isBootstrapping,
   onSignOut,
   adminRequest,
+  membersRequest,
   loadSummary,
   loadBlogPosts,
 }: AdminDashboardProps) {
@@ -200,6 +220,8 @@ export default function AdminDashboard({
           {[
             ["blog", "Publish blog"],
             ["courses", "Courses"],
+            ["programs", "Member programs"],
+            ["students", "Students"],
             ["contact", `Contact forms (${summary.contactSubmissions.length})`],
             ["waitlist", `Waitlists (${summary.waitlistSubmissions.length})`],
           ].map(([value, label]) => (
@@ -221,6 +243,14 @@ export default function AdminDashboard({
 
         {tab === "courses" && (
           <CourseEditor adminRequest={adminRequest} onStatus={setStatus} />
+        )}
+
+        {tab === "programs" && (
+          <ProgramEditor membersRequest={membersRequest} onStatus={setStatus} />
+        )}
+
+        {tab === "students" && (
+          <StudentManager membersRequest={membersRequest} onStatus={setStatus} />
         )}
 
         {tab === "blog" && (

@@ -117,7 +117,20 @@ Column mapping:
 | `fullName` | `full_name` |
 | … | (same pattern as contact) |
 
-## 9. Security checklist
+## 9. Member portal (student dashboard)
+
+Run **`schema-member-portal.sql`** in the SQL editor after the main schema.
+
+1. Supabase → **Authentication** → disable **Enable sign ups** (invite-only students).
+2. Add redirect URLs: `https://yourdomain.com/auth/callback`, `/account/set-password`, `/learn`.
+3. Set `RESEND_API_KEY` and `EMAIL_FROM` in Vercel for invite emails.
+4. Admin panel → **Member programs**: create program + lessons (video URL optional).
+5. Admin panel → **Students**: invite by email with access start/end dates.
+6. Student opens invite link → sets password → `/learn` dashboard.
+
+Student login: `/account/login` (EN) or `/fa/account/login` (FA).
+
+## 10. Security checklist
 
 ### Supabase Attack Protection (enable after deploy)
 

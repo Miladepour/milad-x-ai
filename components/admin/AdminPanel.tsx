@@ -48,6 +48,18 @@ export default function AdminPanel() {
     return data;
   }, []);
 
+  const membersRequest = useCallback(async (action: string, payload = {}) => {
+    const res = await fetch("/api/admin-members", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ action, ...payload }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Members request failed");
+    return data;
+  }, []);
+
   const loadSummary = useCallback(async () => {
     const data = (await adminRequest("summary")) as AdminSummary;
     setSummary(data);
@@ -105,6 +117,7 @@ export default function AdminPanel() {
       isBootstrapping={isBootstrapping}
       onSignOut={handleSignOut}
       adminRequest={adminRequest}
+      membersRequest={membersRequest}
       loadSummary={loadSummary}
       loadBlogPosts={loadBlogPosts}
     />

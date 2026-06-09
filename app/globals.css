@@ -188,6 +188,26 @@ html.rtl .text-sm {
     letter-spacing: 0;
   }
 
+  .type-auth-quote-en {
+    font-size: clamp(1.5rem, 2.8vw, 2.25rem);
+    line-height: 1.2;
+  }
+
+  html.rtl .type-auth-quote-en {
+    font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+    line-height: 1.45;
+  }
+
+  .type-auth-quote-fa {
+    font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+    line-height: 1.75;
+  }
+
+  html.rtl .type-auth-quote-fa {
+    font-size: clamp(1.5rem, 2.8vw, 2.25rem);
+    line-height: 1.55;
+  }
+
   /* Hero FA: layout stays LTR (text left, image right); page scrolls normally */
   html.rtl .hero-content {
     margin-right: auto;
