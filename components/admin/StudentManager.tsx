@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import StudentAnnouncements from "@/components/admin/StudentAnnouncements";
+import StudentEmailComposer from "@/components/admin/StudentEmailComposer";
 import StudentProfilePanel from "@/components/admin/StudentProfilePanel";
 import { getEnrollmentAccessBlockReason } from "@/lib/members/access";
 import { PAYMENT_CURRENCIES, formatPayment } from "@/lib/members/currency";
@@ -23,10 +24,11 @@ interface StudentGroup {
   enrollments: EnrollmentWithDetails[];
 }
 
-type StudentSubTab = "announcements" | "invite" | "list";
+type StudentSubTab = "announcements" | "invite" | "email" | "list";
 
 const SUB_TABS: { id: StudentSubTab; label: string }[] = [
   { id: "announcements", label: "Announcements" },
+  { id: "email", label: "Email" },
   { id: "invite", label: "Invite" },
   { id: "list", label: "Student list" },
 ];
@@ -35,6 +37,7 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
   const [subTab, setSubTab] = useState<StudentSubTab>("list");
   const [programs, setPrograms] = useState<MemberProgram[]>([]);
   const [enrollments, setEnrollments] = useState<EnrollmentWithDetails[]>([]);
+  const [students, setStudents] = useState<StudentProfile[]>([]);
   const [filterProgram, setFilterProgram] = useState("");
   const [search, setSearch] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
@@ -52,12 +55,14 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
   });
 
   const load = useCallback(async () => {
-    const [programsData, enrollmentsData] = await Promise.all([
+    const [programsData, enrollmentsData, studentsData] = await Promise.all([
       membersRequest("list-programs") as Promise<{ programs: MemberProgram[] }>,
       membersRequest("list-enrollments") as Promise<{ enrollments: EnrollmentWithDetails[] }>,
+      membersRequest("list-students") as Promise<{ students: StudentProfile[] }>,
     ]);
     setPrograms(programsData.programs ?? []);
     setEnrollments(enrollmentsData.enrollments ?? []);
+    setStudents(studentsData.students ?? []);
   }, [membersRequest]);
 
   useEffect(() => {
@@ -99,6 +104,8 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
       return haystack.includes(q);
     });
   }, [studentGroups, search]);
+
+  const allStudents = students;
 
   async function handleInvite(e: FormEvent) {
     e.preventDefault();
@@ -213,6 +220,15 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
 
       {subTab === "announcements" && (
         <StudentAnnouncements membersRequest={membersRequest} onStatus={onStatus} />
+      )}
+
+      {subTab === "email" && (
+        <StudentEmailComposer
+          membersRequest={membersRequest}
+          onStatus={onStatus}
+          programs={programs}
+          students={allStudents}
+        />
       )}
 
       {subTab === "invite" && (

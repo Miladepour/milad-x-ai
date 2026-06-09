@@ -749,6 +749,69 @@ export async function syncExpiredEnrollments(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Student email broadcast
+// ---------------------------------------------------------------------------
+
+export type StudentEmailAudience =
+  | { type: "all" }
+  | { type: "student"; studentId: string }
+  | { type: "program"; programId: string };
+
+function dedupeStudentsByEmail(students: StudentProfile[]): StudentProfile[] {
+  const seen = new Set<string>();
+  const result: StudentProfile[] = [];
+  for (const student of students) {
+    const key = student.email.trim().toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    result.push(student);
+  }
+  return result.sort((a, b) =>
+    (a.fullName || a.email).localeCompare(b.fullName || b.email)
+  );
+}
+
+export async function resolveStudentEmailRecipients(
+  audience: StudentEmailAudience
+): Promise<StudentProfile[]> {
+  const supabase = createClient();
+
+  if (audience.type === "student") {
+    const student = await getStudentAdmin(audience.studentId);
+    return student ? [student.profile] : [];
+  }
+
+  if (audience.type === "program") {
+    const { data, error } = await supabase
+      .from("program_enrollments")
+      .select("student_profiles(*)")
+      .eq("program_id", audience.programId);
+
+    if (error) throw new Error(error.message);
+
+    const students = (data ?? [])
+      .map((row) => {
+        const profile = row.student_profiles;
+        if (!profile || Array.isArray(profile)) return null;
+        return studentProfileRowToProfile(profile as StudentProfileRow);
+      })
+      .filter((profile): profile is StudentProfile => profile !== null);
+
+    return dedupeStudentsByEmail(students);
+  }
+
+  const { data, error } = await supabase
+    .from("student_profiles")
+    .select("*")
+    .order("full_name", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return dedupeStudentsByEmail(
+    (data as StudentProfileRow[]).map(studentProfileRowToProfile)
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Student announcements
 // ---------------------------------------------------------------------------
 

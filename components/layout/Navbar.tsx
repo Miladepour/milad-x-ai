@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { localizedPath } from "@/lib/i18n/paths";
+import { accountLoginPath } from "@/lib/members/paths";
 import { COURSES_BASE_PATH } from "@/lib/courses";
 import { CONSULTATION_BASE_PATH } from "@/lib/consultation/constants";
 import { PORTFOLIO_BASE_PATH } from "@/lib/portfolio/constants";
@@ -27,13 +28,19 @@ function isNavActive(
 }
 
 function isStudentAreaActive(pathname: string, urlLocale: UrlLocale) {
-  const login = localizedPath("/account/login", urlLocale);
+  const login = localizedPath("/account/login", "en");
   const learn = localizedPath("/learn", urlLocale);
+  const learnEn = localizedPath("/learn", "en");
+  const learnFa = localizedPath("/learn", "fa");
   return (
     pathname === login ||
     pathname.startsWith(`${login}/`) ||
     pathname === learn ||
-    pathname.startsWith(`${learn}/`)
+    pathname.startsWith(`${learn}/`) ||
+    pathname === learnEn ||
+    pathname.startsWith(`${learnEn}/`) ||
+    pathname === learnFa ||
+    pathname.startsWith(`${learnFa}/`)
   );
 }
 
@@ -146,7 +153,7 @@ export default function Navbar() {
               {t.navbar.contact}
             </Link>
             <Link
-              href={href("/account/login")}
+              href={accountLoginPath(urlLocale)}
               className={`${studentLoginButtonClass} ${
                 isStudentAreaActive(pathname, urlLocale)
                   ? "ring-2 ring-cream ring-offset-2 ring-offset-background"
@@ -201,7 +208,7 @@ export default function Navbar() {
       >
         <div className="flex flex-col px-8 py-4 gap-5">
           <Link
-            href={href("/account/login")}
+            href={accountLoginPath(urlLocale)}
             className={`${studentLoginButtonClass} w-full ${
               isStudentAreaActive(pathname, urlLocale)
                 ? "ring-2 ring-cream ring-offset-2 ring-offset-background"

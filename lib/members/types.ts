@@ -168,3 +168,46 @@ export interface StudentAnnouncementPayload {
   published: boolean;
   expiresAt?: string | null;
 }
+
+export type StudentEmailDeliveryStatus =
+  | "sent"
+  | "delivered"
+  | "opened"
+  | "bounced"
+  | "complained"
+  | "failed"
+  | "delayed";
+
+export type StudentEmailAudienceType = "all" | "student" | "program";
+
+export interface StudentEmailDelivery {
+  id: string;
+  campaignId: string;
+  studentId: string | null;
+  recipientEmail: string;
+  recipientName: string;
+  locale: LocaleCode;
+  resendMessageId: string | null;
+  status: StudentEmailDeliveryStatus;
+  statusDetail: string | null;
+  sentAt: string;
+  deliveredAt: string | null;
+  openedAt: string | null;
+  updatedAt: string;
+}
+
+export interface StudentEmailCampaign {
+  id: string;
+  subject: string;
+  bodyHtml: string;
+  audienceType: StudentEmailAudienceType;
+  audienceLabel: string;
+  programId: string | null;
+  studentId: string | null;
+  sentBy: string | null;
+  recipientCount: number;
+  sentCount: number;
+  failedCount: number;
+  createdAt: string;
+  deliveries: StudentEmailDelivery[];
+}

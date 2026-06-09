@@ -9,7 +9,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface StudentAuthShellProps {
   children: React.ReactNode;
-  /** Login and set-password always use English UI regardless of site locale. */
+  /** Login and set-password form copy stays English when true. Quotes always show in EN + FA. */
   englishOnly?: boolean;
 }
 
@@ -20,7 +20,6 @@ export default function StudentAuthShell({
   const { href, lang } = useLanguage();
   const localeT = useTranslation();
   const t = englishOnly ? translations.EN : localeT;
-  const isFa = !englishOnly && lang === "FA";
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -59,60 +58,25 @@ export default function StudentAuthShell({
             </span>
           </div>
 
-          <blockquote className="relative z-10 px-6 pb-6 md:px-10 md:pb-8 lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-12 lg:pb-16">
-            {englishOnly ? (
-              <>
-                <p
-                  lang="en"
-                  className="font-dm text-[1.125rem] font-bold leading-snug text-cream sm:text-xl lg:type-auth-quote-en"
-                >
-                  {translations.EN.memberPortal.loginQuoteEn}
-                </p>
-                <p
-                  lang="fa"
-                  dir="rtl"
-                  className="font-vazir mt-4 border-s-2 border-orange/50 ps-4 text-[0.9375rem] leading-relaxed text-cream/80 sm:mt-6 sm:text-base sm:ps-5 lg:mt-8 lg:type-auth-quote-fa"
-                >
-                  {translations.FA.memberPortal.loginQuoteFa}
-                </p>
-              </>
-            ) : isFa ? (
-              <>
-                <p
-                  lang="fa"
-                  dir="rtl"
-                  className="font-vazir text-[1.0625rem] font-semibold leading-snug text-cream sm:text-lg lg:type-auth-quote-fa"
-                >
-                  {t.memberPortal.loginQuoteFa}
-                </p>
-                <p
-                  lang="en"
-                  className="font-dm mt-4 border-s-2 border-orange/50 ps-4 text-[0.9375rem] font-normal italic leading-snug text-orange sm:mt-6 sm:text-base sm:ps-5 lg:mt-8 lg:type-auth-quote-en"
-                >
-                  {t.memberPortal.loginQuoteEn}
-                </p>
-              </>
-            ) : (
-              <>
-                <p
-                  lang="en"
-                  className="font-dm text-[1.125rem] font-bold leading-snug text-cream sm:text-xl lg:type-auth-quote-en"
-                >
-                  {t.memberPortal.loginQuoteEn}
-                </p>
-                <p
-                  lang="fa"
-                  dir="rtl"
-                  className="font-vazir mt-4 border-s-2 border-orange/50 ps-4 text-[0.9375rem] leading-relaxed text-cream/80 sm:mt-6 sm:text-base sm:ps-5 lg:mt-8 lg:type-auth-quote-fa"
-                >
-                  {t.memberPortal.loginQuoteFa}
-                </p>
-              </>
-            )}
+          <blockquote className="relative z-10 flex flex-col justify-center px-6 pb-8 md:px-10 lg:flex-1 lg:px-12 lg:pb-16">
+            <p
+              lang="en"
+              dir="ltr"
+              className="type-auth-quote-en font-dm font-bold text-cream"
+            >
+              {translations.EN.memberPortal.loginQuoteEn}
+            </p>
+            <p
+              lang="fa"
+              dir="rtl"
+              className="type-auth-quote-fa mt-5 border-s-2 border-orange/50 ps-4 font-vazir text-cream/85 sm:mt-6 sm:ps-5"
+            >
+              {translations.FA.memberPortal.loginQuoteFa}
+            </p>
           </blockquote>
 
-          <p className="relative z-10 hidden px-6 pb-8 font-mono text-[10px] uppercase tracking-[0.25em] text-cream/40 lg:block lg:px-12 lg:pb-12">
-            {englishOnly ? "Student portal · Invite only" : isFa ? "پنل دانشجو · فقط با دعوت" : "Student portal · Invite only"}
+          <p className="relative z-10 px-6 pb-8 font-mono text-[10px] uppercase tracking-[0.25em] text-cream/40 lg:px-12 lg:pb-12">
+            {lang === "FA" ? "پنل دانشجو · فقط با دعوت" : "Student portal · Invite only"}
           </p>
         </section>
 

@@ -15,14 +15,14 @@ async function sendEmail(options: {
   to: string;
   subject: string;
   html: string;
-}): Promise<boolean> {
+}): Promise<{ ok: boolean; messageId?: string; error?: string }> {
   const apiKey = process.env.RESEND_API_KEY?.trim();
   if (!apiKey) {
     if (process.env.NODE_ENV === "development") {
       console.warn("[resend] RESEND_API_KEY missing — skipping email to", options.to);
-      return true;
+      return { ok: true, messageId: `dev-${Date.now()}` };
     }
-    return false;
+    return { ok: false, error: "RESEND_API_KEY missing" };
   }
 
   const res = await fetch(RESEND_API, {
@@ -42,9 +42,11 @@ async function sendEmail(options: {
   if (!res.ok) {
     const text = await res.text();
     console.error("[resend] failed:", text);
-    return false;
+    return { ok: false, error: text };
   }
-  return true;
+
+  const data = (await res.json().catch(() => ({}))) as { id?: string };
+  return { ok: true, messageId: data.id };
 }
 
 function layout(content: string): string {
@@ -111,7 +113,7 @@ export async function sendInviteEmail(options: {
     </a>
   `);
 
-  return sendEmail({ to: options.to, subject, html });
+  return sendEmail({ to: options.to, subject, html }).then((r) => r.ok);
 }
 
 export async function sendWelcomeEmail(options: {
@@ -144,7 +146,7 @@ export async function sendWelcomeEmail(options: {
     </a>
   `);
 
-  return sendEmail({ to: options.to, subject, html });
+  return sendEmail({ to: options.to, subject, html }).then((r) => r.ok);
 }
 
 export async function sendAccessExpiringEmail(options: {
@@ -181,5 +183,17 @@ export async function sendAccessExpiringEmail(options: {
     </a>
   `);
 
-  return sendEmail({ to: options.to, subject, html });
+  return sendEmail({ to: options.to, subject, html }).then((r) => r.ok);
+}
+
+export function buildEmailLayout(content: string): string {
+  return layout(content);
+}
+
+export async function sendRawEmail(options: {
+  to: string;
+  subject: string;
+  html: string;
+}): Promise<{ ok: boolean; messageId?: string; error?: string }> {
+  return sendEmail(options);
 }

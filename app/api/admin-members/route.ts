@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { sendLoggedStudentBroadcastEmails } from "@/lib/email/send-logged-student-broadcast";
+import { renderStudentBroadcastEmail } from "@/lib/email/student-broadcast";
+import { sanitizeEmailHtml } from "@/lib/email/sanitize-html";
 import { sendAccessExpiringEmail, sendInviteEmail } from "@/lib/email/resend";
 import {
   dateInputToEndIso,
@@ -16,13 +19,16 @@ import {
   listEnrollmentsAdmin,
   listProgramsAdmin,
   reorderLessonsAdmin,
+  resolveStudentEmailRecipients,
   syncExpiredEnrollments,
+  type StudentEmailAudience,
   updateEnrollmentAdmin,
   updateStudentAdmin,
   upsertAnnouncementAdmin,
   upsertLessonAdmin,
   upsertProgramAdmin,
 } from "@/lib/members/store";
+import { listStudentEmailHistoryAdmin } from "@/lib/members/student-email-store";
 import type { StudentAnnouncementPayload } from "@/lib/members/types";
 import type { PaymentCurrency } from "@/lib/members/types";
 import type {
@@ -49,6 +55,39 @@ function parseAccessEnd(value: unknown): string | null {
 function parseCurrency(value: unknown): PaymentCurrency | null {
   if (value === "USD" || value === "GBP" || value === "IRR") return value;
   return null;
+}
+
+function parseStudentEmailAudience(body: Record<string, unknown>): StudentEmailAudience | null {
+  const type = String(body.audienceType ?? "");
+  if (type === "all") return { type: "all" };
+  if (type === "student") {
+    const studentId = String(body.studentId ?? "").trim();
+    return studentId ? { type: "student", studentId } : null;
+  }
+  if (type === "program") {
+    const programId = String(body.programId ?? "").trim();
+    return programId ? { type: "program", programId } : null;
+  }
+  return null;
+}
+
+function parsePreviewLocale(value: unknown): "EN" | "FA" {
+  return value === "FA" ? "FA" : "EN";
+}
+
+async function buildAudienceLabel(
+  audience: StudentEmailAudience,
+  recipients: Awaited<ReturnType<typeof resolveStudentEmailRecipients>>
+): Promise<string> {
+  if (audience.type === "all") {
+    return "All students";
+  }
+  if (audience.type === "student") {
+    const student = recipients[0];
+    return student?.fullName?.trim() || student?.email || "One student";
+  }
+  const program = await getProgramAdmin(audience.programId);
+  return program?.program.title ?? "Program enrollment";
 }
 
 export async function POST(request: Request) {
@@ -124,6 +163,11 @@ export async function POST(request: Request) {
       await syncExpiredEnrollments();
       const enrollments = await listEnrollmentsAdmin();
       return NextResponse.json({ ok: true, enrollments });
+    }
+
+    if (action === "list-students") {
+      const students = await resolveStudentEmailRecipients({ type: "all" });
+      return NextResponse.json({ ok: true, students });
     }
 
     if (action === "get-student") {
@@ -311,6 +355,110 @@ export async function POST(request: Request) {
       });
 
       return NextResponse.json({ ok: true });
+    }
+
+    if (action === "preview-student-email") {
+      const subject = String(body.subject ?? "").trim();
+      const bodyHtml = sanitizeEmailHtml(String(body.bodyHtml ?? ""));
+      const audience = parseStudentEmailAudience(body);
+
+      if (!subject) {
+        return NextResponse.json({ error: "subject is required" }, { status: 400 });
+      }
+      if (!bodyHtml || bodyHtml === "<p></p>") {
+        return NextResponse.json({ error: "email body is required" }, { status: 400 });
+      }
+      if (!audience) {
+        return NextResponse.json({ error: "audience is required" }, { status: 400 });
+      }
+
+      const recipients = await resolveStudentEmailRecipients(audience);
+      if (recipients.length === 0) {
+        return NextResponse.json({ error: "No recipients match this audience" }, { status: 400 });
+      }
+
+      const previewLocale = parsePreviewLocale(body.previewLocale);
+      const sample =
+        audience.type === "student"
+          ? recipients[0]
+          : recipients.find((r) => r.locale === previewLocale) ?? recipients[0];
+
+      const html = renderStudentBroadcastEmail({
+        bodyHtml,
+        fullName: sample.fullName,
+        locale: sample.locale,
+      });
+
+      return NextResponse.json({
+        ok: true,
+        html,
+        subject,
+        recipientCount: recipients.length,
+        sampleRecipient: {
+          email: sample.email,
+          fullName: sample.fullName,
+          locale: sample.locale,
+        },
+        recipients: recipients.map((r) => ({
+          email: r.email,
+          fullName: r.fullName,
+          locale: r.locale,
+        })),
+      });
+    }
+
+    if (action === "list-student-email-history") {
+      const campaigns = await listStudentEmailHistoryAdmin();
+      return NextResponse.json({ ok: true, campaigns });
+    }
+
+    if (action === "send-student-email") {
+      const subject = String(body.subject ?? "").trim();
+      const bodyHtml = sanitizeEmailHtml(String(body.bodyHtml ?? ""));
+      const audience = parseStudentEmailAudience(body);
+
+      if (!subject) {
+        return NextResponse.json({ error: "subject is required" }, { status: 400 });
+      }
+      if (!bodyHtml || bodyHtml === "<p></p>") {
+        return NextResponse.json({ error: "email body is required" }, { status: 400 });
+      }
+      if (!audience) {
+        return NextResponse.json({ error: "audience is required" }, { status: 400 });
+      }
+
+      const recipients = await resolveStudentEmailRecipients(audience);
+      if (recipients.length === 0) {
+        return NextResponse.json({ error: "No recipients match this audience" }, { status: 400 });
+      }
+
+      const audienceLabel = await buildAudienceLabel(audience, recipients);
+
+      const { sent, failed, campaignId } = await sendLoggedStudentBroadcastEmails({
+        subject,
+        bodyHtml,
+        recipients,
+        audienceType: audience.type,
+        audienceLabel,
+        programId: audience.type === "program" ? audience.programId : null,
+        studentId: audience.type === "student" ? audience.studentId : null,
+        sentBy: admin.id,
+      });
+
+      if (sent === 0 && failed > 0) {
+        return NextResponse.json(
+          { error: "All emails failed to send. Check RESEND_API_KEY and EMAIL_FROM." },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        ok: true,
+        sent,
+        failed,
+        total: recipients.length,
+        campaignId,
+      });
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
