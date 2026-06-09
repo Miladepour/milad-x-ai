@@ -2,6 +2,7 @@ import type {
   EnrollmentStatus,
   LessonProgress,
   MemberProgram,
+  PaymentCurrency,
   ProgramEnrollment,
   ProgramLesson,
   ProgramStatus,
@@ -40,6 +41,8 @@ export interface StudentProfileRow {
   email: string;
   full_name: string;
   locale: string;
+  phone?: string | null;
+  notes?: string | null;
   created_at: string;
 }
 
@@ -50,6 +53,8 @@ export interface ProgramEnrollmentRow {
   status: string;
   access_starts_at: string;
   access_ends_at: string | null;
+  amount_paid?: number | null;
+  currency?: string | null;
   invited_at: string;
   invited_by: string | null;
   last_accessed_at: string | null;
@@ -115,12 +120,19 @@ export function programLessonRowToLesson(row: ProgramLessonRow): ProgramLesson {
   };
 }
 
+function parseCurrency(value: string | null | undefined): PaymentCurrency | null {
+  if (value === "USD" || value === "GBP" || value === "IRR") return value;
+  return null;
+}
+
 export function studentProfileRowToProfile(row: StudentProfileRow): StudentProfile {
   return {
     id: row.id,
     email: row.email,
     fullName: row.full_name,
     locale: row.locale === "FA" ? "FA" : "EN",
+    phone: row.phone ?? null,
+    notes: row.notes ?? null,
     createdAt: row.created_at,
   };
 }
@@ -133,6 +145,8 @@ export function enrollmentRowToEnrollment(row: ProgramEnrollmentRow): ProgramEnr
     status: row.status as EnrollmentStatus,
     accessStartsAt: row.access_starts_at,
     accessEndsAt: row.access_ends_at,
+    amountPaid: row.amount_paid != null ? Number(row.amount_paid) : null,
+    currency: parseCurrency(row.currency),
     invitedAt: row.invited_at,
     invitedBy: row.invited_by,
     lastAccessedAt: row.last_accessed_at,

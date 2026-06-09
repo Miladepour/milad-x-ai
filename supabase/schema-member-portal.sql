@@ -47,6 +47,8 @@ create table if not exists public.student_profiles (
   email text not null unique,
   full_name text not null default '',
   locale text not null default 'EN' check (locale in ('EN', 'FA')),
+  phone text,
+  notes text,
   created_at timestamptz not null default now()
 );
 
@@ -60,6 +62,8 @@ create table if not exists public.program_enrollments (
   status text not null default 'invited' check (status in ('invited', 'active', 'suspended', 'expired')),
   access_starts_at timestamptz not null default now(),
   access_ends_at timestamptz,
+  amount_paid numeric(12, 2),
+  currency text check (currency is null or currency in ('USD', 'GBP', 'IRR')),
   invited_at timestamptz not null default now(),
   invited_by uuid references auth.users (id) on delete set null,
   last_accessed_at timestamptz,
@@ -191,8 +195,13 @@ create policy "Students read enrolled programs"
   on public.member_programs for select to authenticated
   using (
     public.is_student()
-    and status = 'published'
-    and public.has_program_access(id)
+    and exists (
+      select 1
+      from public.program_enrollments e
+      where e.student_id = auth.uid()
+        and e.program_id = member_programs.id
+        and public.is_enrollment_active(e.status, e.access_starts_at, e.access_ends_at)
+    )
   );
 
 -- program_lessons: admins full; students read published lessons in enrolled programs
@@ -206,7 +215,6 @@ create policy "Students read enrolled lessons"
   on public.program_lessons for select to authenticated
   using (
     public.is_student()
-    and published_at is not null
     and public.has_program_access(program_id)
   );
 

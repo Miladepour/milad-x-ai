@@ -2,6 +2,7 @@ import type { LocaleCode } from "@/lib/supabase/database.types";
 
 export type ProgramStatus = "draft" | "published";
 export type EnrollmentStatus = "invited" | "active" | "suspended" | "expired";
+export type PaymentCurrency = "USD" | "GBP" | "IRR";
 
 export interface UsefulLink {
   label: string;
@@ -40,6 +41,8 @@ export interface StudentProfile {
   email: string;
   fullName: string;
   locale: LocaleCode;
+  phone: string | null;
+  notes: string | null;
   createdAt: string;
 }
 
@@ -50,6 +53,8 @@ export interface ProgramEnrollment {
   status: EnrollmentStatus;
   accessStartsAt: string;
   accessEndsAt: string | null;
+  amountPaid: number | null;
+  currency: PaymentCurrency | null;
   invitedAt: string;
   invitedBy: string | null;
   lastAccessedAt: string | null;
@@ -110,7 +115,34 @@ export interface InviteStudentPayload {
   email: string;
   fullName: string;
   locale: LocaleCode;
+  phone?: string | null;
+  notes?: string | null;
   programId: string;
   accessStartsAt: string;
   accessEndsAt?: string | null;
+  amountPaid?: number | null;
+  currency?: PaymentCurrency | null;
+}
+
+export interface UpdateStudentPayload {
+  studentId: string;
+  fullName?: string;
+  locale?: LocaleCode;
+  phone?: string | null;
+  notes?: string | null;
+}
+
+export interface AddEnrollmentPayload {
+  studentId: string;
+  programId: string;
+  accessStartsAt: string;
+  accessEndsAt?: string | null;
+  amountPaid?: number | null;
+  currency?: PaymentCurrency | null;
+  status?: EnrollmentStatus;
+}
+
+export interface StudentWithEnrollments {
+  profile: StudentProfile;
+  enrollments: EnrollmentWithDetails[];
 }

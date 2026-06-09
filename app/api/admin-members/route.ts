@@ -1,23 +1,51 @@
 import { NextResponse } from "next/server";
 import { sendAccessExpiringEmail, sendInviteEmail } from "@/lib/email/resend";
 import {
+  dateInputToEndIso,
+  dateInputToStartIso,
+  startOfTodayIso,
+} from "@/lib/members/dates";
+import {
+  addEnrollmentAdmin,
   deleteLessonAdmin,
   getProgramAdmin,
+  getStudentAdmin,
   inviteStudentAdmin,
   listEnrollmentsAdmin,
   listProgramsAdmin,
   reorderLessonsAdmin,
   syncExpiredEnrollments,
   updateEnrollmentAdmin,
+  updateStudentAdmin,
   upsertLessonAdmin,
   upsertProgramAdmin,
 } from "@/lib/members/store";
+import type { PaymentCurrency } from "@/lib/members/types";
 import type {
   InviteStudentPayload,
   MemberProgramPayload,
   ProgramLessonPayload,
 } from "@/lib/members/types";
 import { getAdminUser } from "@/lib/supabase/require-admin";
+
+function parseAccessStart(value: unknown): string {
+  const raw = String(value ?? "").trim();
+  if (!raw) return startOfTodayIso();
+  if (raw.includes("T")) return raw;
+  return dateInputToStartIso(raw);
+}
+
+function parseAccessEnd(value: unknown): string | null {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  if (raw.includes("T")) return raw;
+  return dateInputToEndIso(raw);
+}
+
+function parseCurrency(value: unknown): PaymentCurrency | null {
+  if (value === "USD" || value === "GBP" || value === "IRR") return value;
+  return null;
+}
 
 export async function POST(request: Request) {
   const admin = await getAdminUser();
@@ -94,6 +122,60 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, enrollments });
     }
 
+    if (action === "get-student") {
+      const studentId = String(body.studentId ?? "");
+      if (!studentId) {
+        return NextResponse.json({ error: "studentId required" }, { status: 400 });
+      }
+      const student = await getStudentAdmin(studentId);
+      if (!student) {
+        return NextResponse.json({ error: "Student not found" }, { status: 404 });
+      }
+      return NextResponse.json({ ok: true, student });
+    }
+
+    if (action === "update-student") {
+      const studentId = String(body.studentId ?? "");
+      if (!studentId) {
+        return NextResponse.json({ error: "studentId required" }, { status: 400 });
+      }
+      const profile = await updateStudentAdmin({
+        studentId,
+        fullName: body.fullName,
+        locale: body.locale === "FA" ? "FA" : body.locale === "EN" ? "EN" : undefined,
+        phone: body.phone,
+        notes: body.notes,
+      });
+      return NextResponse.json({ ok: true, profile });
+    }
+
+    if (action === "add-enrollment") {
+      const studentId = String(body.studentId ?? "");
+      const programId = String(body.programId ?? "");
+      if (!studentId || !programId) {
+        return NextResponse.json(
+          { error: "studentId and programId required" },
+          { status: 400 }
+        );
+      }
+      const enrollment = await addEnrollmentAdmin(
+        {
+          studentId,
+          programId,
+          accessStartsAt: parseAccessStart(body.accessStartsAt),
+          accessEndsAt: parseAccessEnd(body.accessEndsAt),
+          amountPaid:
+            body.amountPaid != null && body.amountPaid !== ""
+              ? Number(body.amountPaid)
+              : null,
+          currency: parseCurrency(body.currency),
+          status: body.status,
+        },
+        admin.id
+      );
+      return NextResponse.json({ ok: true, enrollment });
+    }
+
     if (action === "update-enrollment") {
       const enrollmentId = String(body.enrollmentId ?? "");
       if (!enrollmentId) {
@@ -101,8 +183,21 @@ export async function POST(request: Request) {
       }
       const enrollment = await updateEnrollmentAdmin(enrollmentId, {
         status: body.status,
-        accessStartsAt: body.accessStartsAt,
-        accessEndsAt: body.accessEndsAt,
+        accessStartsAt: body.accessStartsAt
+          ? parseAccessStart(body.accessStartsAt)
+          : undefined,
+        accessEndsAt:
+          body.accessEndsAt !== undefined
+            ? parseAccessEnd(body.accessEndsAt)
+            : undefined,
+        amountPaid:
+          body.amountPaid !== undefined
+            ? body.amountPaid === null || body.amountPaid === ""
+              ? null
+              : Number(body.amountPaid)
+            : undefined,
+        currency:
+          body.currency !== undefined ? parseCurrency(body.currency) : undefined,
       });
       return NextResponse.json({ ok: true, enrollment });
     }
@@ -126,9 +221,14 @@ export async function POST(request: Request) {
           email: payload.email,
           fullName: payload.fullName ?? "",
           locale: payload.locale === "FA" ? "FA" : "EN",
+          phone: payload.phone ?? null,
+          notes: payload.notes ?? null,
           programId: payload.programId,
-          accessStartsAt: payload.accessStartsAt || new Date().toISOString(),
-          accessEndsAt: payload.accessEndsAt ?? null,
+          accessStartsAt: parseAccessStart(payload.accessStartsAt),
+          accessEndsAt: parseAccessEnd(payload.accessEndsAt),
+          amountPaid:
+            payload.amountPaid != null ? Number(payload.amountPaid) : null,
+          currency: parseCurrency(payload.currency),
         },
         admin.id
       );

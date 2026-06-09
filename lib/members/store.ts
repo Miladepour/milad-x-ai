@@ -19,17 +19,22 @@ import {
 } from "./mappers";
 import { internalToUrlLocale } from "@/lib/i18n/config";
 import { accountSetPasswordPath, learnPath } from "@/lib/members/paths";
+import { startOfTodayIso } from "./dates";
 import type {
+  AddEnrollmentPayload,
   EnrollmentWithDetails,
   InviteStudentPayload,
   LessonProgress,
   MemberProgram,
   MemberProgramPayload,
+  PaymentCurrency,
   ProgramEnrollment,
   ProgramLesson,
   ProgramLessonPayload,
   StudentDashboardProgram,
   StudentProfile,
+  StudentWithEnrollments,
+  UpdateStudentPayload,
 } from "./types";
 
 function normalizeSlug(value: string): string {
@@ -180,13 +185,57 @@ export async function deleteLessonAdmin(lessonId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+async function enrichEnrollmentRow(
+  supabase: ReturnType<typeof createClient>,
+  row: ProgramEnrollmentRow & {
+    student_profiles: StudentProfileRow | null;
+    member_programs: MemberProgramRow | null;
+  }
+): Promise<EnrollmentWithDetails> {
+  const enrollment = enrollmentRowToEnrollment(row);
+  const program = row.member_programs
+    ? memberProgramRowToProgram(row.member_programs)
+    : undefined;
+  const student = row.student_profiles
+    ? studentProfileRowToProfile(row.student_profiles)
+    : undefined;
+
+  let completedLessons = 0;
+  let totalLessons = 0;
+  if (program) {
+    const { data: lessons } = await supabase
+      .from("program_lessons")
+      .select("id")
+      .eq("program_id", program.id);
+    totalLessons = lessons?.length ?? 0;
+
+    const { data: progress } = await supabase
+      .from("lesson_progress")
+      .select("id, completed_at, lesson_id")
+      .eq("student_id", enrollment.studentId)
+      .not("completed_at", "is", null);
+
+    const lessonIds = new Set((lessons ?? []).map((l) => l.id));
+    completedLessons = (progress ?? []).filter((p) =>
+      lessonIds.has(p.lesson_id)
+    ).length;
+  }
+
+  return {
+    ...enrollment,
+    student,
+    program,
+    completedLessons,
+    totalLessons,
+    progressPercent: computeProgressPercent(completedLessons, totalLessons),
+  };
+}
+
 export async function listEnrollmentsAdmin(): Promise<EnrollmentWithDetails[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("program_enrollments")
-    .select(
-      "*, student_profiles(*), member_programs(*)"
-    )
+    .select("*, student_profiles(*), member_programs(*)")
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);
@@ -198,50 +247,95 @@ export async function listEnrollmentsAdmin(): Promise<EnrollmentWithDetails[]> {
     }
   >;
 
-  const results: EnrollmentWithDetails[] = [];
+  return Promise.all(enrollments.map((row) => enrichEnrollmentRow(supabase, row)));
+}
 
-  for (const row of enrollments) {
-    const enrollment = enrollmentRowToEnrollment(row);
-    const program = row.member_programs
-      ? memberProgramRowToProgram(row.member_programs)
-      : undefined;
-    const student = row.student_profiles
-      ? studentProfileRowToProfile(row.student_profiles)
-      : undefined;
+export async function getStudentAdmin(
+  studentId: string
+): Promise<StudentWithEnrollments | null> {
+  const supabase = createClient();
+  const { data: profileData, error } = await supabase
+    .from("student_profiles")
+    .select("*")
+    .eq("id", studentId)
+    .maybeSingle();
 
-    let completedLessons = 0;
-    let totalLessons = 0;
-    if (program) {
-      const { data: lessons } = await supabase
-        .from("program_lessons")
-        .select("id")
-        .eq("program_id", program.id)
-        .not("published_at", "is", null);
-      totalLessons = lessons?.length ?? 0;
+  if (error) throw new Error(error.message);
+  if (!profileData) return null;
 
-      const { data: progress } = await supabase
-        .from("lesson_progress")
-        .select("id, completed_at, lesson_id")
-        .eq("student_id", enrollment.studentId)
-        .not("completed_at", "is", null);
+  const { data: enrollmentRows, error: enrollError } = await supabase
+    .from("program_enrollments")
+    .select("*, student_profiles(*), member_programs(*)")
+    .eq("student_id", studentId)
+    .order("created_at", { ascending: false });
 
-      const lessonIds = new Set((lessons ?? []).map((l) => l.id));
-      completedLessons = (progress ?? []).filter((p) =>
-        lessonIds.has(p.lesson_id)
-      ).length;
-    }
+  if (enrollError) throw new Error(enrollError.message);
 
-    results.push({
-      ...enrollment,
-      student,
-      program,
-      completedLessons,
-      totalLessons,
-      progressPercent: computeProgressPercent(completedLessons, totalLessons),
-    });
-  }
+  const enrollments = await Promise.all(
+    (enrollmentRows ?? []).map((row) =>
+      enrichEnrollmentRow(
+        supabase,
+        row as ProgramEnrollmentRow & {
+          student_profiles: StudentProfileRow | null;
+          member_programs: MemberProgramRow | null;
+        }
+      )
+    )
+  );
 
-  return results;
+  return {
+    profile: studentProfileRowToProfile(profileData as StudentProfileRow),
+    enrollments,
+  };
+}
+
+export async function updateStudentAdmin(
+  payload: UpdateStudentPayload
+): Promise<StudentProfile> {
+  const supabase = createClient();
+  const row: Record<string, unknown> = {};
+  if (payload.fullName !== undefined) row.full_name = payload.fullName.trim();
+  if (payload.locale !== undefined) row.locale = payload.locale;
+  if (payload.phone !== undefined) row.phone = payload.phone?.trim() || null;
+  if (payload.notes !== undefined) row.notes = payload.notes?.trim() || null;
+
+  const { data, error } = await supabase
+    .from("student_profiles")
+    .update(row)
+    .eq("id", payload.studentId)
+    .select("*")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return studentProfileRowToProfile(data as StudentProfileRow);
+}
+
+export async function addEnrollmentAdmin(
+  payload: AddEnrollmentPayload,
+  invitedBy: string
+): Promise<ProgramEnrollment> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("program_enrollments")
+    .upsert(
+      {
+        student_id: payload.studentId,
+        program_id: payload.programId,
+        status: payload.status ?? "active",
+        access_starts_at: payload.accessStartsAt,
+        access_ends_at: payload.accessEndsAt ?? null,
+        amount_paid: payload.amountPaid ?? null,
+        currency: payload.currency ?? null,
+        invited_by: invitedBy,
+        invited_at: new Date().toISOString(),
+      },
+      { onConflict: "student_id,program_id" }
+    )
+    .select("*")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return enrollmentRowToEnrollment(data as ProgramEnrollmentRow);
 }
 
 export async function updateEnrollmentAdmin(
@@ -250,6 +344,8 @@ export async function updateEnrollmentAdmin(
     status: ProgramEnrollment["status"];
     accessStartsAt: string;
     accessEndsAt: string | null;
+    amountPaid: number | null;
+    currency: PaymentCurrency | null;
   }>
 ): Promise<ProgramEnrollment> {
   const supabase = createClient();
@@ -257,6 +353,8 @@ export async function updateEnrollmentAdmin(
   if (updates.status) row.status = updates.status;
   if (updates.accessStartsAt) row.access_starts_at = updates.accessStartsAt;
   if (updates.accessEndsAt !== undefined) row.access_ends_at = updates.accessEndsAt;
+  if (updates.amountPaid !== undefined) row.amount_paid = updates.amountPaid;
+  if (updates.currency !== undefined) row.currency = updates.currency;
 
   const { data, error } = await supabase
     .from("program_enrollments")
@@ -308,7 +406,7 @@ export async function getStudentDashboard(
 
     const programRow = (row as { member_programs: MemberProgramRow | null })
       .member_programs;
-    if (!programRow || programRow.status !== "published") continue;
+    if (!programRow) continue;
 
     const program = memberProgramRowToProgram(programRow);
 
@@ -316,7 +414,6 @@ export async function getStudentDashboard(
       .from("program_lessons")
       .select("*")
       .eq("program_id", program.id)
-      .not("published_at", "is", null)
       .order("sort_order", { ascending: true });
 
     const lessons = (lessonsData as ProgramLessonRow[] ?? []).map(
@@ -520,6 +617,10 @@ export async function inviteStudentAdmin(
   const inviteLink =
     linkData.properties?.action_link ?? `${siteUrl}${setPasswordPath}`;
 
+  const accessStartsAt =
+    payload.accessStartsAt?.trim() || startOfTodayIso();
+  const accessEndsAt = payload.accessEndsAt ?? null;
+
   const { data: profileData, error: profileError } = await service
     .from("student_profiles")
     .upsert(
@@ -528,6 +629,8 @@ export async function inviteStudentAdmin(
         email,
         full_name: payload.fullName.trim(),
         locale: payload.locale,
+        phone: payload.phone?.trim() || null,
+        notes: payload.notes?.trim() || null,
       },
       { onConflict: "id" }
     )
@@ -542,9 +645,11 @@ export async function inviteStudentAdmin(
       {
         student_id: userId,
         program_id: payload.programId,
-        status: "invited",
-        access_starts_at: payload.accessStartsAt,
-        access_ends_at: payload.accessEndsAt ?? null,
+        status: "active",
+        access_starts_at: accessStartsAt,
+        access_ends_at: accessEndsAt,
+        amount_paid: payload.amountPaid ?? null,
+        currency: payload.currency ?? null,
         invited_by: invitedBy,
         invited_at: new Date().toISOString(),
       },
