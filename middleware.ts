@@ -8,6 +8,7 @@ function handleRequest(request: NextRequest): NextResponse {
 
   if (
     pathname.startsWith("/api") ||
+    pathname.startsWith("/auth") ||
     pathname.startsWith("/_next") ||
     pathname === "/sitemap.xml" ||
     pathname === "/robots.txt" ||

@@ -17,6 +17,8 @@ import {
   type ProgramLessonRow,
   type StudentProfileRow,
 } from "./mappers";
+import { internalToUrlLocale } from "@/lib/i18n/config";
+import { accountSetPasswordPath, learnPath } from "@/lib/members/paths";
 import type {
   EnrollmentWithDetails,
   InviteStudentPayload,
@@ -477,11 +479,16 @@ export async function inviteStudentAdmin(
     "https://www.mxaiacademy.com";
 
   let userId: string;
-  let inviteLink = `${siteUrl}/account/login`;
+  const urlLocale = internalToUrlLocale(payload.locale);
+  const setPasswordPath = accountSetPasswordPath(urlLocale);
+  const learnRedirectPath = learnPath(urlLocale);
+  const authCallbackUrl = (nextPath: string) =>
+    `${siteUrl}/auth/callback?next=${encodeURIComponent(nextPath)}`;
+  let inviteLink = `${siteUrl}${setPasswordPath}`;
 
   const { data: inviteData, error: inviteError } =
     await service.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${siteUrl}/auth/callback?next=/account/set-password`,
+      redirectTo: authCallbackUrl(setPasswordPath),
       data: { full_name: payload.fullName },
     });
 
@@ -491,7 +498,7 @@ export async function inviteStudentAdmin(
       type: "invite",
       email,
       options: {
-        redirectTo: `${siteUrl}/auth/callback?next=/account/set-password`,
+        redirectTo: authCallbackUrl(setPasswordPath),
       },
     });
     if (linkData?.properties?.action_link) {
@@ -502,7 +509,7 @@ export async function inviteStudentAdmin(
       type: "magiclink",
       email,
       options: {
-        redirectTo: `${siteUrl}/auth/callback?next=/learn`,
+        redirectTo: authCallbackUrl(learnRedirectPath),
       },
     });
     if (linkError || !linkData?.user) {
