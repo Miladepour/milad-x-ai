@@ -15,7 +15,11 @@ import {
   verifyTotpCode,
   verifyTotpEnrollment,
 } from "@/lib/supabase/admin-mfa";
-import { requireAdminProfileClient } from "@/lib/supabase/require-admin-client";
+import {
+  assertAdminProfileClient,
+  isAdminProfile,
+  requireAdminProfileClient,
+} from "@/lib/supabase/require-admin-client";
 
 const turnstileRequired = isTurnstileSiteKeyConfigured();
 
@@ -42,10 +46,6 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
     turnstileRef.current?.reset();
   }
 
-  async function ensureAdminSession(supabase: ReturnType<typeof createClient>) {
-    await requireAdminProfileClient(supabase);
-  }
-
   useEffect(() => {
     if (!isSupabaseConfigured()) {
       setSessionChecked(true);
@@ -59,9 +59,17 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
         return;
       }
 
-      try {
-        await ensureAdminSession(supabase);
+      const isAdmin = await isAdminProfile(supabase);
+      if (!isAdmin) {
+        setStep("login");
+        setStatus(
+          "You are signed in with a non-admin account. Enter admin credentials below, or use Student login for courses."
+        );
+        setSessionChecked(true);
+        return;
+      }
 
+      try {
         const assurance = await getMfaAssurance(supabase);
         if (assurance.needsVerification) {
           setStep("mfa_verify");
@@ -72,13 +80,9 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
         } else {
           await onAuthenticated();
         }
-      } catch (error) {
+      } catch {
         setStep("login");
-        setStatus(
-          error instanceof Error
-            ? error.message
-            : "This account cannot access the admin console."
-        );
+        setStatus("Could not restore admin session. Sign in again.");
       } finally {
         setSessionChecked(true);
       }
@@ -127,6 +131,13 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
     setStatus("Signing in…");
     const supabase = createClient();
 
+    const {
+      data: { session: existingSession },
+    } = await supabase.auth.getSession();
+    if (existingSession && !(await isAdminProfile(supabase))) {
+      await supabase.auth.signOut();
+    }
+
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
@@ -144,7 +155,7 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
     }
 
     try {
-      await ensureAdminSession(supabase);
+      await requireAdminProfileClient(supabase);
     } catch (error) {
       resetCaptcha();
       setStatus(
@@ -197,7 +208,7 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
     const supabase = createClient();
 
     try {
-      await ensureAdminSession(supabase);
+      await assertAdminProfileClient(supabase);
       const factor = await getVerifiedTotpFactor(supabase);
       await verifyTotpCode(supabase, factor.id, mfaCode);
       await onAuthenticated();
@@ -218,7 +229,7 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
     const supabase = createClient();
 
     try {
-      await ensureAdminSession(supabase);
+      await assertAdminProfileClient(supabase);
       await verifyTotpEnrollment(supabase, enrollFactorId, mfaCode);
       await onAuthenticated();
       setStatus("MFA enabled. Signed in.");

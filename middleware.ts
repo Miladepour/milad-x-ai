@@ -7,8 +7,6 @@ function handleRequest(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
 
   if (
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/auth") ||
     pathname.startsWith("/_next") ||
     pathname === "/sitemap.xml" ||
     pathname === "/robots.txt" ||
@@ -31,6 +29,10 @@ function handleRequest(request: NextRequest): NextResponse {
     return new NextResponse(null, { status: 404 });
   }
 
+  if (pathname.startsWith("/api") || pathname.startsWith("/auth")) {
+    return NextResponse.next();
+  }
+
   if (pathname === `/${defaultLocale}` || pathname.startsWith(`/${defaultLocale}/`)) {
     const url = request.nextUrl.clone();
     url.pathname = pathname === `/${defaultLocale}` ? "/" : pathname.slice(3);
@@ -46,25 +48,9 @@ function handleRequest(request: NextRequest): NextResponse {
   return NextResponse.rewrite(url);
 }
 
-function needsSessionRefresh(pathname: string): boolean {
-  const logical = pathname.replace(/^\/fa/, "") || "/";
-  const adminSegment = process.env.ADMIN_PATH_SEGMENT;
-  if (adminSegment && logical === `/${adminSegment}`) return true;
-  return (
-    logical === "/admin" ||
-    logical.startsWith("/admin/") ||
-    logical.startsWith("/learn") ||
-    logical.startsWith("/account") ||
-    logical.startsWith("/auth")
-  );
-}
-
 export async function middleware(request: NextRequest) {
-  const response = handleRequest(request);
-  if (!needsSessionRefresh(request.nextUrl.pathname)) {
-    return response;
-  }
-  return updateSession(request, response);
+  const routingResponse = handleRequest(request);
+  return updateSession(request, routingResponse);
 }
 
 export const config = {

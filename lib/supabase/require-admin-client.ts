@@ -19,15 +19,24 @@ export async function isAdminProfile(supabase: SupabaseClient): Promise<boolean>
   return true;
 }
 
+const NOT_ADMIN_MESSAGE =
+  "This account is not authorized for admin access. Use the student login page for enrolled programs.";
+
+/** Throws if the current session is not an admin (does not sign out). */
+export async function assertAdminProfileClient(
+  supabase: SupabaseClient
+): Promise<void> {
+  if (!(await isAdminProfile(supabase))) {
+    throw new Error(NOT_ADMIN_MESSAGE);
+  }
+}
+
 /** Signs out and throws if the current session is not an admin. */
 export async function requireAdminProfileClient(
   supabase: SupabaseClient
 ): Promise<void> {
-  const allowed = await isAdminProfile(supabase);
-  if (!allowed) {
+  if (!(await isAdminProfile(supabase))) {
     await supabase.auth.signOut();
-    throw new Error(
-      "This account is not authorized for admin access. Use the student login page for enrolled programs."
-    );
+    throw new Error(NOT_ADMIN_MESSAGE);
   }
 }
