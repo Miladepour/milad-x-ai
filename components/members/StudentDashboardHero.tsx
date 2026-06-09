@@ -19,6 +19,15 @@ interface StudentDashboardHeroProps {
   progressLabel: string;
 }
 
+const statCardClass =
+  "student-glass-pill flex h-[104px] min-w-0 flex-col items-center px-3 py-3 text-center";
+
+const statLabelClass =
+  "w-full font-mono text-[10px] uppercase leading-tight tracking-widest text-cream";
+
+const statValueClass =
+  "font-dm text-xl font-semibold leading-none text-cream sm:text-2xl";
+
 export default function StudentDashboardHero({
   brandName,
   welcomeLabel,
@@ -63,30 +72,29 @@ export default function StudentDashboardHero({
           </div>
         </div>
 
-        <ul className="mt-6 flex flex-wrap items-stretch gap-3">
+        <ul className="mt-6 grid grid-cols-3 gap-3">
           {stats.map((stat) => (
-            <li
-              key={stat.label}
-              className="student-glass-pill min-h-[88px] min-w-[140px] flex-1 px-4 py-3 sm:max-w-[200px] sm:flex-none"
-            >
-              <p className="font-mono text-[10px] uppercase tracking-widest text-cream/50">
-                {stat.label}
-              </p>
-              <p className="mt-1 font-dm text-xl font-semibold text-cream sm:text-2xl">
-                {stat.value}
-                {stat.hint && (
-                  <span className="ms-1 text-sm font-normal text-cream/45">{stat.hint}</span>
-                )}
-              </p>
+            <li key={stat.label} className={statCardClass}>
+              <p className={statLabelClass}>{stat.label}</p>
+              <div className="flex w-full flex-1 items-center justify-center">
+                <p className={statValueClass}>
+                  {stat.value}
+                  {stat.hint && <span className="ms-1">{stat.hint}</span>}
+                </p>
+              </div>
             </li>
           ))}
-          <li className="student-glass-pill flex min-h-[88px] min-w-[140px] flex-1 items-center justify-center px-3 py-2 sm:max-w-[200px] sm:flex-none sm:px-4">
-            <StudentProgressRing
-              percent={progressPercent}
-              label={progressLabel}
-              size={64}
-              compact
-            />
+          <li className={statCardClass}>
+            <p className={statLabelClass}>{progressLabel}</p>
+            <div className="flex w-full flex-1 items-center justify-center">
+              <StudentProgressRing
+                percent={progressPercent}
+                label={progressLabel}
+                size={56}
+                compact
+                hideLabel
+              />
+            </div>
           </li>
         </ul>
       </div>
