@@ -478,46 +478,47 @@ export async function inviteStudentAdmin(
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
     "https://www.mxaiacademy.com";
 
-  let userId: string;
   const urlLocale = internalToUrlLocale(payload.locale);
   const setPasswordPath = accountSetPasswordPath(urlLocale);
   const learnRedirectPath = learnPath(urlLocale);
   const authCallbackUrl = (nextPath: string) =>
     `${siteUrl}/auth/callback?next=${encodeURIComponent(nextPath)}`;
-  let inviteLink = `${siteUrl}${setPasswordPath}`;
+  const fullName = payload.fullName.trim();
 
-  const { data: inviteData, error: inviteError } =
-    await service.auth.admin.inviteUserByEmail(email, {
-      redirectTo: authCallbackUrl(setPasswordPath),
-      data: { full_name: payload.fullName },
-    });
-
-  if (!inviteError && inviteData?.user) {
-    userId = inviteData.user.id;
-    const { data: linkData } = await service.auth.admin.generateLink({
+  // generateLink only — do NOT use inviteUserByEmail (that sends a second Supabase email).
+  const { data: inviteLinkData, error: inviteLinkError } =
+    await service.auth.admin.generateLink({
       type: "invite",
       email,
       options: {
         redirectTo: authCallbackUrl(setPasswordPath),
+        data: { full_name: fullName },
       },
     });
-    if (linkData?.properties?.action_link) {
-      inviteLink = linkData.properties.action_link;
-    }
-  } else {
-    const { data: linkData, error: linkError } = await service.auth.admin.generateLink({
+
+  let linkData = inviteLinkData;
+  let linkError = inviteLinkError;
+
+  if (linkError || !linkData?.user) {
+    const magic = await service.auth.admin.generateLink({
       type: "magiclink",
       email,
       options: {
         redirectTo: authCallbackUrl(learnRedirectPath),
+        data: { full_name: fullName },
       },
     });
-    if (linkError || !linkData?.user) {
-      throw new Error(inviteError?.message ?? linkError?.message ?? "Could not invite user");
-    }
-    userId = linkData.user.id;
-    inviteLink = linkData.properties?.action_link ?? inviteLink;
+    linkData = magic.data;
+    linkError = magic.error;
   }
+
+  if (linkError || !linkData?.user) {
+    throw new Error(linkError?.message ?? "Could not create invite link");
+  }
+
+  const userId = linkData.user.id;
+  const inviteLink =
+    linkData.properties?.action_link ?? `${siteUrl}${setPasswordPath}`;
 
   const { data: profileData, error: profileError } = await service
     .from("student_profiles")
