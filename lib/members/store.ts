@@ -22,6 +22,7 @@ import { accountSetPasswordPath, learnPath } from "@/lib/members/paths";
 import { startOfTodayIso } from "./dates";
 import type {
   AddEnrollmentPayload,
+  AnnouncementLocale,
   EnrollmentWithDetails,
   InviteStudentPayload,
   LessonProgress,
@@ -31,19 +32,31 @@ import type {
   ProgramEnrollment,
   ProgramLesson,
   ProgramLessonPayload,
+  StudentAnnouncement,
+  StudentAnnouncementPayload,
   StudentDashboardProgram,
   StudentProfile,
   StudentWithEnrollments,
   UpdateStudentPayload,
 } from "./types";
 
-function normalizeSlug(value: string): string {
-  return value
+function normalizeSlug(value: string, fallbackSeed?: string): string {
+  const slug = value
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 90);
+  if (slug) return slug;
+
+  const fromSeed = (fallbackSeed ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+  if (fromSeed) return fromSeed;
+
+  return `program-${crypto.randomUUID().replace(/-/g, "").slice(0, 8)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -96,7 +109,7 @@ export async function upsertProgramAdmin(
   payload: MemberProgramPayload
 ): Promise<MemberProgram> {
   const supabase = createClient();
-  const slug = normalizeSlug(payload.slug || payload.title);
+  const slug = normalizeSlug(payload.slug || payload.title, payload.id);
 
   const row = {
     slug,
@@ -386,6 +399,61 @@ export async function getStudentProfile(
   return studentProfileRowToProfile(data as StudentProfileRow);
 }
 
+async function loadStudentDashboardProgram(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  program: MemberProgram,
+  enrollment: ProgramEnrollment
+): Promise<StudentDashboardProgram> {
+  const { data: lessonsData } = await supabase
+    .from("program_lessons")
+    .select("*")
+    .eq("program_id", program.id)
+    .order("sort_order", { ascending: true });
+
+  const lessons = (lessonsData as ProgramLessonRow[] ?? []).map(
+    programLessonRowToLesson
+  );
+
+  const lessonIds = lessons.map((l) => l.id);
+  let progressData: import("./mappers").LessonProgressRow[] = [];
+  if (lessonIds.length > 0) {
+    const { data } = await supabase
+      .from("lesson_progress")
+      .select("*")
+      .eq("student_id", userId)
+      .in("lesson_id", lessonIds);
+    progressData = (data as import("./mappers").LessonProgressRow[] | null) ?? [];
+  }
+
+  const progressMap = new Map(
+    progressData.map((p) => [p.lesson_id, progressRowToProgress(p)])
+  );
+
+  const completedLessons = lessons.filter((l) =>
+    progressMap.get(l.id)?.completedAt
+  ).length;
+
+  let continueLesson: ProgramLesson | null = null;
+  for (const lesson of lessons) {
+    const prog = progressMap.get(lesson.id);
+    if (!prog?.completedAt) {
+      continueLesson = lesson;
+      break;
+    }
+  }
+
+  return {
+    program,
+    enrollment,
+    lessons,
+    progressPercent: computeProgressPercent(completedLessons, lessons.length),
+    completedLessons,
+    totalLessons: lessons.length,
+    continueLesson,
+  };
+}
+
 export async function getStudentDashboard(
   userId: string
 ): Promise<StudentDashboardProgram[]> {
@@ -404,60 +472,24 @@ export async function getStudentDashboard(
     const enrollment = enrollmentRowToEnrollment(row as ProgramEnrollmentRow);
     if (!isEnrollmentActive(enrollment)) continue;
 
-    const programRow = (row as { member_programs: MemberProgramRow | null })
+    let programRow = (row as { member_programs: MemberProgramRow | null })
       .member_programs;
+    if (!programRow) {
+      const { data } = await supabase
+        .from("member_programs")
+        .select("*")
+        .eq("id", enrollment.programId)
+        .maybeSingle();
+      programRow = (data as MemberProgramRow | null) ?? null;
+    }
     if (!programRow) continue;
 
     const program = memberProgramRowToProgram(programRow);
+    if (!program.slug.trim()) continue;
 
-    const { data: lessonsData } = await supabase
-      .from("program_lessons")
-      .select("*")
-      .eq("program_id", program.id)
-      .order("sort_order", { ascending: true });
-
-    const lessons = (lessonsData as ProgramLessonRow[] ?? []).map(
-      programLessonRowToLesson
+    results.push(
+      await loadStudentDashboardProgram(supabase, userId, program, enrollment)
     );
-
-    const { data: progressData } = await supabase
-      .from("lesson_progress")
-      .select("*")
-      .eq("student_id", userId)
-      .in(
-        "lesson_id",
-        lessons.map((l) => l.id)
-      );
-
-    const progressMap = new Map(
-      (progressData as import("./mappers").LessonProgressRow[] ?? []).map((p) => [
-        p.lesson_id,
-        progressRowToProgress(p),
-      ])
-    );
-
-    const completedLessons = lessons.filter((l) =>
-      progressMap.get(l.id)?.completedAt
-    ).length;
-
-    let continueLesson: ProgramLesson | null = null;
-    for (const lesson of lessons) {
-      const prog = progressMap.get(lesson.id);
-      if (!prog?.completedAt) {
-        continueLesson = lesson;
-        break;
-      }
-    }
-
-    results.push({
-      program,
-      enrollment,
-      lessons,
-      progressPercent: computeProgressPercent(completedLessons, lessons.length),
-      completedLessons,
-      totalLessons: lessons.length,
-      continueLesson,
-    });
   }
 
   results.sort((a, b) => a.program.sortOrder - b.program.sortOrder);
@@ -468,8 +500,37 @@ export async function getStudentProgram(
   userId: string,
   programSlug: string
 ): Promise<StudentDashboardProgram | null> {
-  const dashboard = await getStudentDashboard(userId);
-  return dashboard.find((d) => d.program.slug === programSlug) ?? null;
+  const slug = programSlug.trim().toLowerCase();
+  if (!slug) return null;
+
+  const supabase = createClient();
+
+  const { data: programData, error: programError } = await supabase
+    .from("member_programs")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (programError) throw new Error(programError.message);
+  if (!programData) return null;
+
+  const { data: enrollmentRow, error: enrollmentError } = await supabase
+    .from("program_enrollments")
+    .select("*")
+    .eq("student_id", userId)
+    .eq("program_id", programData.id)
+    .maybeSingle();
+
+  if (enrollmentError) throw new Error(enrollmentError.message);
+  if (!enrollmentRow) return null;
+
+  const enrollment = enrollmentRowToEnrollment(
+    enrollmentRow as ProgramEnrollmentRow
+  );
+  if (!isEnrollmentActive(enrollment)) return null;
+
+  const program = memberProgramRowToProgram(programData as MemberProgramRow);
+  return loadStudentDashboardProgram(supabase, userId, program, enrollment);
 }
 
 export async function getStudentLesson(
@@ -685,4 +746,143 @@ export async function syncExpiredEnrollments(): Promise<void> {
         .eq("id", row.id);
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Student announcements
+// ---------------------------------------------------------------------------
+
+interface StudentAnnouncementRow {
+  id: string;
+  title: string;
+  body: string;
+  locale: AnnouncementLocale;
+  published_at: string | null;
+  expires_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+function announcementRowToAnnouncement(row: StudentAnnouncementRow): StudentAnnouncement {
+  return {
+    id: row.id,
+    title: row.title,
+    body: row.body,
+    locale: row.locale,
+    publishedAt: row.published_at,
+    expiresAt: row.expires_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+const ANNOUNCEMENTS_SETUP_HINT =
+  "Run supabase/patch-student-announcements.sql in the Supabase SQL editor.";
+
+function isMissingAnnouncementsTable(error: { message?: string; code?: string }): boolean {
+  const msg = error.message ?? "";
+  return (
+    error.code === "PGRST205" ||
+    (msg.includes("student_announcements") &&
+      (msg.includes("schema cache") || msg.includes("does not exist")))
+  );
+}
+
+export async function listAnnouncementsAdmin(): Promise<StudentAnnouncement[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("student_announcements")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    if (isMissingAnnouncementsTable(error)) return [];
+    throw new Error(error.message);
+  }
+  return (data as StudentAnnouncementRow[]).map(announcementRowToAnnouncement);
+}
+
+export async function upsertAnnouncementAdmin(
+  payload: StudentAnnouncementPayload
+): Promise<StudentAnnouncement> {
+  const supabase = createClient();
+  const baseRow = {
+    title: payload.title.trim(),
+    body: payload.body.trim(),
+    locale: payload.locale,
+    expires_at: payload.expiresAt ?? null,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (payload.id) {
+    const { data: existing } = await supabase
+      .from("student_announcements")
+      .select("published_at")
+      .eq("id", payload.id)
+      .maybeSingle();
+
+    const publishedAt = payload.published
+      ? (existing as { published_at: string | null } | null)?.published_at ??
+        new Date().toISOString()
+      : null;
+
+    const { data, error } = await supabase
+      .from("student_announcements")
+      .update({ ...baseRow, published_at: publishedAt })
+      .eq("id", payload.id)
+      .select("*")
+      .single();
+    if (error) {
+      if (isMissingAnnouncementsTable(error)) throw new Error(ANNOUNCEMENTS_SETUP_HINT);
+      throw new Error(error.message);
+    }
+    return announcementRowToAnnouncement(data as StudentAnnouncementRow);
+  }
+
+  const row = {
+    ...baseRow,
+    published_at: payload.published ? new Date().toISOString() : null,
+  };
+
+  const { data, error } = await supabase
+    .from("student_announcements")
+    .insert(row)
+    .select("*")
+    .single();
+  if (error) {
+    if (isMissingAnnouncementsTable(error)) throw new Error(ANNOUNCEMENTS_SETUP_HINT);
+    throw new Error(error.message);
+  }
+  return announcementRowToAnnouncement(data as StudentAnnouncementRow);
+}
+
+export async function deleteAnnouncementAdmin(id: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from("student_announcements").delete().eq("id", id);
+  if (error) {
+    if (isMissingAnnouncementsTable(error)) throw new Error(ANNOUNCEMENTS_SETUP_HINT);
+    throw new Error(error.message);
+  }
+}
+
+export async function listAnnouncementsForStudent(
+  studentLocale: "EN" | "FA"
+): Promise<StudentAnnouncement[]> {
+  const supabase = createClient();
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("student_announcements")
+    .select("*")
+    .not("published_at", "is", null)
+    .lte("published_at", now)
+    .or(`expires_at.is.null,expires_at.gt."${now}"`)
+    .in("locale", [studentLocale, "ALL"])
+    .order("published_at", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    if (isMissingAnnouncementsTable(error)) return [];
+    throw new Error(error.message);
+  }
+  return (data as StudentAnnouncementRow[]).map(announcementRowToAnnouncement);
 }

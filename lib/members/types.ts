@@ -146,3 +146,25 @@ export interface StudentWithEnrollments {
   profile: StudentProfile;
   enrollments: EnrollmentWithDetails[];
 }
+
+export type AnnouncementLocale = "EN" | "FA" | "ALL";
+
+export interface StudentAnnouncement {
+  id: string;
+  title: string;
+  body: string;
+  locale: AnnouncementLocale;
+  publishedAt: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StudentAnnouncementPayload {
+  id?: string;
+  title: string;
+  body: string;
+  locale: AnnouncementLocale;
+  published: boolean;
+  expiresAt?: string | null;
+}

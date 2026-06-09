@@ -4,14 +4,15 @@ import { FormEvent, useState } from "react";
 import { Lock } from "lucide-react";
 import StudentAuthShell from "@/components/members/StudentAuthShell";
 import { createClient } from "@/lib/supabase/client";
-import { useTranslation } from "@/lib/i18n/useTranslation";
+import { translations } from "@/lib/i18n/translations";
+
+const t = translations.EN.memberPortal;
 
 interface SetPasswordFormProps {
   redirectTo: string;
 }
 
 export default function SetPasswordForm({ redirectTo }: SetPasswordFormProps) {
-  const t = useTranslation();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [status, setStatus] = useState("");
@@ -42,24 +43,24 @@ export default function SetPasswordForm({ redirectTo }: SetPasswordFormProps) {
   }
 
   return (
-    <StudentAuthShell>
+    <StudentAuthShell englishOnly>
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <div>
           <div className="mb-5 inline-flex h-11 w-11 items-center justify-center border border-orange/40 bg-orange/10">
             <Lock className="h-5 w-5 text-orange" strokeWidth={1.75} aria-hidden />
           </div>
           <h1 className="font-dm text-3xl font-semibold tracking-tight text-cream">
-            {t.memberPortal.setPasswordTitle}
+            {t.setPasswordTitle}
           </h1>
           <p className="mt-2 font-dm text-sm leading-relaxed text-cream/55">
-            {t.memberPortal.setPasswordSubtitle}
+            {t.setPasswordSubtitle}
           </p>
         </div>
 
         <div className="flex flex-col gap-4">
           <label className="flex flex-col gap-2">
             <span className="font-mono text-[10px] uppercase tracking-widest text-cream/45">
-              {t.memberPortal.newPassword}
+              {t.newPassword}
             </span>
             <input
               type="password"
@@ -73,7 +74,7 @@ export default function SetPasswordForm({ redirectTo }: SetPasswordFormProps) {
           </label>
           <label className="flex flex-col gap-2">
             <span className="font-mono text-[10px] uppercase tracking-widest text-cream/45">
-              {t.memberPortal.confirmPassword}
+              {t.confirmPassword}
             </span>
             <input
               type="password"
@@ -91,7 +92,7 @@ export default function SetPasswordForm({ redirectTo }: SetPasswordFormProps) {
           disabled={loading}
           className="w-full bg-orange px-5 py-3.5 font-mono text-xs uppercase tracking-widest text-background transition-colors hover:bg-cream disabled:opacity-50"
         >
-          {loading ? "…" : t.memberPortal.savePassword}
+          {loading ? "…" : t.savePassword}
         </button>
 
         {status && (

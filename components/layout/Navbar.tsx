@@ -37,6 +37,11 @@ function isStudentAreaActive(pathname: string, urlLocale: UrlLocale) {
   );
 }
 
+function isLearnPortalActive(pathname: string, urlLocale: UrlLocale) {
+  const learn = localizedPath("/learn", urlLocale);
+  return pathname === learn || pathname.startsWith(`${learn}/`);
+}
+
 const studentLoginButtonClass =
   "inline-flex items-center justify-center gap-2 border-2 border-orange bg-orange px-4 py-2 font-mono text-[11px] uppercase tracking-widest text-background transition-colors hover:bg-orange-dim hover:border-orange-dim";
 
@@ -70,7 +75,10 @@ export default function Navbar() {
       }`}
     >
       <nav className="px-8 md:px-12 lg:px-16 h-20 flex items-center justify-between">
-        <Link href={href("/")} className="flex items-center">
+        <Link
+          href={isLearnPortalActive(pathname, urlLocale) ? href("/learn") : href("/")}
+          className="flex items-center"
+        >
           <Image
             src="/images/miladxailogo9.png"
             alt="Milad X AI"

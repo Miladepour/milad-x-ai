@@ -43,6 +43,7 @@ export function blogPostToRow(
 
 export function contactRowToSubmission(row: ContactSubmissionRow): ContactSubmission {
   return {
+    id: row.id,
     fullName: row.full_name,
     email: row.email,
     mobile: row.mobile,
@@ -51,6 +52,7 @@ export function contactRowToSubmission(row: ContactSubmissionRow): ContactSubmis
     message: row.message,
     locale: row.locale,
     submittedAt: row.submitted_at,
+    openedAt: row.opened_at ?? null,
   };
 }
 
@@ -58,6 +60,7 @@ export function waitlistRowToSubmission(
   row: WaitlistSubmissionRow
 ): WaitlistSubmission {
   return {
+    id: row.id,
     courseSlug: row.course_slug,
     fullName: row.full_name,
     email: row.email,
@@ -65,6 +68,7 @@ export function waitlistRowToSubmission(
     country: row.country,
     locale: row.locale,
     submittedAt: row.submitted_at,
+    openedAt: row.opened_at ?? null,
   };
 }
 

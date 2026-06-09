@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import LessonContent from "@/components/members/LessonContent";
 import LessonPlayer from "@/components/members/LessonPlayer";
-import MemberSignOutButton from "@/components/members/MemberSignOutButton";
+import StudentGlassCard from "@/components/members/StudentGlassCard";
 import { learnLessonPath, learnProgramPath } from "@/lib/members/paths";
 import { getStudentLesson } from "@/lib/members/store";
 import { urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
@@ -38,39 +38,35 @@ export default async function LearnLessonPage({
       : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-6 py-28">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+    <div className="flex flex-col gap-5 pb-10 sm:gap-6">
+      <StudentGlassCard>
         <Link
           href={learnProgramPath(params.programSlug, locale)}
-          className="font-mono text-xs uppercase tracking-widest text-orange hover:text-cream"
+          className="font-mono text-[10px] uppercase tracking-widest text-orange hover:text-cream"
         >
           ← {data.program.title}
         </Link>
-        <MemberSignOutButton label={t.memberPortal.signOut} />
-      </div>
+        <p className="mt-4 student-section-title">{data.program.title}</p>
+        <h1 className="mt-2 font-dm text-3xl font-semibold text-cream">{data.lesson.title}</h1>
+        <div className="lesson-content mt-4">
+          <LessonContent content={data.lesson.description} />
+        </div>
+      </StudentGlassCard>
 
-      <header>
-        <p className="font-mono text-xs uppercase tracking-widest text-orange">
-          {data.program.title}
-        </p>
-        <h1 className="mt-2 font-dm text-3xl font-semibold text-cream">
-          {data.lesson.title}
-        </h1>
-        <LessonContent content={data.lesson.description} />
-      </header>
+      <StudentGlassCard className="!p-0 overflow-hidden">
+        <LessonPlayer
+          lessonId={data.lesson.id}
+          videoUrl={data.lesson.videoUrl}
+          initialPosition={data.progress?.lastPositionSeconds ?? 0}
+          completed={!!data.progress?.completedAt}
+        />
+      </StudentGlassCard>
 
-      <LessonPlayer
-        lessonId={data.lesson.id}
-        videoUrl={data.lesson.videoUrl}
-        initialPosition={data.progress?.lastPositionSeconds ?? 0}
-        completed={!!data.progress?.completedAt}
-      />
-
-      <nav className="flex flex-wrap justify-between gap-3 border-t border-surface pt-6">
+      <StudentGlassCard className="flex flex-wrap justify-between gap-3">
         {prev ? (
           <Link
             href={learnLessonPath(params.programSlug, prev.id, locale)}
-            className="font-mono text-xs uppercase tracking-widest text-cream hover:text-orange"
+            className="font-mono text-[10px] uppercase tracking-widest text-cream hover:text-orange"
           >
             ← {t.memberPortal.previous}
           </Link>
@@ -80,12 +76,12 @@ export default async function LearnLessonPage({
         {next ? (
           <Link
             href={learnLessonPath(params.programSlug, next.id, locale)}
-            className="font-mono text-xs uppercase tracking-widest text-orange hover:text-cream"
+            className="font-mono text-[10px] uppercase tracking-widest text-orange hover:text-cream"
           >
             {t.memberPortal.next} →
           </Link>
         ) : null}
-      </nav>
+      </StudentGlassCard>
     </div>
   );
 }

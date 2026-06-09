@@ -33,6 +33,7 @@ export interface ContactSubmissionRow {
   message: string;
   locale: string;
   submitted_at: string;
+  opened_at?: string | null;
 }
 
 export interface WaitlistSubmissionRow {
@@ -44,6 +45,7 @@ export interface WaitlistSubmissionRow {
   country: string;
   locale: string;
   submitted_at: string;
+  opened_at?: string | null;
 }
 
 export interface CourseRow {

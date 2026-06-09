@@ -6,6 +6,7 @@ import type { BlogPost } from "@/lib/blog/types";
 import type { ContactSubmission } from "@/lib/contact/types";
 import type { WaitlistSubmission } from "@/lib/courses/types";
 import AdminLoginScreen from "@/components/admin/AdminLoginScreen";
+import type { AdminInsights } from "@/lib/admin/insights";
 import { createClient } from "@/lib/supabase/client";
 
 const AdminDashboard = dynamic(() => import("@/components/admin/AdminDashboard"), {
@@ -24,6 +25,7 @@ interface AdminSummary {
 
 interface BootstrapResponse extends AdminSummary {
   posts: BlogPost[];
+  insights: AdminInsights;
 }
 
 export default function AdminPanel() {
@@ -35,6 +37,7 @@ export default function AdminPanel() {
     waitlistSubmissions: [],
   });
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [insights, setInsights] = useState<AdminInsights | null>(null);
 
   const adminRequest = useCallback(async (action: string, payload = {}) => {
     const res = await fetch("/api/admin-console", {
@@ -70,6 +73,24 @@ export default function AdminPanel() {
     setBlogPosts(data.posts ?? []);
   }, [adminRequest]);
 
+  const refreshDashboard = useCallback(async () => {
+    setIsBootstrapping(true);
+    try {
+      const [summaryData, insightsData] = await Promise.all([
+        adminRequest("summary") as Promise<AdminSummary>,
+        adminRequest("insights") as Promise<{ insights: AdminInsights }>,
+        loadBlogPosts(),
+      ]);
+      setSummary({
+        contactSubmissions: summaryData.contactSubmissions,
+        waitlistSubmissions: summaryData.waitlistSubmissions,
+      });
+      setInsights(insightsData.insights);
+    } finally {
+      setIsBootstrapping(false);
+    }
+  }, [adminRequest, loadBlogPosts]);
+
   const unlockWithSession = useCallback(async () => {
     setIsUnlocked(true);
     setIsBootstrapping(true);
@@ -81,6 +102,7 @@ export default function AdminPanel() {
         waitlistSubmissions: data.waitlistSubmissions,
       });
       setBlogPosts(data.posts ?? []);
+      setInsights(data.insights ?? null);
       setAdminEmail(data.email ?? "");
     } catch (error) {
       setIsUnlocked(false);
@@ -97,6 +119,7 @@ export default function AdminPanel() {
     setAdminEmail("");
     setSummary({ contactSubmissions: [], waitlistSubmissions: [] });
     setBlogPosts([]);
+    setInsights(null);
   }
 
   if (!isUnlocked) {
@@ -113,9 +136,11 @@ export default function AdminPanel() {
     <AdminDashboard
       adminEmail={adminEmail}
       summary={summary}
+      insights={insights}
       blogPosts={blogPosts}
       isBootstrapping={isBootstrapping}
       onSignOut={handleSignOut}
+      onRefresh={refreshDashboard}
       adminRequest={adminRequest}
       membersRequest={membersRequest}
       loadSummary={loadSummary}

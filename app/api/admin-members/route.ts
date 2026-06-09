@@ -7,19 +7,23 @@ import {
 } from "@/lib/members/dates";
 import {
   addEnrollmentAdmin,
+  deleteAnnouncementAdmin,
   deleteLessonAdmin,
   getProgramAdmin,
   getStudentAdmin,
   inviteStudentAdmin,
+  listAnnouncementsAdmin,
   listEnrollmentsAdmin,
   listProgramsAdmin,
   reorderLessonsAdmin,
   syncExpiredEnrollments,
   updateEnrollmentAdmin,
   updateStudentAdmin,
+  upsertAnnouncementAdmin,
   upsertLessonAdmin,
   upsertProgramAdmin,
 } from "@/lib/members/store";
+import type { StudentAnnouncementPayload } from "@/lib/members/types";
 import type { PaymentCurrency } from "@/lib/members/types";
 import type {
   InviteStudentPayload,
@@ -248,6 +252,41 @@ export async function POST(request: Request) {
       });
 
       return NextResponse.json({ ok: true, student, enrollment });
+    }
+
+    if (action === "list-announcements") {
+      const announcements = await listAnnouncementsAdmin();
+      return NextResponse.json({ ok: true, announcements });
+    }
+
+    if (action === "save-announcement") {
+      const payload = body as StudentAnnouncementPayload & { action?: string };
+      if (!payload.title?.trim()) {
+        return NextResponse.json({ error: "title is required" }, { status: 400 });
+      }
+      const locale =
+        payload.locale === "FA" || payload.locale === "EN" ? payload.locale : "ALL";
+      const announcement = await upsertAnnouncementAdmin({
+        id: payload.id,
+        title: payload.title,
+        body: payload.body ?? "",
+        locale,
+        published: Boolean(payload.published),
+        expiresAt:
+          payload.expiresAt === null || payload.expiresAt === ""
+            ? null
+            : String(payload.expiresAt),
+      });
+      return NextResponse.json({ ok: true, announcement });
+    }
+
+    if (action === "delete-announcement") {
+      const id = String(body.id ?? "");
+      if (!id) {
+        return NextResponse.json({ error: "id required" }, { status: 400 });
+      }
+      await deleteAnnouncementAdmin(id);
+      return NextResponse.json({ ok: true });
     }
 
     if (action === "send-expiry-reminder") {

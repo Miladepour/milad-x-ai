@@ -1,6 +1,7 @@
 export type ContactInquiryType = "private_course" | "collaboration";
 
 export interface ContactSubmission {
+  id: string;
   fullName: string;
   email: string;
   mobile: string;
@@ -9,4 +10,5 @@ export interface ContactSubmission {
   message: string;
   locale: string;
   submittedAt: string;
+  openedAt: string | null;
 }

@@ -70,6 +70,7 @@ export interface Course {
 }
 
 export interface WaitlistSubmission {
+  id: string;
   courseSlug: string;
   fullName: string;
   email: string;
@@ -77,4 +78,5 @@ export interface WaitlistSubmission {
   country: string;
   locale: string;
   submittedAt: string;
+  openedAt: string | null;
 }

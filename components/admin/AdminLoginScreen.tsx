@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import TurnstileWidget, {
   type TurnstileWidgetHandle,
@@ -20,11 +21,33 @@ import {
   isAdminProfile,
   requireAdminProfileClient,
 } from "@/lib/supabase/require-admin-client";
+import { ADMIN_DASHBOARD_BANNER_URL } from "@/lib/admin/dashboard-constants";
 
 const turnstileRequired = isTurnstileSiteKeyConfigured();
 
 interface AdminLoginScreenProps {
   onAuthenticated: () => Promise<void>;
+}
+
+function AuthCard({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="student-glass-strong student-glass w-full max-w-md">
+      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-orange">
+        MX Console
+      </p>
+      <h1 className="mt-2 font-dm text-2xl font-semibold text-cream sm:text-3xl">{title}</h1>
+      {subtitle && <p className="mt-2 font-dm text-sm text-cream/65">{subtitle}</p>}
+      <div className="mt-6">{children}</div>
+    </div>
+  );
 }
 
 export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenProps) {
@@ -255,167 +278,152 @@ export default function AdminLoginScreen({ onAuthenticated }: AdminLoginScreenPr
 
   if (!sessionChecked) {
     return (
-      <div className="min-h-screen bg-background px-6 py-28">
-        <p className="mx-auto max-w-md font-dm text-sm text-cream/70">Loading…</p>
+      <div className="flex min-h-screen items-center justify-center bg-background px-6">
+        <p className="font-dm text-sm text-cream/70">Loading…</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-cream px-6 py-28">
-      {step === "login" && (
-        <form
-          onSubmit={handleLogin}
-          className="mx-auto flex w-full max-w-md flex-col gap-5 border border-surface bg-surface/40 p-6"
-        >
-          <div>
-            <p className="font-mono text-xs uppercase tracking-widest text-orange">
-              Private console
-            </p>
-            <h1 className="mt-2 font-dm text-3xl font-semibold text-cream">Admin access</h1>
-          </div>
-          <input
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            type="email"
-            className="form-field"
-            placeholder="Email"
-            autoComplete="email"
-            required
-          />
-          <input
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            type="password"
-            className="form-field"
-            placeholder="Password"
-            autoComplete="current-password"
-            required
-          />
-          <TurnstileWidget
-            ref={turnstileRef}
-            onToken={setCaptchaToken}
-            onExpire={() => setCaptchaToken("")}
-          />
-          <button
-            disabled={loading || (turnstileRequired && !captchaToken)}
-            className="bg-orange px-5 py-3 font-mono text-xs uppercase tracking-widest text-background transition-colors hover:bg-cream disabled:opacity-60"
+    <div className="relative min-h-screen overflow-hidden bg-background text-cream">
+      <Image
+        src={ADMIN_DASHBOARD_BANNER_URL}
+        alt=""
+        fill
+        priority
+        className="object-cover opacity-40"
+        sizes="100vw"
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background/90 to-background/75" />
+
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16">
+        {step === "login" && (
+          <AuthCard title="Admin access" subtitle="Private console for MX AI Academy.">
+            <form onSubmit={handleLogin} className="flex flex-col gap-4">
+              <input
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                type="email"
+                className="form-field"
+                placeholder="Email"
+                autoComplete="email"
+                required
+              />
+              <input
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                type="password"
+                className="form-field"
+                placeholder="Password"
+                autoComplete="current-password"
+                required
+              />
+              <TurnstileWidget
+                ref={turnstileRef}
+                onToken={setCaptchaToken}
+                onExpire={() => setCaptchaToken("")}
+              />
+              <button
+                disabled={loading || (turnstileRequired && !captchaToken)}
+                className="bg-orange px-5 py-3 font-mono text-xs uppercase tracking-widest text-background transition-colors hover:bg-cream disabled:opacity-60"
+              >
+                Sign in
+              </button>
+              {!isSupabaseConfigured() && (
+                <p className="font-dm text-sm leading-relaxed text-orange">
+                  Supabase is not configured. Add your project URL and anon key to `.env.local`.
+                </p>
+              )}
+              {status && <p className="font-dm text-sm text-cream/70">{status}</p>}
+            </form>
+          </AuthCard>
+        )}
+
+        {step === "mfa_verify" && (
+          <AuthCard
+            title="Enter authenticator code"
+            subtitle="Open your authenticator app and enter the 6-digit code."
           >
-            Sign in
-          </button>
-          {!isSupabaseConfigured() && (
-            <p className="font-dm text-sm text-orange leading-relaxed">
-              Supabase is not configured. Add your project URL and anon key to `.env.local`.
-            </p>
-          )}
-          {status && <p className="font-dm text-sm text-cream/70">{status}</p>}
-        </form>
-      )}
+            <form onSubmit={handleVerifyMfa} className="flex flex-col gap-4">
+              <input
+                value={mfaCode}
+                onChange={(event) =>
+                  setMfaCode(event.target.value.replace(/\D/g, "").slice(0, 6))
+                }
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]{6}"
+                className="form-field text-center font-mono text-lg tracking-[0.3em]"
+                placeholder="000000"
+                autoComplete="one-time-code"
+                required
+              />
+              <button
+                disabled={loading || mfaCode.length < 6}
+                className="bg-orange px-5 py-3 font-mono text-xs uppercase tracking-widest text-background hover:bg-cream disabled:opacity-60"
+              >
+                Verify
+              </button>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="font-mono text-xs uppercase tracking-widest text-cream/60 hover:text-orange"
+              >
+                Use a different account
+              </button>
+              {status && <p className="font-dm text-sm text-cream/70">{status}</p>}
+            </form>
+          </AuthCard>
+        )}
 
-      {step === "mfa_verify" && (
-        <form
-          onSubmit={handleVerifyMfa}
-          className="mx-auto flex w-full max-w-md flex-col gap-5 border border-surface bg-surface/40 p-6"
-        >
-          <div>
-            <p className="font-mono text-xs uppercase tracking-widest text-orange">
-              Two-factor authentication
-            </p>
-            <h1 className="mt-2 font-dm text-3xl font-semibold text-cream">
-              Enter authenticator code
-            </h1>
-            <p className="mt-2 font-dm text-sm text-cream/70">
-              Open your authenticator app and enter the 6-digit code.
-            </p>
-          </div>
-          <input
-            value={mfaCode}
-            onChange={(event) => setMfaCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]{6}"
-            className="form-field text-center font-mono text-lg tracking-[0.3em]"
-            placeholder="000000"
-            autoComplete="one-time-code"
-            required
-          />
-          <button
-            disabled={loading || mfaCode.length < 6}
-            className="bg-orange px-5 py-3 font-mono text-xs uppercase tracking-widest text-background transition-colors hover:bg-cream disabled:opacity-60"
+        {step === "mfa_enroll" && (
+          <AuthCard
+            title="Protect admin access"
+            subtitle="Scan the QR code, then enter the 6-digit code to finish setup."
           >
-            Verify
-          </button>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="font-mono text-xs uppercase tracking-widest text-cream/60 hover:text-orange"
-          >
-            Use a different account
-          </button>
-          {status && <p className="font-dm text-sm text-cream/70">{status}</p>}
-        </form>
-      )}
-
-      {step === "mfa_enroll" && (
-        <form
-          onSubmit={handleCompleteEnrollment}
-          className="mx-auto flex w-full max-w-md flex-col gap-5 border border-surface bg-surface/40 p-6"
-        >
-          <div>
-            <p className="font-mono text-xs uppercase tracking-widest text-orange">
-              Set up MFA
-            </p>
-            <h1 className="mt-2 font-dm text-3xl font-semibold text-cream">
-              Protect admin access
-            </h1>
-            <p className="mt-2 font-dm text-sm text-cream/70">
-              Scan the QR code, then enter the 6-digit code to finish setup.
-            </p>
-          </div>
-
-          {enrollQr && (
-            <div
-              className="mx-auto rounded-sm bg-white p-3"
-              dangerouslySetInnerHTML={{ __html: enrollQr }}
-            />
-          )}
-
-          {enrollSecret && (
-            <p className="break-all font-mono text-xs text-cream/60">
-              Manual key: {enrollSecret}
-            </p>
-          )}
-
-          <input
-            value={mfaCode}
-            onChange={(event) => setMfaCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]{6}"
-            className="form-field text-center font-mono text-lg tracking-[0.3em]"
-            placeholder="000000"
-            autoComplete="one-time-code"
-            required
-          />
-
-          <button
-            disabled={loading || mfaCode.length < 6 || !enrollFactorId}
-            className="bg-orange px-5 py-3 font-mono text-xs uppercase tracking-widest text-background transition-colors hover:bg-cream disabled:opacity-60"
-          >
-            Enable MFA and continue
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="font-mono text-xs uppercase tracking-widest text-cream/60 hover:text-orange"
-          >
-            Sign out
-          </button>
-
-          {status && <p className="font-dm text-sm text-cream/70">{status}</p>}
-        </form>
-      )}
+            <form onSubmit={handleCompleteEnrollment} className="flex flex-col gap-4">
+              {enrollQr && (
+                <div
+                  className="mx-auto rounded-sm bg-white p-3"
+                  dangerouslySetInnerHTML={{ __html: enrollQr }}
+                />
+              )}
+              {enrollSecret && (
+                <p className="break-all font-mono text-xs text-cream/60">
+                  Manual key: {enrollSecret}
+                </p>
+              )}
+              <input
+                value={mfaCode}
+                onChange={(event) =>
+                  setMfaCode(event.target.value.replace(/\D/g, "").slice(0, 6))
+                }
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]{6}"
+                className="form-field text-center font-mono text-lg tracking-[0.3em]"
+                placeholder="000000"
+                autoComplete="one-time-code"
+                required
+              />
+              <button
+                disabled={loading || mfaCode.length < 6 || !enrollFactorId}
+                className="bg-orange px-5 py-3 font-mono text-xs uppercase tracking-widest text-background hover:bg-cream disabled:opacity-60"
+              >
+                Enable MFA and continue
+              </button>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="font-mono text-xs uppercase tracking-widest text-cream/60 hover:text-orange"
+              >
+                Sign out
+              </button>
+              {status && <p className="font-dm text-sm text-cream/70">{status}</p>}
+            </form>
+          </AuthCard>
+        )}
+      </div>
     </div>
   );
 }

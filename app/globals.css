@@ -18,6 +18,26 @@
   .form-field:disabled {
     @apply opacity-55 cursor-not-allowed;
   }
+
+  .student-glass {
+    @apply rounded-2xl border border-white/[0.08] bg-white/[0.04] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-6;
+  }
+
+  .student-glass-strong {
+    @apply border-white/[0.12] bg-white/[0.07];
+  }
+
+  .student-glass-accent {
+    @apply border-orange/25 bg-orange/[0.08];
+  }
+
+  .student-glass-pill {
+    @apply rounded-2xl border border-white/[0.12] bg-white/[0.08] shadow-[0_4px_24px_rgba(0,0,0,0.2)] backdrop-blur-xl;
+  }
+
+  .student-section-title {
+    @apply font-mono text-[10px] uppercase tracking-[0.18em] text-orange;
+  }
 }
 
 :root {

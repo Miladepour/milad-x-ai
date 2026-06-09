@@ -14,6 +14,7 @@ import {
   waitlistRowToSubmission,
 } from "@/lib/supabase/mappers";
 import { createClient } from "@/lib/supabase/server";
+import { buildAdminInsights } from "@/lib/admin/insights";
 import { getAdminUser } from "@/lib/supabase/require-admin";
 
 export async function POST(request: Request) {
@@ -28,28 +29,49 @@ export async function POST(request: Request) {
     const supabase = createClient();
 
     if (action === "bootstrap") {
-      const [contactResult, waitlistResult, posts] = await Promise.all([
-        supabase
-          .from("contact_submissions")
-          .select("*")
-          .order("submitted_at", { ascending: false }),
-        supabase
-          .from("waitlist_submissions")
-          .select("*")
-          .order("submitted_at", { ascending: false }),
-        listBlogPostsAdmin(),
-      ]);
-
-      if (contactResult.error) throw new Error(contactResult.error.message);
-      if (waitlistResult.error) throw new Error(waitlistResult.error.message);
+      const [insights, posts] = await Promise.all([buildAdminInsights(), listBlogPostsAdmin()]);
 
       return NextResponse.json({
         ok: true,
         email: admin.email,
-        contactSubmissions: (contactResult.data ?? []).map(contactRowToSubmission),
-        waitlistSubmissions: (waitlistResult.data ?? []).map(waitlistRowToSubmission),
+        contactSubmissions: insights.contactSubmissions,
+        waitlistSubmissions: insights.waitlistSubmissions,
         posts,
+        insights,
       });
+    }
+
+    if (action === "insights") {
+      const insights = await buildAdminInsights();
+      return NextResponse.json({ ok: true, insights });
+    }
+
+    if (action === "mark-contact-opened") {
+      const id = String(body.id ?? "");
+      if (!id) {
+        return NextResponse.json({ error: "id required" }, { status: 400 });
+      }
+      const { error } = await supabase
+        .from("contact_submissions")
+        .update({ opened_at: new Date().toISOString() })
+        .eq("id", id)
+        .is("opened_at", null);
+      if (error) throw new Error(error.message);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (action === "mark-waitlist-opened") {
+      const id = String(body.id ?? "");
+      if (!id) {
+        return NextResponse.json({ error: "id required" }, { status: 400 });
+      }
+      const { error } = await supabase
+        .from("waitlist_submissions")
+        .update({ opened_at: new Date().toISOString() })
+        .eq("id", id)
+        .is("opened_at", null);
+      if (error) throw new Error(error.message);
+      return NextResponse.json({ ok: true });
     }
 
     if (action === "summary" || action === "login") {

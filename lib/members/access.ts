@@ -39,3 +39,23 @@ export function computeProgressPercent(
   if (totalCount <= 0) return 0;
   return Math.round((completedCount / totalCount) * 100);
 }
+
+/** Why a student cannot open this enrollment in the portal, or null if access is OK. */
+export function getEnrollmentAccessBlockReason(
+  enrollment: Pick<ProgramEnrollment, "status" | "accessStartsAt" | "accessEndsAt">
+): string | null {
+  if (isEnrollmentActive(enrollment)) return null;
+  if (enrollment.status === "suspended") return "Suspended";
+  if (enrollment.status === "expired") return "Expired";
+  const now = Date.now();
+  if (now < new Date(enrollment.accessStartsAt).getTime()) {
+    return "Access has not started yet";
+  }
+  if (
+    enrollment.accessEndsAt &&
+    now > new Date(enrollment.accessEndsAt).getTime()
+  ) {
+    return "Access has ended";
+  }
+  return "Inactive";
+}

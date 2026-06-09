@@ -5,6 +5,9 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { BlogPost } from "@/lib/blog/types";
 import type { ContactSubmission } from "@/lib/contact/types";
 import type { WaitlistSubmission } from "@/lib/courses/types";
+import AdminInsightsPanel from "@/components/admin/AdminInsights";
+import AdminShell, { type AdminTab } from "@/components/admin/AdminShell";
+import type { AdminInsights } from "@/lib/admin/insights";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
@@ -27,14 +30,6 @@ const StudentManager = dynamic(() => import("@/components/admin/StudentManager")
   ),
 });
 
-type AdminTab =
-  | "blog"
-  | "contact"
-  | "waitlist"
-  | "courses"
-  | "programs"
-  | "students";
-
 interface AdminSummary {
   contactSubmissions: ContactSubmission[];
   waitlistSubmissions: WaitlistSubmission[];
@@ -51,15 +46,18 @@ interface SubmissionCard {
   title: string;
   subtitle: string;
   date: string;
+  isUnopened?: boolean;
   fields: SubmissionField[];
 }
 
 interface AdminDashboardProps {
   adminEmail: string;
   summary: AdminSummary;
+  insights: AdminInsights | null;
   blogPosts: BlogPost[];
   isBootstrapping: boolean;
   onSignOut: () => Promise<void>;
+  onRefresh: () => Promise<void>;
   adminRequest: (action: string, payload?: Record<string, unknown>) => Promise<unknown>;
   membersRequest: (action: string, payload?: Record<string, unknown>) => Promise<unknown>;
   loadSummary: () => Promise<void>;
@@ -85,15 +83,17 @@ function slugify(value: string) {
 export default function AdminDashboard({
   adminEmail,
   summary,
+  insights,
   blogPosts,
   isBootstrapping,
   onSignOut,
+  onRefresh,
   adminRequest,
   membersRequest,
   loadSummary,
   loadBlogPosts,
 }: AdminDashboardProps) {
-  const [tab, setTab] = useState<AdminTab>("blog");
+  const [tab, setTab] = useState<AdminTab>("overview");
   const [status, setStatus] = useState("");
   const [post, setPost] = useState({
     locale: "EN",
@@ -179,82 +179,53 @@ export default function AdminDashboard({
   }, [editor, post.content]);
 
   return (
-    <div className="min-h-screen bg-background text-cream px-6 py-28">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
-        <header className="flex flex-col gap-5 border-b border-surface pb-6 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-widest text-orange">
-              Private console
-            </p>
-            <h1 className="mt-2 font-dm text-4xl font-semibold text-cream">
-              Admin panel
-            </h1>
-            {adminEmail && (
-              <p className="mt-2 font-dm text-sm text-cream/60">{adminEmail}</p>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2 self-start">
-            <button
-              type="button"
-              onClick={() => loadSummary()}
-              disabled={isBootstrapping}
-              className="border border-orange px-4 py-2 font-mono text-xs uppercase tracking-widest text-orange transition-colors hover:bg-orange hover:text-background disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Refresh inbox
-            </button>
-            <button
-              type="button"
-              onClick={() => onSignOut()}
-              className="border border-surface px-4 py-2 font-mono text-xs uppercase tracking-widest text-cream transition-colors hover:border-orange hover:text-orange"
-            >
-              Sign out
-            </button>
-          </div>
-        </header>
+    <AdminShell
+      adminEmail={adminEmail}
+      tab={tab}
+      onTabChange={setTab}
+      onRefresh={() => void onRefresh()}
+      onSignOut={() => void onSignOut()}
+      isRefreshing={isBootstrapping}
+      status={status}
+      navBadges={{
+        contact: insights?.counts.unopenedContact ?? 0,
+        waitlist: insights?.counts.unopenedWaitlist ?? 0,
+        students: insights?.counts.students,
+        blog: insights?.counts.blogPosts ?? blogPosts.length,
+      }}
+    >
+      {isBootstrapping && tab === "overview" && (
+        <p className="student-glass font-dm text-sm text-cream/70">Loading insights…</p>
+      )}
 
-        {isBootstrapping && (
-          <p className="font-dm text-sm text-cream/70">Loading inbox and posts…</p>
-        )}
+      {tab === "overview" && insights && (
+        <AdminInsightsPanel insights={insights} onNavigate={setTab} />
+      )}
 
-        <div className="flex flex-wrap gap-2">
-          {[
-            ["blog", "Publish blog"],
-            ["courses", "Courses"],
-            ["programs", "Member programs"],
-            ["students", "Students"],
-            ["contact", `Contact forms (${summary.contactSubmissions.length})`],
-            ["waitlist", `Waitlists (${summary.waitlistSubmissions.length})`],
-          ].map(([value, label]) => (
-            <button
-              key={value}
-              onClick={() => setTab(value as AdminTab)}
-              className={`px-4 py-2 font-mono text-xs uppercase tracking-widest transition-colors ${
-                tab === value
-                  ? "bg-orange text-background"
-                  : "border border-surface text-cream hover:border-orange"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      {tab === "overview" && !insights && !isBootstrapping && (
+        <p className="student-glass font-dm text-sm text-cream/70">No insights available.</p>
+      )}
 
-        {status && <p className="font-dm text-sm text-orange">{status}</p>}
-
-        {tab === "courses" && (
+      {tab === "courses" && (
+        <div className="student-glass">
           <CourseEditor adminRequest={adminRequest} onStatus={setStatus} />
-        )}
+        </div>
+      )}
 
-        {tab === "programs" && (
+      {tab === "programs" && (
+        <div className="student-glass">
           <ProgramEditor membersRequest={membersRequest} onStatus={setStatus} />
-        )}
+        </div>
+      )}
 
-        {tab === "students" && (
+      {tab === "students" && (
+        <div className="student-glass">
           <StudentManager membersRequest={membersRequest} onStatus={setStatus} />
-        )}
+        </div>
+      )}
 
-        {tab === "blog" && (
-          <form onSubmit={handlePublish} className="grid gap-5 lg:grid-cols-[1fr_320px]">
+      {tab === "blog" && (
+        <form onSubmit={handlePublish} className="student-glass grid gap-5 lg:grid-cols-[1fr_320px]">
             <div className="flex flex-col gap-4">
               <input
                 value={post.title}
@@ -494,17 +465,22 @@ export default function AdminDashboard({
                 Publish
               </button>
             </aside>
-          </form>
-        )}
+        </form>
+      )}
 
-        {tab === "contact" && (
-          <SubmissionList
+      {tab === "contact" && (
+        <SubmissionList
             empty="No contact forms yet."
+            onOpenItem={async (id) => {
+              await adminRequest("mark-contact-opened", { id });
+              await onRefresh();
+            }}
             items={summary.contactSubmissions.map((item) => ({
-              id: `${item.email}-${item.submittedAt}`,
+              id: item.id,
               title: item.fullName,
               subtitle: `${item.inquiryType} · ${item.country}`,
               date: item.submittedAt,
+              isUnopened: !item.openedAt,
               fields: [
                 { label: "Full name", value: item.fullName },
                 { label: "Email", value: item.email },
@@ -516,17 +492,22 @@ export default function AdminDashboard({
                 { label: "Message", value: item.message, wide: true },
               ],
             }))}
-          />
-        )}
+        />
+      )}
 
-        {tab === "waitlist" && (
-          <SubmissionList
+      {tab === "waitlist" && (
+        <SubmissionList
             empty="No waitlist forms yet."
+            onOpenItem={async (id) => {
+              await adminRequest("mark-waitlist-opened", { id });
+              await onRefresh();
+            }}
             items={summary.waitlistSubmissions.map((item) => ({
-              id: `${item.email}-${item.submittedAt}`,
+              id: item.id,
               title: item.fullName,
               subtitle: `${item.courseSlug} · ${item.country}`,
               date: item.submittedAt,
+              isUnopened: !item.openedAt,
               fields: [
                 { label: "Full name", value: item.fullName },
                 { label: "Email", value: item.email },
@@ -537,19 +518,20 @@ export default function AdminDashboard({
                 { label: "Submitted at", value: new Date(item.submittedAt).toLocaleString() },
               ],
             }))}
-          />
-        )}
-      </div>
-    </div>
+        />
+      )}
+    </AdminShell>
   );
 }
 
 function SubmissionList({
   empty,
   items,
+  onOpenItem,
 }: {
   empty: string;
   items: SubmissionCard[];
+  onOpenItem?: (id: string) => Promise<void>;
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -596,7 +578,7 @@ function SubmissionList({
 
   if (items.length === 0) {
     return (
-      <div className="border border-surface bg-surface/20 p-8 font-dm text-cream/70">
+      <div className="student-glass p-8 font-dm text-cream/70">
         {empty}
       </div>
     );
@@ -604,7 +586,7 @@ function SubmissionList({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="grid gap-3 border border-surface bg-surface/20 p-4 md:grid-cols-[1fr_190px_190px_auto]">
+      <div className="student-glass grid gap-3 md:grid-cols-[1fr_190px_190px_auto]">
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -643,7 +625,7 @@ function SubmissionList({
       </p>
 
       {filteredItems.length === 0 ? (
-        <div className="border border-surface bg-surface/20 p-8 font-dm text-cream/70">
+        <div className="student-glass p-8 font-dm text-cream/70">
           No submissions match your filters.
         </div>
       ) : (
@@ -652,17 +634,30 @@ function SubmissionList({
             const isOpen = openId === item.id;
 
             return (
-              <li key={item.id} className="border border-surface bg-surface/25">
+              <li key={item.id} className="student-glass-strong student-glass !p-0">
                 <button
                   type="button"
-                  onClick={() => setOpenId(isOpen ? null : item.id)}
+                  onClick={() => {
+                    const nextOpen = isOpen ? null : item.id;
+                    setOpenId(nextOpen);
+                    if (!isOpen && nextOpen && item.isUnopened && onOpenItem) {
+                      void onOpenItem(item.id);
+                    }
+                  }}
                   className="flex w-full flex-col gap-3 p-5 text-left transition-colors hover:bg-surface/35 md:flex-row md:items-start md:justify-between"
                   aria-expanded={isOpen}
                 >
                   <div>
-                    <h2 className="font-dm text-xl font-semibold text-cream">
-                      {item.title}
-                    </h2>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="font-dm text-xl font-semibold text-cream">
+                        {item.title}
+                      </h2>
+                      {item.isUnopened && (
+                        <span className="rounded-full bg-orange/20 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-orange">
+                          New
+                        </span>
+                      )}
+                    </div>
                     <p className="mt-1 font-dm text-sm text-cream/70">
                       {item.subtitle}
                     </p>

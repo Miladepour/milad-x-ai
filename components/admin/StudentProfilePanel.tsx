@@ -7,6 +7,7 @@ import type {
   PaymentCurrency,
   StudentWithEnrollments,
 } from "@/lib/members/types";
+import { getEnrollmentAccessBlockReason } from "@/lib/members/access";
 import { PAYMENT_CURRENCIES, formatPayment } from "@/lib/members/currency";
 import {
   formatDateOnly,
@@ -41,6 +42,7 @@ export default function StudentProfilePanel({
 }: StudentProfilePanelProps) {
   const [data, setData] = useState<StudentWithEnrollments | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [profileForm, setProfileForm] = useState({
     fullName: "",
     locale: "EN" as "EN" | "FA",
@@ -59,6 +61,7 @@ export default function StudentProfilePanel({
 
   async function load() {
     setLoading(true);
+    setLoadError(null);
     try {
       const result = (await membersRequest("get-student", {
         studentId,
@@ -71,7 +74,10 @@ export default function StudentProfilePanel({
         notes: result.student.profile.notes ?? "",
       });
     } catch (err) {
-      onStatus(err instanceof Error ? err.message : "Could not load student");
+      const message = err instanceof Error ? err.message : "Could not load student";
+      setLoadError(message);
+      setData(null);
+      onStatus(message);
     } finally {
       setLoading(false);
     }
@@ -161,10 +167,27 @@ export default function StudentProfilePanel({
     }
   }
 
-  if (loading || !data) {
+  if (loading) {
     return (
       <div className="border border-surface bg-surface/30 p-8 font-dm text-cream/70">
         Loading student…
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="flex flex-col gap-3 border border-surface bg-surface/30 p-8">
+        <p className="font-dm text-cream/70">
+          {loadError ?? "Could not load this student."}
+        </p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="self-start font-mono text-xs uppercase tracking-widest text-orange hover:text-cream"
+        >
+          Close
+        </button>
       </div>
     );
   }
@@ -349,6 +372,16 @@ export default function StudentProfilePanel({
                       Progress: {item.completedLessons ?? 0}/{item.totalLessons ?? 0} (
                       {item.progressPercent ?? 0}%)
                     </p>
+                    {getEnrollmentAccessBlockReason(item) && (
+                      <p className="mt-1 font-dm text-xs text-amber-300/90">
+                        Student cannot open: {getEnrollmentAccessBlockReason(item)}
+                      </p>
+                    )}
+                    {!item.program?.slug?.trim() && (
+                      <p className="mt-1 font-dm text-xs text-amber-300/90">
+                        Program has no URL slug — set an English slug in Programs.
+                      </p>
+                    )}
                   </div>
                   <button
                     type="button"

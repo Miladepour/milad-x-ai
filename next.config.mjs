@@ -17,6 +17,11 @@ const nextConfig = {
         hostname: "*.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
+      },
     ],
   },
   async headers() {
@@ -37,7 +42,7 @@ const nextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://res.cloudinary.com https://i.ytimg.com https://*.supabase.co https://challenges.cloudflare.com",
+              "img-src 'self' data: blob: https://res.cloudinary.com https://i.ytimg.com https://*.supabase.co https://images.unsplash.com https://challenges.cloudflare.com",
               "font-src 'self' data:",
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com",
               "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://challenges.cloudflare.com",
