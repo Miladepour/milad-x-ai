@@ -336,6 +336,7 @@ export const translations = {
       statLessonsDone: "Lessons completed",
       statProgress: "Overall progress",
       noAnnouncements: "No announcements right now.",
+      learnMore: "Learn more",
       noUpcomingCourses: "No upcoming courses at the moment.",
       upcomingCoursesSubtitle:
         "Go further with live workshops. Join other students building real skills with AI.",
@@ -729,6 +730,7 @@ export const translations = {
       statLessonsDone: "درس‌های تکمیل‌شده",
       statProgress: "پیشرفت کلی",
       noAnnouncements: "فعلاً اعلانی وجود ندارد.",
+      learnMore: "بیشتر بدانید",
       noUpcomingCourses: "در حال حاضر دوره پیش‌رویی نیست.",
       upcomingCoursesSubtitle:
         "با ورکشاپ‌های زنده یک قدم جلوتر بروید. به جمع دانشجویانی بپیوندید که با هوش مصنوعی مهارت واقعی می‌سازند.",

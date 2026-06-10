@@ -2,12 +2,14 @@
 
 import { FormEvent, useCallback, useMemo, useState } from "react";
 import StudentEmailHistory from "@/components/admin/StudentEmailHistory";
+import StudentSearchSelect from "@/components/admin/StudentSearchSelect";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import RichTextEditor from "@/components/shared/RichTextEditor";
 import type { MemberProgram, StudentProfile } from "@/lib/members/types";
 
 interface StudentEmailComposerProps {
   membersRequest: (action: string, payload?: Record<string, unknown>) => Promise<unknown>;
-  onStatus: (message: string) => void;
+  onStatus: (message: string, variant?: "success" | "error" | "info") => void;
   programs: MemberProgram[];
   students: StudentProfile[];
 }
@@ -53,15 +55,9 @@ export default function StudentEmailComposer({
   const [preview, setPreview] = useState<PreviewData | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [sending, setSending] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingRecipientCount, setPendingRecipientCount] = useState(0);
   const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
-
-  const sortedStudents = useMemo(
-    () =>
-      [...students].sort((a, b) =>
-        (a.fullName || a.email).localeCompare(b.fullName || b.email)
-      ),
-    [students]
-  );
 
   const audiencePayload = useMemo(() => {
     if (audienceType === "student") {
@@ -120,28 +116,46 @@ export default function StudentEmailComposer({
     subject,
   ]);
 
-  async function handleSend(e: FormEvent) {
-    e.preventDefault();
+  async function requestSend(e?: FormEvent) {
+    e?.preventDefault();
     if (!canPreview) {
       onStatus("Complete the email and audience before sending.");
       return;
     }
 
-    if (!preview) {
-      await loadPreview();
+    setLoadingPreview(true);
+    try {
+      const data = (await membersRequest("preview-student-email", {
+        subject: subject.trim(),
+        bodyHtml,
+        previewLocale,
+        ...audiencePayload,
+      })) as PreviewData & { ok?: boolean };
+
+      if (data.recipientCount === 0) {
+        onStatus("No recipients selected.");
+        return;
+      }
+
+      setPreview({
+        html: data.html,
+        subject: data.subject,
+        recipientCount: data.recipientCount,
+        sampleRecipient: data.sampleRecipient,
+        recipients: data.recipients,
+      });
+      setPendingRecipientCount(data.recipientCount);
+      setConfirmOpen(true);
+    } catch (err) {
+      onStatus(err instanceof Error ? err.message : "Could not prepare send");
+    } finally {
+      setLoadingPreview(false);
     }
+  }
 
-    const count = preview?.recipientCount ?? 0;
-    if (count === 0) {
-      onStatus("No recipients selected.");
-      return;
-    }
-
-    const confirmed = window.confirm(
-      `Send this email to ${count} student${count === 1 ? "" : "s"}?`
-    );
-    if (!confirmed) return;
-
+  async function executeSend() {
+    const count = pendingRecipientCount;
+    setConfirmOpen(false);
     setSending(true);
     onStatus(`Sending to ${count} recipient${count === 1 ? "" : "s"}…`);
     try {
@@ -152,14 +166,14 @@ export default function StudentEmailComposer({
       })) as { sent: number; failed: number; total: number };
 
       if (result.failed > 0) {
-        onStatus(`Sent ${result.sent} of ${result.total}. ${result.failed} failed.`);
+        onStatus(`Sent ${result.sent} of ${result.total}. ${result.failed} failed.`, "error");
       } else {
-        onStatus(`Email sent to ${result.sent} student${result.sent === 1 ? "" : "s"}.`);
+        onStatus(`Email sent to ${result.sent} student${result.sent === 1 ? "" : "s"}.`, "success");
       }
       setHistoryRefreshKey((key) => key + 1);
       setView("history");
     } catch (err) {
-      onStatus(err instanceof Error ? err.message : "Send failed");
+      onStatus(err instanceof Error ? err.message : "Send failed", "error");
     } finally {
       setSending(false);
     }
@@ -219,7 +233,7 @@ export default function StudentEmailComposer({
           refreshKey={historyRefreshKey}
         />
       ) : view === "compose" ? (
-        <form onSubmit={handleSend} className="grid gap-4">
+        <form onSubmit={(e) => void requestSend(e)} className="grid gap-4">
           <fieldset className="grid gap-3 rounded-2xl border border-white/[0.08] p-4">
             <legend className="px-1 font-mono text-[10px] uppercase tracking-widest text-orange">
               Audience
@@ -242,19 +256,11 @@ export default function StudentEmailComposer({
             </div>
 
             {audienceType === "student" && (
-              <select
+              <StudentSearchSelect
+                students={students}
                 value={studentId}
-                onChange={(e) => setStudentId(e.target.value)}
-                className="form-field max-w-xl"
-                required
-              >
-                <option value="">Select student</option>
-                {sortedStudents.map((student) => (
-                  <option key={student.id} value={student.id}>
-                    {student.fullName || student.email} · {student.email}
-                  </option>
-                ))}
-              </select>
+                onChange={setStudentId}
+              />
             )}
 
             {audienceType === "program" && (
@@ -404,18 +410,33 @@ export default function StudentEmailComposer({
 
           <button
             type="button"
-            onClick={() => void handleSend({ preventDefault: () => {} } as FormEvent)}
-            disabled={!canPreview || sending || !preview}
+            onClick={() => void requestSend()}
+            disabled={!canPreview || sending || loadingPreview}
             className="self-start bg-orange px-5 py-3 font-mono text-xs uppercase tracking-widest text-background transition-colors hover:bg-cream disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {sending
-              ? "Sending…"
+            {sending || loadingPreview
+              ? "Preparing…"
               : `Send to ${preview?.recipientCount ?? 0} student${
                   preview?.recipientCount === 1 ? "" : "s"
                 }`}
           </button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Send email?"
+        description={`Send this email to ${pendingRecipientCount} student${
+          pendingRecipientCount === 1 ? "" : "s"
+        }? This cannot be undone.`}
+        confirmLabel={`Send to ${pendingRecipientCount}`}
+        cancelLabel="Cancel"
+        loading={sending}
+        onConfirm={() => void executeSend()}
+        onCancel={() => {
+          if (!sending) setConfirmOpen(false);
+        }}
+      />
     </div>
   );
 }

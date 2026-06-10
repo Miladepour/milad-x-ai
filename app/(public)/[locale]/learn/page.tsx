@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import StudentDashboardHero from "@/components/members/StudentDashboardHero";
 import StudentGlassCard from "@/components/members/StudentGlassCard";
 import StudentPortalButton from "@/components/members/StudentPortalButton";
+import { normalizeAnnouncementLink } from "@/lib/members/store";
 import StudentProgramCard from "@/components/members/StudentProgramCard";
 import { accountLoginPath, learnProgramPath } from "@/lib/members/paths";
 import {
@@ -45,7 +46,7 @@ export default async function LearnDashboardPage({
 
   const [programs, announcements, courses] = await Promise.all([
     getStudentDashboard(student.user.id),
-    listAnnouncementsForStudent(student.profile.locale),
+    listAnnouncementsForStudent(student.user.id, student.profile.locale),
     getCourses(internal),
   ]);
 
@@ -97,28 +98,45 @@ export default async function LearnDashboardPage({
           <p className="mt-4 font-dm text-sm text-cream/55">{t.memberPortal.noAnnouncements}</p>
         ) : (
           <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {announcements.map((item) => (
-              <li
-                key={item.id}
-                className="student-glass-pill rounded-xl px-4 py-4"
-              >
-                <p className="font-dm text-lg font-semibold text-cream">{item.title}</p>
-                {item.body && (
-                  <p className="mt-2 line-clamp-3 font-dm text-sm leading-relaxed text-cream/65">
-                    {item.body}
-                  </p>
-                )}
-                {item.publishedAt && (
-                  <p className="mt-3 font-mono text-[10px] text-cream/40">
-                    {new Date(item.publishedAt).toLocaleDateString(dateLocale, {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </p>
-                )}
-              </li>
-            ))}
+            {announcements.map((item) => {
+              const linkUrl = normalizeAnnouncementLink(item.linkUrl);
+              const linkLabel = item.linkLabel?.trim() || t.memberPortal.learnMore;
+              const isExternal = Boolean(linkUrl && /^https?:\/\//i.test(linkUrl));
+
+              return (
+                <li
+                  key={item.id}
+                  className="student-glass-pill flex h-full flex-col rounded-xl px-4 py-4"
+                >
+                  <p className="font-dm text-lg font-semibold text-cream">{item.title}</p>
+                  {item.body && (
+                    <p className="mt-2 line-clamp-3 flex-1 font-dm text-sm leading-relaxed text-cream/65">
+                      {item.body}
+                    </p>
+                  )}
+                  {linkUrl && (
+                    <div className="mt-4">
+                      <StudentPortalButton
+                        href={linkUrl}
+                        variant="secondary"
+                        external={isExternal}
+                      >
+                        {linkLabel}
+                      </StudentPortalButton>
+                    </div>
+                  )}
+                  {item.publishedAt && (
+                    <p className="mt-3 font-mono text-[10px] text-cream/40">
+                      {new Date(item.publishedAt).toLocaleDateString(dateLocale, {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </StudentGlassCard>

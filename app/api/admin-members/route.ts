@@ -308,13 +308,42 @@ export async function POST(request: Request) {
       if (!payload.title?.trim()) {
         return NextResponse.json({ error: "title is required" }, { status: 400 });
       }
-      const locale =
-        payload.locale === "FA" || payload.locale === "EN" ? payload.locale : "ALL";
+
+      const audienceType =
+        payload.audienceType === "student" ||
+        payload.audienceType === "programs" ||
+        payload.audienceType === "all"
+          ? payload.audienceType
+          : "all";
+
+      if (audienceType === "student" && !String(payload.studentId ?? "").trim()) {
+        return NextResponse.json({ error: "student is required" }, { status: 400 });
+      }
+
+      const programIds = Array.isArray(payload.programIds)
+        ? payload.programIds.map((id) => String(id)).filter(Boolean)
+        : [];
+
+      if (audienceType === "programs" && programIds.length === 0) {
+        return NextResponse.json(
+          { error: "Select at least one program" },
+          { status: 400 }
+        );
+      }
+
+      const linkUrl = String(payload.linkUrl ?? "").trim();
+      const linkLabel = String(payload.linkLabel ?? "").trim();
+
       const announcement = await upsertAnnouncementAdmin({
         id: payload.id,
         title: payload.title,
         body: payload.body ?? "",
-        locale,
+        locale: "ALL",
+        audienceType,
+        studentId: audienceType === "student" ? String(payload.studentId) : null,
+        programIds: audienceType === "programs" ? programIds : [],
+        linkUrl: linkUrl || null,
+        linkLabel: linkLabel || null,
         published: Boolean(payload.published),
         expiresAt:
           payload.expiresAt === null || payload.expiresAt === ""

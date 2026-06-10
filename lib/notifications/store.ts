@@ -1,5 +1,5 @@
-import type { StudentAnnouncement } from "@/lib/members/types";
 import { learnPath } from "@/lib/members/paths";
+import type { StudentAnnouncement } from "@/lib/members/types";
 import type { AppNotification, NotificationKind } from "@/lib/notifications/types";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 
@@ -180,17 +180,41 @@ export async function notifyStudentsForAnnouncement(
 
   const supabase = createServiceClient();
 
-  let studentQuery = supabase.from("student_profiles").select("id, locale");
-  if (announcement.locale !== "ALL") {
-    studentQuery = studentQuery.eq("locale", announcement.locale);
+  let students: Array<{ id: string; locale: "EN" | "FA" }> = [];
+
+  if (announcement.audienceType === "student" && announcement.studentId) {
+    const { data, error } = await supabase
+      .from("student_profiles")
+      .select("id, locale")
+      .eq("id", announcement.studentId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    students = data ? [{ id: data.id, locale: data.locale }] : [];
+  } else if (
+    announcement.audienceType === "programs" &&
+    announcement.programIds.length > 0
+  ) {
+    const { data, error } = await supabase
+      .from("program_enrollments")
+      .select("student_profiles(id, locale)")
+      .in("program_id", announcement.programIds);
+    if (error) throw new Error(error.message);
+    const seen = new Set<string>();
+    for (const row of data ?? []) {
+      const profile = row.student_profiles;
+      if (!profile || Array.isArray(profile)) continue;
+      const student = profile as { id: string; locale: "EN" | "FA" };
+      if (seen.has(student.id)) continue;
+      seen.add(student.id);
+      students.push(student);
+    }
+  } else {
+    const { data, error } = await supabase.from("student_profiles").select("id, locale");
+    if (error) throw new Error(error.message);
+    students = (data ?? []) as Array<{ id: string; locale: "EN" | "FA" }>;
   }
 
-  const { data: students, error: studentsError } = await studentQuery;
-  if (studentsError) {
-    if (isMissingNotificationsTable(studentsError)) return;
-    throw new Error(studentsError.message);
-  }
-  if (!students?.length) return;
+  if (!students.length) return;
 
   const { data: existing, error: existingError } = await supabase
     .from("user_notifications")

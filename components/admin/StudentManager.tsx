@@ -219,7 +219,12 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
       </div>
 
       {subTab === "announcements" && (
-        <StudentAnnouncements membersRequest={membersRequest} onStatus={onStatus} />
+        <StudentAnnouncements
+          membersRequest={membersRequest}
+          onStatus={onStatus}
+          programs={programs}
+          students={allStudents}
+        />
       )}
 
       {subTab === "email" && (

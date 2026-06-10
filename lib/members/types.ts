@@ -149,11 +149,18 @@ export interface StudentWithEnrollments {
 
 export type AnnouncementLocale = "EN" | "FA" | "ALL";
 
+export type StudentAnnouncementAudienceType = "all" | "student" | "programs";
+
 export interface StudentAnnouncement {
   id: string;
   title: string;
   body: string;
   locale: AnnouncementLocale;
+  audienceType: StudentAnnouncementAudienceType;
+  studentId: string | null;
+  programIds: string[];
+  linkUrl: string | null;
+  linkLabel: string | null;
   publishedAt: string | null;
   expiresAt: string | null;
   createdAt: string;
@@ -164,7 +171,12 @@ export interface StudentAnnouncementPayload {
   id?: string;
   title: string;
   body: string;
-  locale: AnnouncementLocale;
+  locale?: AnnouncementLocale;
+  audienceType: StudentAnnouncementAudienceType;
+  studentId?: string | null;
+  programIds?: string[];
+  linkUrl?: string | null;
+  linkLabel?: string | null;
   published: boolean;
   expiresAt?: string | null;
 }

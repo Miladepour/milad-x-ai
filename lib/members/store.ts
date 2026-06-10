@@ -34,6 +34,7 @@ import type {
   ProgramLesson,
   ProgramLessonPayload,
   StudentAnnouncement,
+  StudentAnnouncementAudienceType,
   StudentAnnouncementPayload,
   StudentDashboardProgram,
   StudentProfile,
@@ -758,6 +759,11 @@ export type StudentEmailAudience =
   | { type: "student"; studentId: string }
   | { type: "program"; programId: string };
 
+export type StudentAnnouncementAudience =
+  | { type: "all" }
+  | { type: "student"; studentId: string }
+  | { type: "programs"; programIds: string[] };
+
 function dedupeStudentsByEmail(students: StudentProfile[]): StudentProfile[] {
   const seen = new Set<string>();
   const result: StudentProfile[] = [];
@@ -772,35 +778,43 @@ function dedupeStudentsByEmail(students: StudentProfile[]): StudentProfile[] {
   );
 }
 
+async function studentsFromProgramEnrollments(
+  programIds: string[]
+): Promise<StudentProfile[]> {
+  if (programIds.length === 0) return [];
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("program_enrollments")
+    .select("student_profiles(*)")
+    .in("program_id", programIds);
+
+  if (error) throw new Error(error.message);
+
+  const students = (data ?? [])
+    .map((row) => {
+      const profile = row.student_profiles;
+      if (!profile || Array.isArray(profile)) return null;
+      return studentProfileRowToProfile(profile as StudentProfileRow);
+    })
+    .filter((profile): profile is StudentProfile => profile !== null);
+
+  return dedupeStudentsByEmail(students);
+}
+
 export async function resolveStudentEmailRecipients(
   audience: StudentEmailAudience
 ): Promise<StudentProfile[]> {
-  const supabase = createClient();
-
   if (audience.type === "student") {
     const student = await getStudentAdmin(audience.studentId);
     return student ? [student.profile] : [];
   }
 
   if (audience.type === "program") {
-    const { data, error } = await supabase
-      .from("program_enrollments")
-      .select("student_profiles(*)")
-      .eq("program_id", audience.programId);
-
-    if (error) throw new Error(error.message);
-
-    const students = (data ?? [])
-      .map((row) => {
-        const profile = row.student_profiles;
-        if (!profile || Array.isArray(profile)) return null;
-        return studentProfileRowToProfile(profile as StudentProfileRow);
-      })
-      .filter((profile): profile is StudentProfile => profile !== null);
-
-    return dedupeStudentsByEmail(students);
+    return studentsFromProgramEnrollments([audience.programId]);
   }
 
+  const supabase = createClient();
   const { data, error } = await supabase
     .from("student_profiles")
     .select("*")
@@ -812,6 +826,51 @@ export async function resolveStudentEmailRecipients(
   );
 }
 
+export async function resolveAnnouncementRecipients(
+  audience: StudentAnnouncementAudience
+): Promise<StudentProfile[]> {
+  if (audience.type === "student") {
+    const student = await getStudentAdmin(audience.studentId);
+    return student ? [student.profile] : [];
+  }
+
+  if (audience.type === "programs") {
+    return studentsFromProgramEnrollments(audience.programIds);
+  }
+
+  return resolveStudentEmailRecipients({ type: "all" });
+}
+
+async function getStudentEnrolledProgramIds(studentId: string): Promise<string[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("program_enrollments")
+    .select("program_id")
+    .eq("student_id", studentId);
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row) => row.program_id);
+}
+
+export function announcementMatchesStudent(
+  announcement: StudentAnnouncement,
+  studentId: string,
+  enrolledProgramIds: string[],
+  studentLocale: "EN" | "FA"
+): boolean {
+  if (announcement.audienceType === "student") {
+    return announcement.studentId === studentId;
+  }
+
+  if (announcement.audienceType === "programs") {
+    return announcement.programIds.some((programId) =>
+      enrolledProgramIds.includes(programId)
+    );
+  }
+
+  return announcement.locale === "ALL" || announcement.locale === studentLocale;
+}
+
 // ---------------------------------------------------------------------------
 // Student announcements
 // ---------------------------------------------------------------------------
@@ -821,10 +880,25 @@ interface StudentAnnouncementRow {
   title: string;
   body: string;
   locale: AnnouncementLocale;
+  audience_type?: StudentAnnouncementAudienceType | null;
+  student_id?: string | null;
+  program_ids?: string[] | null;
+  link_url?: string | null;
+  link_label?: string | null;
   published_at: string | null;
   expires_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export function normalizeAnnouncementLink(
+  url: string | null | undefined
+): string | null {
+  const trimmed = String(url ?? "").trim();
+  if (!trimmed) return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (trimmed.startsWith("/")) return trimmed;
+  return `https://${trimmed}`;
 }
 
 function announcementRowToAnnouncement(row: StudentAnnouncementRow): StudentAnnouncement {
@@ -833,6 +907,11 @@ function announcementRowToAnnouncement(row: StudentAnnouncementRow): StudentAnno
     title: row.title,
     body: row.body,
     locale: row.locale,
+    audienceType: row.audience_type ?? "all",
+    studentId: row.student_id ?? null,
+    programIds: row.program_ids ?? [],
+    linkUrl: row.link_url ?? null,
+    linkLabel: row.link_label?.trim() || null,
     publishedAt: row.published_at,
     expiresAt: row.expires_at,
     createdAt: row.created_at,
@@ -873,7 +952,15 @@ export async function upsertAnnouncementAdmin(
   const baseRow = {
     title: payload.title.trim(),
     body: payload.body.trim(),
-    locale: payload.locale,
+    locale: payload.locale ?? "ALL",
+    audience_type: payload.audienceType,
+    student_id: payload.audienceType === "student" ? payload.studentId ?? null : null,
+    program_ids:
+      payload.audienceType === "programs" ? payload.programIds ?? [] : [],
+    link_url: normalizeAnnouncementLink(payload.linkUrl),
+    link_label: normalizeAnnouncementLink(payload.linkUrl)
+      ? payload.linkLabel?.trim() || null
+      : null,
     expires_at: payload.expiresAt ?? null,
     updated_at: new Date().toISOString(),
   };
@@ -938,6 +1025,7 @@ export async function deleteAnnouncementAdmin(id: string): Promise<void> {
 }
 
 export async function listAnnouncementsForStudent(
+  studentId: string,
   studentLocale: "EN" | "FA"
 ): Promise<StudentAnnouncement[]> {
   const supabase = createClient();
@@ -948,13 +1036,24 @@ export async function listAnnouncementsForStudent(
     .not("published_at", "is", null)
     .lte("published_at", now)
     .or(`expires_at.is.null,expires_at.gt."${now}"`)
-    .in("locale", [studentLocale, "ALL"])
     .order("published_at", { ascending: false })
-    .limit(10);
+    .limit(50);
 
   if (error) {
     if (isMissingAnnouncementsTable(error)) return [];
     throw new Error(error.message);
   }
-  return (data as StudentAnnouncementRow[]).map(announcementRowToAnnouncement);
+
+  const enrolledProgramIds = await getStudentEnrolledProgramIds(studentId);
+  return (data as StudentAnnouncementRow[])
+    .map(announcementRowToAnnouncement)
+    .filter((announcement) =>
+      announcementMatchesStudent(
+        announcement,
+        studentId,
+        enrolledProgramIds,
+        studentLocale
+      )
+    )
+    .slice(0, 10);
 }
