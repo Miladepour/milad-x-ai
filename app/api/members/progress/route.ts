@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { upsertLessonProgress } from "@/lib/members/store";
+import { SERVER_ERROR_MESSAGE } from "@/lib/security/api-errors";
 import { getStudentUser } from "@/lib/supabase/require-student";
 
 export async function POST(request: Request) {
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, progress });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[members/progress]", error);
+    return NextResponse.json({ error: SERVER_ERROR_MESSAGE }, { status: 500 });
   }
 }

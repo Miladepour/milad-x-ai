@@ -16,6 +16,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { buildAdminInsights } from "@/lib/admin/insights";
 import { markNotificationsReadByReference } from "@/lib/notifications/store";
+import { SERVER_ERROR_MESSAGE } from "@/lib/security/api-errors";
 import { getAdminUser } from "@/lib/supabase/require-admin";
 
 export async function POST(request: Request) {
@@ -194,7 +195,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[admin-console]", error);
+    return NextResponse.json({ error: SERVER_ERROR_MESSAGE }, { status: 500 });
   }
 }

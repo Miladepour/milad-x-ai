@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { SERVER_ERROR_MESSAGE } from "@/lib/security/api-errors";
 import { verifyResendWebhook } from "@/lib/email/verify-resend-webhook";
 import {
   mapResendEventType,
@@ -66,8 +67,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, updated });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Webhook error";
-    console.error("[resend webhook]", message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[resend webhook]", error);
+    return NextResponse.json({ error: SERVER_ERROR_MESSAGE }, { status: 500 });
   }
 }

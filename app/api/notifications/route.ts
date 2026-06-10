@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { SERVER_ERROR_MESSAGE } from "@/lib/security/api-errors";
 import {
   listNotificationsForUser,
   markAllNotificationsRead,
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[notifications]", error);
+    return NextResponse.json({ error: SERVER_ERROR_MESSAGE }, { status: 500 });
   }
 }
