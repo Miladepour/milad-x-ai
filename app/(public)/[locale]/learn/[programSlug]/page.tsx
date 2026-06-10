@@ -31,7 +31,7 @@ export default async function LearnProgramPage({
         <StudentPortalButton href={learnPath(locale)} variant="secondary">
           {t.memberPortal.backToDashboard}
         </StudentPortalButton>
-        <h1 className="mt-5 font-dm text-4xl font-semibold text-cream sm:text-5xl">
+        <h1 className="mt-5 font-dm text-2xl font-semibold text-orange sm:text-3xl">
           {data.program.title}
         </h1>
         <p className="mt-3 font-dm text-cream/70">{data.program.description}</p>
@@ -66,7 +66,7 @@ export default async function LearnProgramPage({
 
       <StudentGlassCard>
         <h2 className="student-section-title">{t.memberPortal.lessonList}</h2>
-        <ul className="mt-4 space-y-3">
+        <ul className="mt-3 space-y-2">
           {data.lessons.map((lesson, index) => (
             <li key={lesson.id}>
               <StudentLessonCard
