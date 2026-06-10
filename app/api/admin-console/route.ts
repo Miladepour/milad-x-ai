@@ -13,6 +13,7 @@ import {
   contactRowToSubmission,
   waitlistRowToSubmission,
 } from "@/lib/supabase/mappers";
+import { createAdminDbClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import { buildAdminInsights } from "@/lib/admin/insights";
 import { markNotificationsReadByReference } from "@/lib/notifications/store";
@@ -53,7 +54,8 @@ export async function POST(request: Request) {
       if (!id) {
         return NextResponse.json({ error: "id required" }, { status: 400 });
       }
-      const { error } = await supabase
+      const adminDb = createAdminDbClient();
+      const { error } = await adminDb
         .from("contact_submissions")
         .update({ opened_at: new Date().toISOString() })
         .eq("id", id)
@@ -68,7 +70,8 @@ export async function POST(request: Request) {
       if (!id) {
         return NextResponse.json({ error: "id required" }, { status: 400 });
       }
-      const { error } = await supabase
+      const adminDb = createAdminDbClient();
+      const { error } = await adminDb
         .from("waitlist_submissions")
         .update({ opened_at: new Date().toISOString() })
         .eq("id", id)
