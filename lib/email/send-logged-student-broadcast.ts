@@ -1,3 +1,4 @@
+import type { EmailBannerId } from "@/lib/email/banners";
 import { renderStudentBroadcastEmail } from "@/lib/email/student-broadcast";
 import { sendRawEmail } from "@/lib/email/resend";
 import { sanitizeEmailHtml } from "@/lib/email/sanitize-html";
@@ -17,6 +18,7 @@ export async function sendLoggedStudentBroadcastEmails(options: {
   programId?: string | null;
   studentId?: string | null;
   sentBy: string;
+  bannerId?: EmailBannerId;
 }): Promise<{ sent: number; failed: number; campaignId: string }> {
   const subject = options.subject.trim();
   const bodyHtml = sanitizeEmailHtml(options.bodyHtml);
@@ -40,6 +42,7 @@ export async function sendLoggedStudentBroadcastEmails(options: {
       bodyHtml,
       fullName: student.fullName,
       locale: student.locale === "FA" ? "FA" : "EN",
+      bannerId: options.bannerId,
     });
 
     const result = await sendRawEmail({

@@ -1,4 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
+import {
+  getAnnouncementStatesForStudent,
+  mergeAnnouncementsWithState,
+} from "@/lib/members/announcement-states";
+import { normalizeAnnouncementLink } from "@/lib/members/announcement-utils";
 import { notifyStudentsForAnnouncement } from "@/lib/notifications/store";
 import { createServiceClient } from "@/lib/supabase/server";
 import {
@@ -36,6 +41,7 @@ import type {
   StudentAnnouncement,
   StudentAnnouncementAudienceType,
   StudentAnnouncementPayload,
+  StudentAnnouncementWithState,
   StudentDashboardProgram,
   StudentProfile,
   StudentWithEnrollments,
@@ -891,16 +897,6 @@ interface StudentAnnouncementRow {
   updated_at: string;
 }
 
-export function normalizeAnnouncementLink(
-  url: string | null | undefined
-): string | null {
-  const trimmed = String(url ?? "").trim();
-  if (!trimmed) return null;
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  if (trimmed.startsWith("/")) return trimmed;
-  return `https://${trimmed}`;
-}
-
 function announcementRowToAnnouncement(row: StudentAnnouncementRow): StudentAnnouncement {
   return {
     id: row.id,
@@ -1026,8 +1022,9 @@ export async function deleteAnnouncementAdmin(id: string): Promise<void> {
 
 export async function listAnnouncementsForStudent(
   studentId: string,
-  studentLocale: "EN" | "FA"
-): Promise<StudentAnnouncement[]> {
+  studentLocale: "EN" | "FA",
+  options?: { includeDismissed?: boolean; limit?: number }
+): Promise<StudentAnnouncementWithState[]> {
   const supabase = createClient();
   const now = new Date().toISOString();
   const { data, error } = await supabase
@@ -1045,7 +1042,7 @@ export async function listAnnouncementsForStudent(
   }
 
   const enrolledProgramIds = await getStudentEnrolledProgramIds(studentId);
-  return (data as StudentAnnouncementRow[])
+  const matched = (data as StudentAnnouncementRow[])
     .map(announcementRowToAnnouncement)
     .filter((announcement) =>
       announcementMatchesStudent(
@@ -1054,6 +1051,19 @@ export async function listAnnouncementsForStudent(
         enrolledProgramIds,
         studentLocale
       )
-    )
-    .slice(0, 10);
+    );
+
+  const states = await getAnnouncementStatesForStudent(
+    studentId,
+    matched.map((item) => item.id)
+  );
+  const withState = mergeAnnouncementsWithState(matched, states);
+  const visible = options?.includeDismissed
+    ? withState
+    : withState.filter((item) => !item.isDismissed);
+
+  if (options?.limit != null) {
+    return visible.slice(0, options.limit);
+  }
+  return visible;
 }

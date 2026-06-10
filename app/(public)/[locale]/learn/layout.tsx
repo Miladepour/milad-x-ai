@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import StudentDashboardShell from "@/components/members/StudentDashboardShell";
 import { accountLoginPath, learnLessonPath } from "@/lib/members/paths";
-import { getStudentDashboard, syncExpiredEnrollments } from "@/lib/members/store";
+import {
+  getStudentDashboard,
+  listAnnouncementsForStudent,
+  syncExpiredEnrollments,
+} from "@/lib/members/store";
 import { isValidLocale, urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { getStudentUser } from "@/lib/supabase/require-student";
 import { translations } from "@/lib/i18n/translations";
@@ -34,8 +38,12 @@ export default async function LearnLayout({
 
   await syncExpiredEnrollments();
 
-  const programs = await getStudentDashboard(student.user.id);
+  const [programs, announcements] = await Promise.all([
+    getStudentDashboard(student.user.id),
+    listAnnouncementsForStudent(student.user.id, student.profile.locale),
+  ]);
   const continueItem = programs.find((p) => p.continueLesson);
+  const announcementUnreadCount = announcements.filter((item) => !item.isRead).length;
 
   const displayName =
     student.profile.fullName?.trim() || student.profile.email.split("@")[0];
@@ -45,6 +53,7 @@ export default async function LearnLayout({
       <StudentDashboardShell
         locale={locale}
         studentName={displayName}
+        announcementUnreadCount={announcementUnreadCount}
         continueWatching={
           continueItem?.continueLesson
             ? {

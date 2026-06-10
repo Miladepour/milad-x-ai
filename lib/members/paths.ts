@@ -5,6 +5,22 @@ export function learnPath(locale: UrlLocale): string {
   return localizedPath("/learn", locale);
 }
 
+export function learnAnnouncementsPath(locale: UrlLocale): string {
+  return localizedPath("/learn/announcements", locale);
+}
+
+export function learnProgramsPath(locale: UrlLocale): string {
+  return localizedPath("/learn/programs", locale);
+}
+
+export function learnUpcomingCoursesPath(locale: UrlLocale): string {
+  return localizedPath("/learn/upcoming-courses", locale);
+}
+
+export function learnResourcesPath(locale: UrlLocale): string {
+  return localizedPath("/learn/resources", locale);
+}
+
 export function learnProgramPath(programSlug: string, locale: UrlLocale): string {
   return localizedPath(`/learn/${programSlug}`, locale);
 }

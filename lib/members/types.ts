@@ -167,6 +167,13 @@ export interface StudentAnnouncement {
   updatedAt: string;
 }
 
+export interface StudentAnnouncementWithState extends StudentAnnouncement {
+  readAt: string | null;
+  dismissedAt: string | null;
+  isRead: boolean;
+  isDismissed: boolean;
+}
+
 export interface StudentAnnouncementPayload {
   id?: string;
   title: string;

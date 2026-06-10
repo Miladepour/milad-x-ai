@@ -5,6 +5,11 @@ import StudentEmailHistory from "@/components/admin/StudentEmailHistory";
 import StudentSearchSelect from "@/components/admin/StudentSearchSelect";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import RichTextEditor from "@/components/shared/RichTextEditor";
+import {
+  DEFAULT_BROADCAST_BANNER_ID,
+  EMAIL_BANNER_LIST,
+  type EmailBannerId,
+} from "@/lib/email/banners";
 import type { MemberProgram, StudentProfile } from "@/lib/members/types";
 
 interface StudentEmailComposerProps {
@@ -51,6 +56,7 @@ export default function StudentEmailComposer({
   const [programId, setProgramId] = useState("");
   const [previewLocale, setPreviewLocale] = useState<"EN" | "FA">("EN");
   const [subject, setSubject] = useState("");
+  const [bannerId, setBannerId] = useState<EmailBannerId>(DEFAULT_BROADCAST_BANNER_ID);
   const [bodyHtml, setBodyHtml] = useState("<p></p>");
   const [preview, setPreview] = useState<PreviewData | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
@@ -89,6 +95,7 @@ export default function StudentEmailComposer({
       const data = (await membersRequest("preview-student-email", {
         subject: subject.trim(),
         bodyHtml,
+        bannerId,
         previewLocale,
         ...audiencePayload,
       })) as PreviewData & { ok?: boolean };
@@ -112,6 +119,7 @@ export default function StudentEmailComposer({
     canPreview,
     membersRequest,
     onStatus,
+    bannerId,
     previewLocale,
     subject,
   ]);
@@ -128,6 +136,7 @@ export default function StudentEmailComposer({
       const data = (await membersRequest("preview-student-email", {
         subject: subject.trim(),
         bodyHtml,
+        bannerId,
         previewLocale,
         ...audiencePayload,
       })) as PreviewData & { ok?: boolean };
@@ -162,6 +171,7 @@ export default function StudentEmailComposer({
       const result = (await membersRequest("send-student-email", {
         subject: subject.trim(),
         bodyHtml,
+        bannerId,
         ...audiencePayload,
       })) as { sent: number; failed: number; total: number };
 
@@ -280,6 +290,41 @@ export default function StudentEmailComposer({
             )}
           </fieldset>
 
+          <fieldset className="grid gap-3 rounded-2xl border border-white/[0.08] p-4">
+            <legend className="px-1 font-mono text-[10px] uppercase tracking-widest text-orange">
+              Header banner
+            </legend>
+            <p className="font-dm text-xs text-cream/55">
+              Choose the illustration shown at the top of the email.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {EMAIL_BANNER_LIST.map((banner) => {
+                const selected = bannerId === banner.id;
+                return (
+                  <button
+                    key={banner.id}
+                    type="button"
+                    onClick={() => setBannerId(banner.id)}
+                    className={`overflow-hidden rounded-xl border text-left transition-colors ${
+                      selected
+                        ? "border-orange ring-1 ring-orange"
+                        : "border-white/[0.1] hover:border-orange/50"
+                    }`}
+                  >
+                    <img
+                      src={banner.imagePath}
+                      alt=""
+                      className="block h-20 w-full object-cover"
+                    />
+                    <span className="block px-3 py-2 font-dm text-xs text-cream/80">
+                      {banner.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+
           <label className="flex flex-col gap-2">
             <span className="font-mono text-[10px] uppercase tracking-widest text-cream/45">
               Subject
@@ -393,12 +438,12 @@ export default function StudentEmailComposer({
             </div>
           )}
 
-          <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0D0D0D]">
+          <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#F4F4F4]">
             {preview?.html ? (
               <iframe
                 title="Email preview"
                 srcDoc={preview.html}
-                className="min-h-[640px] w-full border-0 bg-[#0D0D0D]"
+                className="min-h-[720px] w-full border-0 bg-[#F4F4F4]"
                 sandbox=""
               />
             ) : (

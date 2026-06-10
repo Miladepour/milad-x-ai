@@ -1,15 +1,15 @@
 import { redirect } from "next/navigation";
 import StudentDashboardHero from "@/components/members/StudentDashboardHero";
+import StudentAnnouncementsDashboard from "@/components/members/StudentAnnouncementsDashboard";
 import StudentGlassCard from "@/components/members/StudentGlassCard";
 import StudentPortalButton from "@/components/members/StudentPortalButton";
-import { normalizeAnnouncementLink } from "@/lib/members/store";
 import StudentProgramCard from "@/components/members/StudentProgramCard";
-import { accountLoginPath, learnProgramPath } from "@/lib/members/paths";
+import { accountLoginPath, learnAnnouncementsPath, learnProgramPath } from "@/lib/members/paths";
 import {
   getStudentDashboard,
   listAnnouncementsForStudent,
 } from "@/lib/members/store";
-import type { UsefulLink } from "@/lib/members/types";
+import { collectUsefulLinks } from "@/lib/members/learn-content";
 import { getCourses } from "@/lib/courses/store";
 import StudentUpcomingCourseCard from "@/components/members/StudentUpcomingCourseCard";
 import { urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
@@ -53,16 +53,7 @@ export default async function LearnDashboardPage({
   const upcomingCourses = courses.filter((c) => c.status !== "Closed").slice(0, 2);
   const courseStatusLabels = translations[internal].coursesPage.statusLabels;
 
-  const usefulLinks: UsefulLink[] = [];
-  const seen = new Set<string>();
-  for (const item of programs) {
-    for (const link of item.program.usefulLinks) {
-      if (!seen.has(link.url)) {
-        seen.add(link.url);
-        usefulLinks.push(link);
-      }
-    }
-  }
+  const usefulLinks = collectUsefulLinks(programs);
 
   const totalLessons = programs.reduce((sum, p) => sum + p.totalLessons, 0);
   const completedLessons = programs.reduce((sum, p) => sum + p.completedLessons, 0);
@@ -92,54 +83,19 @@ export default async function LearnDashboardPage({
         progressLabel={t.memberPortal.statProgress}
       />
 
-      <StudentGlassCard id="announcements" className="scroll-mt-36">
-        <h2 className="student-section-title">{t.memberPortal.navAnnouncements}</h2>
-        {announcements.length === 0 ? (
-          <p className="mt-4 font-dm text-sm text-cream/55">{t.memberPortal.noAnnouncements}</p>
-        ) : (
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {announcements.map((item) => {
-              const linkUrl = normalizeAnnouncementLink(item.linkUrl);
-              const linkLabel = item.linkLabel?.trim() || t.memberPortal.learnMore;
-              const isExternal = Boolean(linkUrl && /^https?:\/\//i.test(linkUrl));
-
-              return (
-                <li
-                  key={item.id}
-                  className="student-glass-pill flex h-full flex-col rounded-xl px-4 py-4"
-                >
-                  <p className="font-dm text-lg font-semibold text-cream">{item.title}</p>
-                  {item.body && (
-                    <p className="mt-2 line-clamp-3 flex-1 font-dm text-sm leading-relaxed text-cream/65">
-                      {item.body}
-                    </p>
-                  )}
-                  {linkUrl && (
-                    <div className="mt-4">
-                      <StudentPortalButton
-                        href={linkUrl}
-                        variant="secondary"
-                        external={isExternal}
-                      >
-                        {linkLabel}
-                      </StudentPortalButton>
-                    </div>
-                  )}
-                  {item.publishedAt && (
-                    <p className="mt-3 font-mono text-[10px] text-cream/40">
-                      {new Date(item.publishedAt).toLocaleDateString(dateLocale, {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })}
-                    </p>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </StudentGlassCard>
+      <StudentAnnouncementsDashboard
+        announcements={announcements}
+        announcementsHref={learnAnnouncementsPath(locale)}
+        dateLocale={dateLocale}
+        labels={{
+          sectionTitle: t.memberPortal.navAnnouncements,
+          noAnnouncements: t.memberPortal.noAnnouncements,
+          seeAll: t.memberPortal.seeAllAnnouncements,
+          learnMore: t.memberPortal.learnMore,
+          read: t.memberPortal.announcementRead,
+          unread: t.memberPortal.announcementUnread,
+        }}
+      />
 
       <StudentGlassCard id="upcoming-courses" className="scroll-mt-36">
         <div className="flex flex-wrap items-start justify-between gap-3">

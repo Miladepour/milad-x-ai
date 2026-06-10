@@ -19,12 +19,15 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import StudentNavIcon from "@/components/members/StudentNavIcon";
 import NotificationBell from "@/components/notifications/NotificationBell";
-import {
-  NotificationProvider,
-  useNotifications,
-} from "@/components/notifications/NotificationProvider";
+import { NotificationProvider } from "@/components/notifications/NotificationProvider";
 import NotificationToasts from "@/components/notifications/NotificationToasts";
-import { learnPath } from "@/lib/members/paths";
+import {
+  learnAnnouncementsPath,
+  learnPath,
+  learnProgramsPath,
+  learnResourcesPath,
+  learnUpcomingCoursesPath,
+} from "@/lib/members/paths";
 import { localizedPath } from "@/lib/i18n/paths";
 import type { UrlLocale } from "@/lib/i18n/config";
 
@@ -53,6 +56,7 @@ interface StudentDashboardShellProps {
   locale: UrlLocale;
   studentName: string;
   labels: StudentNavLabels;
+  announcementUnreadCount?: number;
   continueWatching?: StudentContinueWatching | null;
   children: React.ReactNode;
 }
@@ -77,41 +81,57 @@ function StudentDashboardShellInner({
   locale,
   studentName,
   labels,
+  announcementUnreadCount = 0,
   continueWatching,
   children,
 }: StudentDashboardShellProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const { notifications } = useNotifications();
-  const announcementUnread = notifications.filter(
-    (item) => item.kind === "announcement" && !item.readAt
-  ).length;
 
   const dashboardHref = learnPath(locale);
-  const isOnDashboard = pathname === dashboardHref || pathname === `${dashboardHref}/`;
-  const inProgram = pathname.includes("/learn/") && !isOnDashboard;
+  const announcementsHref = learnAnnouncementsPath(locale);
+  const programsHref = learnProgramsPath(locale);
+  const coursesHref = learnUpcomingCoursesPath(locale);
+  const resourcesHref = learnResourcesPath(locale);
+
+  function pathMatches(href: string) {
+    return pathname === href || pathname === `${href}/`;
+  }
+
+  const isOnDashboard = pathMatches(dashboardHref);
+  const isOnAnnouncements = pathMatches(announcementsHref);
+  const isOnPrograms = pathMatches(programsHref);
+  const isOnCourses = pathMatches(coursesHref);
+  const isOnResources = pathMatches(resourcesHref);
+  const isOnPortalSection =
+    isOnAnnouncements || isOnPrograms || isOnCourses || isOnResources;
+  const inProgram =
+    pathname.includes("/learn/") && !isOnDashboard && !isOnPortalSection;
 
   const navItems: NavItem[] = [
     { id: "overview", label: labels.overview, href: dashboardHref, icon: LayoutDashboard },
-    { id: "programs", label: labels.myPrograms, href: `${dashboardHref}#my-programs`, icon: BookOpen },
+    { id: "programs", label: labels.myPrograms, href: programsHref, icon: BookOpen },
     {
       id: "announcements",
       label: labels.announcements,
-      href: `${dashboardHref}#announcements`,
+      href: announcementsHref,
       icon: Megaphone,
     },
     {
       id: "courses",
       label: labels.upcomingCourses,
-      href: `${dashboardHref}#upcoming-courses`,
+      href: coursesHref,
       icon: CalendarDays,
     },
-    { id: "resources", label: labels.resources, href: `${dashboardHref}#resources`, icon: Link2 },
+    { id: "resources", label: labels.resources, href: resourcesHref, icon: Link2 },
   ];
 
   function isActive(item: NavItem) {
     if (item.id === "overview") return isOnDashboard;
-    if (item.id === "programs" && inProgram) return true;
+    if (item.id === "announcements") return isOnAnnouncements;
+    if (item.id === "programs") return isOnPrograms || inProgram;
+    if (item.id === "courses") return isOnCourses;
+    if (item.id === "resources") return isOnResources;
     return false;
   }
 
@@ -126,7 +146,7 @@ function StudentDashboardShellInner({
   function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
     const active = isActive(item);
     const Icon = item.icon;
-    const badge = item.id === "announcements" ? announcementUnread : 0;
+    const badge = item.id === "announcements" ? announcementUnreadCount : 0;
     return (
       <Link href={item.href} onClick={onNavigate} className={navRowClass(active)}>
         <StudentNavIcon icon={Icon} active={active} />

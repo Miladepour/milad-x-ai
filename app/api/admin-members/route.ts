@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { parseEmailBannerId } from "@/lib/email/banners";
 import { sendLoggedStudentBroadcastEmails } from "@/lib/email/send-logged-student-broadcast";
 import { renderStudentBroadcastEmail } from "@/lib/email/student-broadcast";
 import { sanitizeEmailHtml } from "@/lib/email/sanitize-html";
@@ -412,16 +413,20 @@ export async function POST(request: Request) {
           ? recipients[0]
           : recipients.find((r) => r.locale === previewLocale) ?? recipients[0];
 
+      const bannerId = parseEmailBannerId(body.bannerId);
+
       const html = renderStudentBroadcastEmail({
         bodyHtml,
         fullName: sample.fullName,
         locale: sample.locale,
+        bannerId,
       });
 
       return NextResponse.json({
         ok: true,
         html,
         subject,
+        bannerId,
         recipientCount: recipients.length,
         sampleRecipient: {
           email: sample.email,
@@ -462,6 +467,7 @@ export async function POST(request: Request) {
       }
 
       const audienceLabel = await buildAudienceLabel(audience, recipients);
+      const bannerId = parseEmailBannerId(body.bannerId);
 
       const { sent, failed, campaignId } = await sendLoggedStudentBroadcastEmails({
         subject,
@@ -472,6 +478,7 @@ export async function POST(request: Request) {
         programId: audience.type === "program" ? audience.programId : null,
         studentId: audience.type === "student" ? audience.studentId : null,
         sentBy: admin.id,
+        bannerId,
       });
 
       if (sent === 0 && failed > 0) {

@@ -1,4 +1,7 @@
-import { buildEmailLayout, sendRawEmail } from "@/lib/email/resend";
+import type { EmailBannerId } from "@/lib/email/banners";
+import { DEFAULT_BROADCAST_BANNER_ID } from "@/lib/email/banners";
+import { sendRawEmail } from "@/lib/email/resend";
+import { buildEmailLayout } from "@/lib/email/template";
 import { sanitizeEmailHtml } from "@/lib/email/sanitize-html";
 
 function escapeHtml(value: string): string {
@@ -19,24 +22,30 @@ export function renderStudentBroadcastEmail(options: {
   bodyHtml: string;
   fullName: string;
   locale: "EN" | "FA";
+  bannerId?: EmailBannerId;
 }): string {
   const isFa = options.locale === "FA";
   const name = options.fullName.trim() || (isFa ? "دانشجو" : "there");
   const greeting = isFa ? `سلام ${name}!` : `Hi ${name}!`;
   const safeBody = sanitizeEmailHtml(options.bodyHtml);
+  const bannerId = options.bannerId ?? DEFAULT_BROADCAST_BANNER_ID;
 
-  return buildEmailLayout(`
-    <h1 style="margin:0 0 20px;font-size:24px;color:#F5F0E8;font-weight:600;">${escapeHtml(greeting)}</h1>
-    <div style="font-size:15px;line-height:1.65;color:#F5F0E8CC;">
+  return buildEmailLayout(
+    `
+    <h1 style="margin:0 0 20px;font-size:26px;line-height:1.3;color:#1A1A1A;font-weight:700;">${escapeHtml(greeting)}</h1>
+    <div style="font-size:16px;line-height:1.7;color:#4A4A4A;">
       ${safeBody}
     </div>
-  `);
+  `,
+    { bannerId, locale: options.locale }
+  );
 }
 
 export async function sendStudentBroadcastEmails(options: {
   subject: string;
   bodyHtml: string;
   recipients: StudentEmailRecipient[];
+  bannerId?: EmailBannerId;
 }): Promise<{ sent: number; failed: number }> {
   const subject = options.subject.trim();
   const bodyHtml = sanitizeEmailHtml(options.bodyHtml);
@@ -48,13 +57,14 @@ export async function sendStudentBroadcastEmails(options: {
       bodyHtml,
       fullName: recipient.fullName,
       locale: recipient.locale,
+      bannerId: options.bannerId,
     });
-    const ok = await sendRawEmail({
+    const result = await sendRawEmail({
       to: recipient.email,
       subject,
       html,
     });
-    if (ok) sent += 1;
+    if (result.ok) sent += 1;
     else failed += 1;
   }
 
