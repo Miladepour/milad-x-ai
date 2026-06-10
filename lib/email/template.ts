@@ -45,7 +45,7 @@ export function buildEmailLayout(content: string, options: EmailLayoutOptions): 
   const isFa = options.locale === "FA";
   const dir = isFa ? "rtl" : "ltr";
   const lang = isFa ? "fa" : "en";
-  const logoUrl = absoluteAsset("/images/miladxailogo9.png");
+  const logoStripUrl = absoluteAsset("/images/email-banner-with-logo.gif");
   const bannerUrl = getEmailBannerImageUrl(options.bannerId);
   const align = isFa ? "right" : "left";
 
@@ -73,19 +73,19 @@ export function buildEmailLayout(content: string, options: EmailLayoutOptions): 
             </td>
           </tr>
           <tr>
-            <td style="padding:28px 32px 8px;" align="${align}">
-              <a href="${SITE_URL}" style="text-decoration:none;">
+            <td style="padding:0;line-height:0;font-size:0;">
+              <a href="${SITE_URL}" style="text-decoration:none;display:block;">
                 <img
-                  src="${logoUrl}"
+                  src="${logoStripUrl}"
                   alt="MX AI Academy"
-                  width="120"
-                  style="display:block;width:120px;height:auto;border:0;"
+                  width="600"
+                  style="display:block;width:100%;max-width:600px;height:auto;border:0;"
                 />
               </a>
             </td>
           </tr>
           <tr>
-            <td style="padding:8px 32px 28px;color:${EMAIL_TEXT};font-size:16px;line-height:1.65;" align="${align}">
+            <td style="padding:28px 32px;color:${EMAIL_TEXT};font-size:16px;line-height:1.65;" align="${align}">
               ${content}
             </td>
           </tr>
