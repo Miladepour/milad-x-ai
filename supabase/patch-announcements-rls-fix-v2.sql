@@ -1,5 +1,5 @@
--- Fix: enforce announcement audience targeting at the database layer.
--- Run in Supabase Dashboard → SQL (after patch-student-announcement-audience.sql)
+-- Fix student announcement visibility (re-run in Supabase SQL Editor).
+-- Handles legacy null audience_type and locale targeting for broadcast announcements.
 
 drop policy if exists "Students read published announcements" on public.student_announcements;
 

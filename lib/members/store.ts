@@ -1,3 +1,4 @@
+import { createAdminDbClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import {
   getAnnouncementStatesForStudent,
@@ -851,11 +852,16 @@ async function getStudentEnrolledProgramIds(studentId: string): Promise<string[]
   const supabase = createClient();
   const { data, error } = await supabase
     .from("program_enrollments")
-    .select("program_id")
+    .select("program_id, status, access_starts_at, access_ends_at")
     .eq("student_id", studentId);
 
   if (error) throw new Error(error.message);
-  return (data ?? []).map((row) => row.program_id);
+  return (data ?? [])
+    .map((row) =>
+      enrollmentRowToEnrollment(row as ProgramEnrollmentRow)
+    )
+    .filter(isEnrollmentActive)
+    .map((enrollment) => enrollment.programId);
 }
 
 export function announcementMatchesStudent(
@@ -928,7 +934,7 @@ function isMissingAnnouncementsTable(error: { message?: string; code?: string })
 }
 
 export async function listAnnouncementsAdmin(): Promise<StudentAnnouncement[]> {
-  const supabase = createClient();
+  const supabase = createAdminDbClient();
   const { data, error } = await supabase
     .from("student_announcements")
     .select("*")
@@ -944,7 +950,7 @@ export async function listAnnouncementsAdmin(): Promise<StudentAnnouncement[]> {
 export async function upsertAnnouncementAdmin(
   payload: StudentAnnouncementPayload
 ): Promise<StudentAnnouncement> {
-  const supabase = createClient();
+  const supabase = createAdminDbClient();
   const baseRow = {
     title: payload.title.trim(),
     body: payload.body.trim(),
@@ -1012,7 +1018,7 @@ export async function upsertAnnouncementAdmin(
 }
 
 export async function deleteAnnouncementAdmin(id: string): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminDbClient();
   const { error } = await supabase.from("student_announcements").delete().eq("id", id);
   if (error) {
     if (isMissingAnnouncementsTable(error)) throw new Error(ANNOUNCEMENTS_SETUP_HINT);
