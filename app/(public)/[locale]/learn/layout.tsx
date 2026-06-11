@@ -53,6 +53,7 @@ export default async function LearnLayout({
       <StudentDashboardShell
         locale={locale}
         studentName={displayName}
+        studentEmail={student.profile.email}
         announcementUnreadCount={announcementUnreadCount}
         continueWatching={
           continueItem?.continueLesson
@@ -75,6 +76,8 @@ export default async function LearnLayout({
           announcements: t.memberPortal.navAnnouncements,
           upcomingCourses: t.memberPortal.navUpcomingCourses,
           resources: t.memberPortal.navResources,
+          profile: t.memberPortal.navProfile,
+          viewProfile: t.memberPortal.profileViewProfile,
           backToSite: t.memberPortal.backToSite,
           signOut: t.memberPortal.signOut,
           menu: t.memberPortal.menu,

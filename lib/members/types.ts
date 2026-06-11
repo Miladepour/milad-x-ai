@@ -132,6 +132,28 @@ export interface UpdateStudentPayload {
   notes?: string | null;
 }
 
+export interface StudentSelfUpdatePayload {
+  fullName?: string;
+  locale?: LocaleCode;
+  phone?: string | null;
+}
+
+export interface StudentProfileEnrollmentSummary {
+  id: string;
+  programTitle: string;
+  programSlug: string;
+  status: EnrollmentStatus;
+  amountPaid: number | null;
+  currency: PaymentCurrency | null;
+  enrolledAt: string;
+  accessEndsAt: string | null;
+}
+
+export interface StudentProfileAccount {
+  profile: StudentProfile;
+  enrollments: StudentProfileEnrollmentSummary[];
+}
+
 export interface AddEnrollmentPayload {
   studentId: string;
   programId: string;

@@ -46,6 +46,9 @@ import type {
   StudentAnnouncementWithState,
   StudentDashboardProgram,
   StudentProfile,
+  StudentProfileAccount,
+  StudentProfileEnrollmentSummary,
+  StudentSelfUpdatePayload,
   StudentWithEnrollments,
   UpdateStudentPayload,
 } from "./types";
@@ -406,6 +409,66 @@ export async function getStudentProfile(
 
   if (error) throw new Error(error.message);
   if (!data) return null;
+  return studentProfileRowToProfile(data as StudentProfileRow);
+}
+
+export async function getStudentProfileAccount(
+  userId: string
+): Promise<StudentProfileAccount | null> {
+  const supabase = createClient();
+  const profile = await getStudentProfile(userId);
+  if (!profile) return null;
+
+  const { data, error } = await supabase
+    .from("program_enrollments")
+    .select("*, member_programs(*)")
+    .eq("student_id", userId)
+    .order("invited_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  const enrollments: StudentProfileEnrollmentSummary[] = [];
+
+  for (const row of data ?? []) {
+    const enrollment = enrollmentRowToEnrollment(row as ProgramEnrollmentRow);
+    const programRow = (row as { member_programs: MemberProgramRow | null }).member_programs;
+    if (!programRow) continue;
+
+    const program = memberProgramRowToProgram(programRow);
+    enrollments.push({
+      id: enrollment.id,
+      programTitle: program.title,
+      programSlug: program.slug,
+      status: enrollment.status,
+      amountPaid: enrollment.amountPaid,
+      currency: enrollment.currency,
+      enrolledAt: enrollment.invitedAt,
+      accessEndsAt: enrollment.accessEndsAt,
+    });
+  }
+
+  return { profile, enrollments };
+}
+
+export async function updateStudentSelf(
+  userId: string,
+  payload: StudentSelfUpdatePayload
+): Promise<StudentProfile> {
+  const supabase = createClient();
+  const row: Record<string, unknown> = {};
+
+  if (payload.fullName !== undefined) row.full_name = payload.fullName.trim();
+  if (payload.locale !== undefined) row.locale = payload.locale;
+  if (payload.phone !== undefined) row.phone = payload.phone?.trim() || null;
+
+  const { data, error } = await supabase
+    .from("student_profiles")
+    .update(row)
+    .eq("id", userId)
+    .select("*")
+    .single();
+
+  if (error) throw new Error(error.message);
   return studentProfileRowToProfile(data as StudentProfileRow);
 }
 

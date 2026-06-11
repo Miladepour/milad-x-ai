@@ -21,6 +21,10 @@ export function learnResourcesPath(locale: UrlLocale): string {
   return localizedPath("/learn/resources", locale);
 }
 
+export function learnProfilePath(locale: UrlLocale): string {
+  return localizedPath("/learn/profile", locale);
+}
+
 export function learnProgramPath(programSlug: string, locale: UrlLocale): string {
   return localizedPath(`/learn/${programSlug}`, locale);
 }

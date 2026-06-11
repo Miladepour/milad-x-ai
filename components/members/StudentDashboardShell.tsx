@@ -13,6 +13,7 @@ import {
   Megaphone,
   Menu,
   PlayCircle,
+  User,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -24,6 +25,7 @@ import NotificationToasts from "@/components/notifications/NotificationToasts";
 import {
   learnAnnouncementsPath,
   learnPath,
+  learnProfilePath,
   learnProgramsPath,
   learnResourcesPath,
   learnUpcomingCoursesPath,
@@ -37,6 +39,8 @@ export interface StudentNavLabels {
   announcements: string;
   upcomingCourses: string;
   resources: string;
+  profile: string;
+  viewProfile: string;
   backToSite: string;
   signOut: string;
   menu: string;
@@ -55,6 +59,7 @@ export interface StudentContinueWatching {
 interface StudentDashboardShellProps {
   locale: UrlLocale;
   studentName: string;
+  studentEmail: string;
   labels: StudentNavLabels;
   announcementUnreadCount?: number;
   continueWatching?: StudentContinueWatching | null;
@@ -77,9 +82,19 @@ export default function StudentDashboardShell(props: StudentDashboardShellProps)
   );
 }
 
+function profileInitials(fullName: string, email: string): string {
+  const source = fullName.trim() || email.split("@")[0] || "?";
+  const parts = source.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
+  }
+  return source.slice(0, 2).toUpperCase();
+}
+
 function StudentDashboardShellInner({
   locale,
   studentName,
+  studentEmail,
   labels,
   announcementUnreadCount = 0,
   continueWatching,
@@ -93,6 +108,8 @@ function StudentDashboardShellInner({
   const programsHref = learnProgramsPath(locale);
   const coursesHref = learnUpcomingCoursesPath(locale);
   const resourcesHref = learnResourcesPath(locale);
+  const profileHref = learnProfilePath(locale);
+  const profileInitialsLabel = profileInitials(studentName, studentEmail);
 
   function pathMatches(href: string) {
     return pathname === href || pathname === `${href}/`;
@@ -103,8 +120,9 @@ function StudentDashboardShellInner({
   const isOnPrograms = pathMatches(programsHref);
   const isOnCourses = pathMatches(coursesHref);
   const isOnResources = pathMatches(resourcesHref);
+  const isOnProfile = pathMatches(profileHref);
   const isOnPortalSection =
-    isOnAnnouncements || isOnPrograms || isOnCourses || isOnResources;
+    isOnAnnouncements || isOnPrograms || isOnCourses || isOnResources || isOnProfile;
   const inProgram =
     pathname.includes("/learn/") && !isOnDashboard && !isOnPortalSection;
 
@@ -124,6 +142,7 @@ function StudentDashboardShellInner({
       icon: CalendarDays,
     },
     { id: "resources", label: labels.resources, href: resourcesHref, icon: Link2 },
+    { id: "profile", label: labels.profile, href: profileHref, icon: User },
   ];
 
   function isActive(item: NavItem) {
@@ -132,6 +151,7 @@ function StudentDashboardShellInner({
     if (item.id === "programs") return isOnPrograms || inProgram;
     if (item.id === "courses") return isOnCourses;
     if (item.id === "resources") return isOnResources;
+    if (item.id === "profile") return isOnProfile;
     return false;
   }
 
@@ -170,12 +190,27 @@ function StudentDashboardShellInner({
     <div className="flex h-full flex-col">
       <div className="border-b border-white/[0.08] px-4 py-5">
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-orange">
-              {labels.portalTitle}
-            </p>
-            <p className="mt-1 truncate font-dm text-sm font-medium text-cream">{studentName}</p>
-          </div>
+          <Link
+            href={profileHref}
+            onClick={() => setMenuOpen(false)}
+            className="group min-w-0 flex flex-1 items-center gap-3 rounded-xl transition-colors hover:bg-white/[0.04]"
+            aria-label={labels.viewProfile}
+          >
+            <span
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-orange/35 bg-orange/15 font-dm text-sm font-semibold text-orange transition-colors group-hover:border-orange/55"
+              aria-hidden
+            >
+              {profileInitialsLabel}
+            </span>
+            <span className="min-w-0">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-orange">
+                {labels.portalTitle}
+              </p>
+              <p className="mt-1 truncate font-dm text-sm font-medium text-cream group-hover:text-orange">
+                {studentName}
+              </p>
+            </span>
+          </Link>
           <NotificationBell />
         </div>
       </div>
@@ -245,7 +280,13 @@ function StudentDashboardShellInner({
           <Menu className="h-4 w-4" strokeWidth={1.75} />
           {labels.menu}
         </button>
-        <p className="truncate font-dm text-sm font-medium text-cream">{labels.portalTitle}</p>
+        <Link
+          href={profileHref}
+          onClick={() => setMenuOpen(false)}
+          className="truncate font-dm text-sm font-medium text-cream transition-colors hover:text-orange"
+        >
+          {studentName}
+        </Link>
         <NotificationBell />
       </div>
 
