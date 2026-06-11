@@ -11,6 +11,7 @@ import {
   computeProgressPercent,
   isEnrollmentActive,
   resolveEnrollmentStatus,
+  shouldShowInExpiredPrograms,
 } from "./access";
 import {
   enrollmentRowToEnrollment,
@@ -412,19 +413,23 @@ async function loadStudentDashboardProgram(
   supabase: ReturnType<typeof createClient>,
   userId: string,
   program: MemberProgram,
-  enrollment: ProgramEnrollment
+  enrollment: ProgramEnrollment,
+  options?: { includeLessons?: boolean }
 ): Promise<StudentDashboardProgram> {
-  const { data: lessonsData } = await supabase
+  const includeLessons = options?.includeLessons ?? true;
+  const lessonsClient = includeLessons ? supabase : createAdminDbClient();
+  const { data: lessonsData } = await lessonsClient
     .from("program_lessons")
-    .select("*")
+    .select(includeLessons ? "*" : "id")
     .eq("program_id", program.id)
     .order("sort_order", { ascending: true });
 
-  const lessons = (lessonsData as ProgramLessonRow[] ?? []).map(
-    programLessonRowToLesson
-  );
+  const lessonRows = (lessonsData ?? []) as ProgramLessonRow[];
+  const lessonIds = lessonRows.map((row) => row.id);
+  const lessons = includeLessons
+    ? lessonRows.map(programLessonRowToLesson)
+    : [];
 
-  const lessonIds = lessons.map((l) => l.id);
   let progressData: import("./mappers").LessonProgressRow[] = [];
   if (lessonIds.length > 0) {
     const { data } = await supabase
@@ -439,32 +444,54 @@ async function loadStudentDashboardProgram(
     progressData.map((p) => [p.lesson_id, progressRowToProgress(p)])
   );
 
-  const completedLessons = lessons.filter((l) =>
-    progressMap.get(l.id)?.completedAt
+  const completedLessons = lessonIds.filter((id) =>
+    progressMap.get(id)?.completedAt
   ).length;
 
   let continueLesson: ProgramLesson | null = null;
-  for (const lesson of lessons) {
-    const prog = progressMap.get(lesson.id);
-    if (!prog?.completedAt) {
-      continueLesson = lesson;
-      break;
+  if (includeLessons) {
+    for (const lesson of lessons) {
+      const prog = progressMap.get(lesson.id);
+      if (!prog?.completedAt) {
+        continueLesson = lesson;
+        break;
+      }
     }
   }
+
+  const totalLessons = lessonIds.length;
 
   return {
     program,
     enrollment,
     lessons,
-    progressPercent: computeProgressPercent(completedLessons, lessons.length),
+    progressPercent: computeProgressPercent(completedLessons, totalLessons),
     completedLessons,
-    totalLessons: lessons.length,
+    totalLessons,
     continueLesson,
   };
 }
 
 export async function getStudentDashboard(
   userId: string
+): Promise<StudentDashboardProgram[]> {
+  return listStudentEnrollmentPrograms(userId, isEnrollmentActive);
+}
+
+export async function getStudentExpiredPrograms(
+  userId: string
+): Promise<StudentDashboardProgram[]> {
+  return listStudentEnrollmentPrograms(userId, shouldShowInExpiredPrograms, {
+    includeLessons: false,
+  });
+}
+
+async function listStudentEnrollmentPrograms(
+  userId: string,
+  filterEnrollment: (
+    enrollment: ProgramEnrollment
+  ) => boolean,
+  options?: { includeLessons?: boolean }
 ): Promise<StudentDashboardProgram[]> {
   const supabase = createClient();
 
@@ -479,7 +506,7 @@ export async function getStudentDashboard(
 
   for (const row of enrollments ?? []) {
     const enrollment = enrollmentRowToEnrollment(row as ProgramEnrollmentRow);
-    if (!isEnrollmentActive(enrollment)) continue;
+    if (!filterEnrollment(enrollment)) continue;
 
     let programRow = (row as { member_programs: MemberProgramRow | null })
       .member_programs;
@@ -497,12 +524,52 @@ export async function getStudentDashboard(
     if (!program.slug.trim()) continue;
 
     results.push(
-      await loadStudentDashboardProgram(supabase, userId, program, enrollment)
+      await loadStudentDashboardProgram(
+        supabase,
+        userId,
+        program,
+        enrollment,
+        options
+      )
     );
   }
 
   results.sort((a, b) => a.program.sortOrder - b.program.sortOrder);
   return results;
+}
+
+export async function getStudentEnrollmentForProgram(
+  userId: string,
+  programSlug: string
+): Promise<{ program: MemberProgram; enrollment: ProgramEnrollment } | null> {
+  const slug = programSlug.trim().toLowerCase();
+  if (!slug) return null;
+
+  const supabase = createClient();
+
+  const { data: programData, error: programError } = await supabase
+    .from("member_programs")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (programError) throw new Error(programError.message);
+  if (!programData) return null;
+
+  const { data: enrollmentRow, error: enrollmentError } = await supabase
+    .from("program_enrollments")
+    .select("*")
+    .eq("student_id", userId)
+    .eq("program_id", programData.id)
+    .maybeSingle();
+
+  if (enrollmentError) throw new Error(enrollmentError.message);
+  if (!enrollmentRow) return null;
+
+  return {
+    program: memberProgramRowToProgram(programData as MemberProgramRow),
+    enrollment: enrollmentRowToEnrollment(enrollmentRow as ProgramEnrollmentRow),
+  };
 }
 
 export async function getStudentProgram(

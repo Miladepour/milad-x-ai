@@ -3,15 +3,16 @@ import StudentDashboardHero from "@/components/members/StudentDashboardHero";
 import StudentAnnouncementsDashboard from "@/components/members/StudentAnnouncementsDashboard";
 import StudentGlassCard from "@/components/members/StudentGlassCard";
 import StudentPortalButton from "@/components/members/StudentPortalButton";
-import StudentProgramCard from "@/components/members/StudentProgramCard";
-import { accountLoginPath, learnAnnouncementsPath, learnProgramPath } from "@/lib/members/paths";
+import { accountLoginPath, learnAnnouncementsPath } from "@/lib/members/paths";
 import {
   getStudentDashboard,
+  getStudentExpiredPrograms,
   listAnnouncementsForStudent,
 } from "@/lib/members/store";
 import { collectUsefulLinks } from "@/lib/members/learn-content";
 import { getCourses } from "@/lib/courses/store";
 import StudentUpcomingCourseCard from "@/components/members/StudentUpcomingCourseCard";
+import StudentProgramCardList from "@/components/members/StudentProgramCardList";
 import { urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { localizedPath } from "@/lib/i18n/paths";
 import { getStudentUser } from "@/lib/supabase/require-student";
@@ -44,8 +45,9 @@ export default async function LearnDashboardPage({
   const student = await getStudentUser();
   if (!student) redirect(accountLoginPath(locale));
 
-  const [programs, announcements, courses] = await Promise.all([
+  const [programs, expiredPrograms, announcements, courses] = await Promise.all([
     getStudentDashboard(student.user.id),
+    getStudentExpiredPrograms(student.user.id),
     listAnnouncementsForStudent(student.user.id, student.profile.locale),
     getCourses(internal),
   ]);
@@ -62,6 +64,16 @@ export default async function LearnDashboardPage({
 
   const displayName =
     student.profile.fullName?.trim() || student.profile.email.split("@")[0];
+
+  const programCardLabels = {
+    progress: t.memberPortal.progress,
+    lessons: t.memberPortal.lessons,
+    accessUntil: t.memberPortal.accessUntil,
+    noExpiry: t.memberPortal.noExpiry,
+    openProgram: t.memberPortal.openProgram,
+    expiredOn: t.memberPortal.expiredOn,
+    programLocked: t.memberPortal.programLocked,
+  };
 
   return (
     <div className="flex flex-col gap-5 pb-10 sm:gap-6">
@@ -140,32 +152,34 @@ export default async function LearnDashboardPage({
         {programs.length === 0 ? (
           <p className="mt-4 font-dm text-sm text-cream/55">{t.memberPortal.noPrograms}</p>
         ) : (
-          <ul className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {programs.map((item) => (
-              <li key={item.program.id} className="h-full">
-                <StudentProgramCard
-                  href={learnProgramPath(item.program.slug, locale)}
-                  title={item.program.title}
-                  description={item.program.description}
-                  coverImage={item.program.coverImage}
-                  progressPercent={item.progressPercent}
-                  completedLessons={item.completedLessons}
-                  totalLessons={item.totalLessons}
-                  progressLabel={t.memberPortal.progress}
-                  lessonsLabel={t.memberPortal.lessons}
-                  accessLabel={t.memberPortal.accessUntil}
-                  accessValue={
-                    item.enrollment.accessEndsAt
-                      ? new Date(item.enrollment.accessEndsAt).toLocaleDateString(dateLocale)
-                      : t.memberPortal.noExpiry
-                  }
-                  openLabel={t.memberPortal.openProgram}
-                />
-              </li>
-            ))}
-          </ul>
+          <div className="mt-5">
+            <StudentProgramCardList
+              programs={programs}
+              locale={locale}
+              dateLocale={dateLocale}
+              labels={programCardLabels}
+            />
+          </div>
         )}
       </StudentGlassCard>
+
+      {expiredPrograms.length > 0 && (
+        <StudentGlassCard id="expired-programs" className="scroll-mt-36">
+          <h2 className="student-section-title">{t.memberPortal.expiredPrograms}</h2>
+          <p className="mt-2 font-dm text-sm leading-relaxed text-cream/65">
+            {t.memberPortal.expiredProgramsSubtitle}
+          </p>
+          <div className="mt-5">
+            <StudentProgramCardList
+              programs={expiredPrograms}
+              locale={locale}
+              dateLocale={dateLocale}
+              locked
+              labels={programCardLabels}
+            />
+          </div>
+        </StudentGlassCard>
+      )}
 
       {usefulLinks.length > 0 && (
         <StudentGlassCard id="resources" className="scroll-mt-36">

@@ -1,10 +1,13 @@
 import { notFound } from "next/navigation";
+import StudentAccessEnded from "@/components/members/StudentAccessEnded";
 import StudentGlassCard from "@/components/members/StudentGlassCard";
 import StudentLessonCard from "@/components/members/StudentLessonCard";
 import StudentPortalButton from "@/components/members/StudentPortalButton";
+import { isEnrollmentActive } from "@/lib/members/access";
 import { learnLessonPath, learnPath } from "@/lib/members/paths";
-import { getStudentProgram } from "@/lib/members/store";
+import { getStudentEnrollmentForProgram, getStudentProgram } from "@/lib/members/store";
 import { urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
+import { localizedPath } from "@/lib/i18n/paths";
 import { getStudentUser } from "@/lib/supabase/require-student";
 import { translations } from "@/lib/i18n/translations";
 
@@ -23,7 +26,27 @@ export default async function LearnProgramPage({
   if (!student) notFound();
 
   const data = await getStudentProgram(student.user.id, params.programSlug);
-  if (!data) notFound();
+  if (!data) {
+    const enrollmentView = await getStudentEnrollmentForProgram(
+      student.user.id,
+      params.programSlug
+    );
+    if (enrollmentView && !isEnrollmentActive(enrollmentView.enrollment)) {
+      return (
+        <StudentAccessEnded
+          locale={locale}
+          programTitle={enrollmentView.program.title}
+          labels={{
+            title: t.memberPortal.accessEndedTitle,
+            body: t.memberPortal.accessEndedBody,
+            contactSupport: t.memberPortal.contactSupport,
+            backToDashboard: t.memberPortal.backToDashboard,
+          }}
+        />
+      );
+    }
+    notFound();
+  }
 
   return (
     <div className="flex flex-col gap-5 pb-10 sm:gap-6">

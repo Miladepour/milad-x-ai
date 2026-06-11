@@ -23,6 +23,7 @@ export default function StudentLoginScreen({ redirectTo }: StudentLoginScreenPro
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
+  const [needsCaptchaRetry, setNeedsCaptchaRetry] = useState(false);
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
   const turnstileRef = useRef<TurnstileWidgetHandle>(null);
@@ -35,12 +36,14 @@ export default function StudentLoginScreen({ redirectTo }: StudentLoginScreenPro
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (turnstileRequired && !captchaToken) {
-      setStatus("Complete the security check below.");
+      setStatus(t.captchaRetryHint);
+      setNeedsCaptchaRetry(true);
       return;
     }
 
     setLoading(true);
     setStatus("");
+    setNeedsCaptchaRetry(false);
     const supabase = createClient();
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -51,7 +54,10 @@ export default function StudentLoginScreen({ redirectTo }: StudentLoginScreenPro
 
     if (error) {
       setStatus(error.message);
-      resetCaptcha();
+      if (turnstileRequired) {
+        resetCaptcha();
+        setNeedsCaptchaRetry(true);
+      }
       setLoading(false);
       return;
     }
@@ -77,6 +83,7 @@ export default function StudentLoginScreen({ redirectTo }: StudentLoginScreenPro
         "This account is not enrolled as a student. Use the link from your invite email."
       );
       resetCaptcha();
+      setNeedsCaptchaRetry(true);
       setLoading(false);
       return;
     }
@@ -129,23 +136,40 @@ export default function StudentLoginScreen({ redirectTo }: StudentLoginScreenPro
           </label>
         </div>
 
-        <TurnstileWidget
-          ref={turnstileRef}
-          onToken={setCaptchaToken}
-          onExpire={() => setCaptchaToken("")}
-        />
+        <div
+          className={
+            needsCaptchaRetry && turnstileRequired && !captchaToken
+              ? "rounded-xl ring-2 ring-orange/50 ring-offset-2 ring-offset-background"
+              : undefined
+          }
+        >
+          <TurnstileWidget
+            ref={turnstileRef}
+            onToken={(token) => {
+              setCaptchaToken(token);
+              if (token) setNeedsCaptchaRetry(false);
+            }}
+            onExpire={() => setCaptchaToken("")}
+          />
+        </div>
 
         <button
           type="submit"
           disabled={loading || (turnstileRequired && !captchaToken)}
           className="w-full bg-orange px-5 py-3.5 font-mono text-xs uppercase tracking-widest text-background transition-colors hover:bg-cream disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {loading ? "…" : t.signIn}
+          {loading ? t.signingIn : t.signIn}
         </button>
 
         {status && (
           <p className="font-dm text-sm leading-relaxed text-orange" role="alert">
             {status}
+            {needsCaptchaRetry && turnstileRequired && !captchaToken && (
+              <>
+                {" "}
+                {t.captchaRetryHint}
+              </>
+            )}
           </p>
         )}
 

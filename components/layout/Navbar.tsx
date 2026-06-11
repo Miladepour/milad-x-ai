@@ -3,12 +3,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Lock } from "lucide-react";
 import { useEffect, useState } from "react";
+import StudentNavButton from "@/components/layout/StudentNavButton";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { localizedPath } from "@/lib/i18n/paths";
-import { accountLoginPath } from "@/lib/members/paths";
 import { COURSES_BASE_PATH } from "@/lib/courses";
 import { CONSULTATION_BASE_PATH } from "@/lib/consultation/constants";
 import { PORTFOLIO_BASE_PATH } from "@/lib/portfolio/constants";
@@ -48,9 +47,6 @@ function isLearnPortalActive(pathname: string, urlLocale: UrlLocale) {
   const learn = localizedPath("/learn", urlLocale);
   return pathname === learn || pathname.startsWith(`${learn}/`);
 }
-
-const studentLoginButtonClass =
-  "inline-flex items-center justify-center gap-2 border-2 border-orange bg-orange px-4 py-2 font-mono text-[11px] uppercase tracking-widest text-background transition-colors hover:bg-orange-dim hover:border-orange-dim";
 
 function navLinkClass(active: boolean, variant: "desktop" | "mobile") {
   const base = "font-dm text-sm transition-colors";
@@ -152,18 +148,14 @@ export default function Navbar() {
             >
               {t.navbar.contact}
             </Link>
-            <Link
-              href={accountLoginPath(urlLocale)}
-              className={`${studentLoginButtonClass} ${
-                isStudentAreaActive(pathname, urlLocale)
-                  ? "ring-2 ring-cream ring-offset-2 ring-offset-background"
-                  : ""
-              }`}
-              aria-label={t.navbar.studentLoginAria}
-            >
-              <Lock className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden />
-              {t.navbar.studentLogin}
-            </Link>
+            <StudentNavButton
+              urlLocale={urlLocale}
+              active={isStudentAreaActive(pathname, urlLocale)}
+              loginLabel={t.navbar.studentLogin}
+              loginAria={t.navbar.studentLoginAria}
+              dashboardLabel={t.navbar.studentDashboard}
+              dashboardAria={t.navbar.studentDashboardAria}
+            />
           </div>
 
           <button
@@ -207,19 +199,16 @@ export default function Navbar() {
         } bg-background/95 backdrop-blur-md`}
       >
         <div className="flex flex-col px-8 py-4 gap-5">
-          <Link
-            href={accountLoginPath(urlLocale)}
-            className={`${studentLoginButtonClass} w-full ${
-              isStudentAreaActive(pathname, urlLocale)
-                ? "ring-2 ring-cream ring-offset-2 ring-offset-background"
-                : ""
-            }`}
-            aria-label={t.navbar.studentLoginAria}
-            onClick={() => setMenuOpen(false)}
-          >
-            <Lock className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
-            {t.navbar.studentLogin}
-          </Link>
+          <StudentNavButton
+            urlLocale={urlLocale}
+            active={isStudentAreaActive(pathname, urlLocale)}
+            loginLabel={t.navbar.studentLogin}
+            loginAria={t.navbar.studentLoginAria}
+            dashboardLabel={t.navbar.studentDashboard}
+            dashboardAria={t.navbar.studentDashboardAria}
+            className="w-full"
+            onNavigate={() => setMenuOpen(false)}
+          />
           <Link
             href={href("/")}
             className={navLinkClass(isNavActive(pathname, "/", urlLocale), "mobile")}

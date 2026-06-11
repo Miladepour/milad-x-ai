@@ -1,10 +1,15 @@
 import { notFound } from "next/navigation";
+import StudentAccessEnded from "@/components/members/StudentAccessEnded";
 import LessonContent from "@/components/members/LessonContent";
 import LessonPlayer from "@/components/members/LessonPlayer";
 import StudentGlassCard from "@/components/members/StudentGlassCard";
 import StudentPortalButton from "@/components/members/StudentPortalButton";
+import { isEnrollmentActive } from "@/lib/members/access";
 import { learnLessonPath, learnProgramPath } from "@/lib/members/paths";
-import { getStudentLesson } from "@/lib/members/store";
+import {
+  getStudentEnrollmentForProgram,
+  getStudentLesson,
+} from "@/lib/members/store";
 import { urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { getStudentUser } from "@/lib/supabase/require-student";
 import { translations } from "@/lib/i18n/translations";
@@ -28,7 +33,27 @@ export default async function LearnLessonPage({
     params.programSlug,
     params.lessonId
   );
-  if (!data) notFound();
+  if (!data) {
+    const enrollmentView = await getStudentEnrollmentForProgram(
+      student.user.id,
+      params.programSlug
+    );
+    if (enrollmentView && !isEnrollmentActive(enrollmentView.enrollment)) {
+      return (
+        <StudentAccessEnded
+          locale={locale}
+          programTitle={enrollmentView.program.title}
+          labels={{
+            title: t.memberPortal.accessEndedTitle,
+            body: t.memberPortal.accessEndedBody,
+            contactSupport: t.memberPortal.contactSupport,
+            backToDashboard: t.memberPortal.backToDashboard,
+          }}
+        />
+      );
+    }
+    notFound();
+  }
 
   const lessonIndex = data.lessons.findIndex((l) => l.id === data.lesson.id);
   const prev = lessonIndex > 0 ? data.lessons[lessonIndex - 1] : null;

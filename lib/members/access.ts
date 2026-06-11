@@ -59,3 +59,11 @@ export function getEnrollmentAccessBlockReason(
   }
   return "Inactive";
 }
+
+/** Show in the expired programs panel (not active, and not waiting for access to start). */
+export function shouldShowInExpiredPrograms(
+  enrollment: Pick<ProgramEnrollment, "status" | "accessStartsAt" | "accessEndsAt">
+): boolean {
+  if (isEnrollmentActive(enrollment)) return false;
+  return getEnrollmentAccessBlockReason(enrollment) !== "Access has not started yet";
+}

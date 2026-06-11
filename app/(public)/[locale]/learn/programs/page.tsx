@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import StudentGlassCard from "@/components/members/StudentGlassCard";
-import StudentProgramCard from "@/components/members/StudentProgramCard";
-import { accountLoginPath, learnProgramPath } from "@/lib/members/paths";
-import { getStudentDashboard } from "@/lib/members/store";
+import StudentProgramCardList from "@/components/members/StudentProgramCardList";
+import { accountLoginPath } from "@/lib/members/paths";
+import { getStudentDashboard, getStudentExpiredPrograms } from "@/lib/members/store";
 import { urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { getStudentUser } from "@/lib/supabase/require-student";
 import { translations } from "@/lib/i18n/translations";
@@ -22,7 +22,20 @@ export default async function LearnProgramsPage({
   const student = await getStudentUser();
   if (!student) redirect(accountLoginPath(locale));
 
-  const programs = await getStudentDashboard(student.user.id);
+  const [programs, expiredPrograms] = await Promise.all([
+    getStudentDashboard(student.user.id),
+    getStudentExpiredPrograms(student.user.id),
+  ]);
+
+  const programCardLabels = {
+    progress: t.memberPortal.progress,
+    lessons: t.memberPortal.lessons,
+    accessUntil: t.memberPortal.accessUntil,
+    noExpiry: t.memberPortal.noExpiry,
+    openProgram: t.memberPortal.openProgram,
+    expiredOn: t.memberPortal.expiredOn,
+    programLocked: t.memberPortal.programLocked,
+  };
 
   return (
     <div className="flex flex-col gap-5 pb-10 sm:gap-6">
@@ -37,32 +50,32 @@ export default async function LearnProgramsPage({
         {programs.length === 0 ? (
           <p className="font-dm text-sm text-cream/55">{t.memberPortal.noPrograms}</p>
         ) : (
-          <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {programs.map((item) => (
-              <li key={item.program.id} className="h-full">
-                <StudentProgramCard
-                  href={learnProgramPath(item.program.slug, locale)}
-                  title={item.program.title}
-                  description={item.program.description}
-                  coverImage={item.program.coverImage}
-                  progressPercent={item.progressPercent}
-                  completedLessons={item.completedLessons}
-                  totalLessons={item.totalLessons}
-                  progressLabel={t.memberPortal.progress}
-                  lessonsLabel={t.memberPortal.lessons}
-                  accessLabel={t.memberPortal.accessUntil}
-                  accessValue={
-                    item.enrollment.accessEndsAt
-                      ? new Date(item.enrollment.accessEndsAt).toLocaleDateString(dateLocale)
-                      : t.memberPortal.noExpiry
-                  }
-                  openLabel={t.memberPortal.openProgram}
-                />
-              </li>
-            ))}
-          </ul>
+          <StudentProgramCardList
+            programs={programs}
+            locale={locale}
+            dateLocale={dateLocale}
+            labels={programCardLabels}
+          />
         )}
       </StudentGlassCard>
+
+      {expiredPrograms.length > 0 && (
+        <StudentGlassCard>
+          <h2 className="student-section-title">{t.memberPortal.expiredPrograms}</h2>
+          <p className="mt-2 font-dm text-sm leading-relaxed text-cream/65">
+            {t.memberPortal.expiredProgramsSubtitle}
+          </p>
+          <div className="mt-5">
+            <StudentProgramCardList
+              programs={expiredPrograms}
+              locale={locale}
+              dateLocale={dateLocale}
+              locked
+              labels={programCardLabels}
+            />
+          </div>
+        </StudentGlassCard>
+      )}
     </div>
   );
 }

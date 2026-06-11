@@ -1,4 +1,4 @@
-import { learnPath } from "@/lib/members/paths";
+import { learnAnnouncementsPath } from "@/lib/members/paths";
 import type { StudentAnnouncement } from "@/lib/members/types";
 import type { AppNotification, NotificationKind } from "@/lib/notifications/types";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
@@ -238,7 +238,7 @@ export async function notifyStudentsForAnnouncement(
       kind: "announcement" as const,
       title: announcement.title,
       body: excerpt,
-      href: `${learnPath(student.locale === "FA" ? "fa" : "en")}#announcements`,
+      href: learnAnnouncementsPath(student.locale === "FA" ? "fa" : "en"),
       reference_id: announcement.id,
     }));
 
