@@ -29,6 +29,10 @@ import {
   upsertLessonAdmin,
   upsertProgramAdmin,
 } from "@/lib/members/store";
+import {
+  getQuizForLessonAdmin,
+  saveQuizForLessonAdmin,
+} from "@/lib/members/quiz-store";
 import { listStudentEmailHistoryAdmin } from "@/lib/members/student-email-store";
 import type { StudentAnnouncementPayload } from "@/lib/members/types";
 import type { PaymentCurrency } from "@/lib/members/types";
@@ -37,6 +41,7 @@ import type {
   MemberProgramPayload,
   ProgramLessonPayload,
 } from "@/lib/members/types";
+import type { QuizQuestionPayload } from "@/lib/members/types";
 import { SERVER_ERROR_MESSAGE } from "@/lib/security/api-errors";
 import { getAdminUser } from "@/lib/supabase/require-admin";
 
@@ -130,14 +135,37 @@ export async function POST(request: Request) {
 
     if (action === "save-lesson") {
       const payload = body.lesson as ProgramLessonPayload;
-      if (!payload?.programId || !payload?.title?.trim()) {
+      const hasTitle =
+        payload?.titleEn?.trim() || payload?.titleFa?.trim();
+      if (!payload?.programId || !hasTitle) {
         return NextResponse.json(
-          { error: "programId and title are required" },
+          { error: "programId and title (EN or FA) are required" },
           { status: 400 }
         );
       }
       const lesson = await upsertLessonAdmin(payload);
       return NextResponse.json({ ok: true, lesson });
+    }
+
+    if (action === "get-lesson-quiz") {
+      const lessonId = String(body.lessonId ?? "").trim();
+      if (!lessonId) {
+        return NextResponse.json({ error: "lessonId required" }, { status: 400 });
+      }
+      const questions = await getQuizForLessonAdmin(lessonId);
+      return NextResponse.json({ ok: true, questions });
+    }
+
+    if (action === "save-lesson-quiz") {
+      const lessonId = String(body.lessonId ?? "").trim();
+      const questions = Array.isArray(body.questions)
+        ? (body.questions as QuizQuestionPayload[])
+        : [];
+      if (!lessonId) {
+        return NextResponse.json({ error: "lessonId required" }, { status: 400 });
+      }
+      const saved = await saveQuizForLessonAdmin(lessonId, questions);
+      return NextResponse.json({ ok: true, questions: saved });
     }
 
     if (action === "reorder-lessons") {

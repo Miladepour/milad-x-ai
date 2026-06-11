@@ -1,12 +1,20 @@
 import { notFound } from "next/navigation";
 import StudentAccessEnded from "@/components/members/StudentAccessEnded";
 import LessonContent from "@/components/members/LessonContent";
+import LessonLocked from "@/components/members/LessonLocked";
+import LessonMarkComplete from "@/components/members/LessonMarkComplete";
 import LessonPlayer from "@/components/members/LessonPlayer";
+import LessonQuizPlayer from "@/components/members/LessonQuizPlayer";
 import StudentGlassCard from "@/components/members/StudentGlassCard";
 import StudentPortalButton from "@/components/members/StudentPortalButton";
 import { isEnrollmentActive } from "@/lib/members/access";
+import { isLessonUnlocked } from "@/lib/members/lesson-gating";
+import { resolveLessonBody, resolveLessonTitle } from "@/lib/members/lesson-localized";
 import { learnLessonPath, learnProgramPath } from "@/lib/members/paths";
+import { getQuizForStudent } from "@/lib/members/quiz-store";
+import { sanitizeLessonHtml } from "@/lib/members/sanitize-lesson-html";
 import {
+  getCompletedLessonIds,
   getStudentEnrollmentForProgram,
   getStudentLesson,
 } from "@/lib/members/store";
@@ -55,12 +63,68 @@ export default async function LearnLessonPage({
     notFound();
   }
 
-  const lessonIndex = data.lessons.findIndex((l) => l.id === data.lesson.id);
-  const prev = lessonIndex > 0 ? data.lessons[lessonIndex - 1] : null;
+  const completedIds = await getCompletedLessonIds(
+    student.user.id,
+    data.lessons.map((lesson) => lesson.id)
+  );
+  const unlock = isLessonUnlocked(data.lessons, data.lesson.id, completedIds);
+
+  if (!unlock.unlocked && unlock.previousLesson) {
+    return (
+      <LessonLocked
+        locale={locale}
+        programSlug={params.programSlug}
+        previousLessonTitle={resolveLessonTitle(unlock.previousLesson, internal)}
+        previousLessonHref={learnLessonPath(
+          params.programSlug,
+          unlock.previousLesson.id,
+          locale
+        )}
+        labels={{
+          title: t.memberPortal.lessonLockedTitle,
+          body: t.memberPortal.lessonLockedBody,
+          backToProgram: t.memberPortal.lessonLockedBackToProgram,
+          goToPrevious: t.memberPortal.lessonLockedGoToPrevious,
+        }}
+      />
+    );
+  }
+
+  const sortedLessons = [...data.lessons].sort((a, b) => a.sortOrder - b.sortOrder);
+  const lessonIndex = sortedLessons.findIndex((l) => l.id === data.lesson.id);
+  const prev = lessonIndex > 0 ? sortedLessons[lessonIndex - 1] : null;
   const next =
-    lessonIndex >= 0 && lessonIndex < data.lessons.length - 1
-      ? data.lessons[lessonIndex + 1]
+    lessonIndex >= 0 && lessonIndex < sortedLessons.length - 1
+      ? sortedLessons[lessonIndex + 1]
       : null;
+
+  const title = resolveLessonTitle(data.lesson, internal);
+  const body = resolveLessonBody(data.lesson, internal);
+  const isCompleted = !!data.progress?.completedAt;
+  const lessonType = data.lesson.lessonType;
+
+  const quizLabels = {
+    submit: t.memberPortal.quizSubmit,
+    submitting: t.memberPortal.quizSubmitting,
+    retake: t.memberPortal.quizRetake,
+    score: t.memberPortal.quizScore,
+    passed: t.memberPortal.quizPassed,
+    failed: t.memberPortal.quizFailed,
+    yourAnswer: t.memberPortal.quizYourAnswer,
+    correctAnswer: t.memberPortal.quizCorrectAnswer,
+    selectAnswer: t.memberPortal.quizSelectAnswer,
+    lockedNext: t.memberPortal.quizLockedNext,
+  };
+
+  const quizQuestions =
+    lessonType === "quiz"
+      ? await getQuizForStudent(data.lesson.id, internal)
+      : [];
+
+  const quizIntroHtml =
+    lessonType === "quiz" && body.trim()
+      ? sanitizeLessonHtml(body)
+      : "";
 
   return (
     <div className="flex flex-col gap-5 pb-10 sm:gap-6">
@@ -73,21 +137,46 @@ export default async function LearnLessonPage({
         </StudentPortalButton>
         <p className="mt-5 student-section-title">{data.program.title}</p>
         <h1 className="mt-2 font-dm text-4xl font-semibold text-cream sm:text-5xl">
-          {data.lesson.title}
+          {title}
         </h1>
-        <div className="lesson-content mt-4">
-          <LessonContent content={data.lesson.description} />
-        </div>
       </StudentGlassCard>
 
-      <StudentGlassCard className="!p-0 overflow-hidden">
-        <LessonPlayer
-          lessonId={data.lesson.id}
-          videoUrl={data.lesson.videoUrl}
-          initialPosition={data.progress?.lastPositionSeconds ?? 0}
-          completed={!!data.progress?.completedAt}
-        />
-      </StudentGlassCard>
+      {lessonType === "video" && (
+        <StudentGlassCard className="!p-0 overflow-hidden">
+          <LessonPlayer
+            lessonId={data.lesson.id}
+            videoUrl={data.lesson.videoUrl}
+            initialPosition={data.progress?.lastPositionSeconds ?? 0}
+            completed={isCompleted}
+          />
+          {body.trim() ? (
+            <div className="border-t border-white/[0.08] px-4 py-5 sm:px-6">
+              <LessonContent content={body} />
+            </div>
+          ) : null}
+        </StudentGlassCard>
+      )}
+
+      {lessonType === "text" && (
+        <StudentGlassCard className="!p-0 overflow-hidden">
+          <div className="px-4 py-5 sm:px-6">
+            <LessonContent content={body} />
+          </div>
+          <LessonMarkComplete lessonId={data.lesson.id} completed={isCompleted} />
+        </StudentGlassCard>
+      )}
+
+      {lessonType === "quiz" && (
+        <StudentGlassCard className="!p-0 overflow-hidden">
+          <LessonQuizPlayer
+            programSlug={params.programSlug}
+            lessonId={data.lesson.id}
+            introHtml={quizIntroHtml}
+            questions={quizQuestions}
+            labels={quizLabels}
+          />
+        </StudentGlassCard>
+      )}
 
       <StudentGlassCard className="flex flex-wrap items-center justify-between gap-3">
         {prev ? (
@@ -100,7 +189,7 @@ export default async function LearnLessonPage({
         ) : (
           <span />
         )}
-        {next ? (
+        {next && isCompleted ? (
           <StudentPortalButton
             href={learnLessonPath(params.programSlug, next.id, locale)}
             variant="primary"

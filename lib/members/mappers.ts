@@ -26,6 +26,11 @@ export interface MemberProgramRow {
 export interface ProgramLessonRow {
   id: string;
   program_id: string;
+  lesson_type?: string | null;
+  title_en?: string | null;
+  title_fa?: string | null;
+  body_en?: string | null;
+  body_fa?: string | null;
   title: string;
   description: string;
   video_url: string | null;
@@ -106,11 +111,27 @@ export function memberProgramRowToProgram(row: MemberProgramRow): MemberProgram 
 }
 
 export function programLessonRowToLesson(row: ProgramLessonRow): ProgramLesson {
+  const titleEn = (row.title_en ?? row.title ?? "").trim();
+  const titleFa = (row.title_fa ?? row.title ?? "").trim();
+  const bodyEn = (row.body_en ?? row.description ?? "").trim();
+  const bodyFa = (row.body_fa ?? row.description ?? "").trim();
+  const lessonType =
+    row.lesson_type === "text" || row.lesson_type === "quiz" || row.lesson_type === "video"
+      ? row.lesson_type
+      : row.video_url
+        ? "video"
+        : "text";
+
   return {
     id: row.id,
     programId: row.program_id,
-    title: row.title,
-    description: row.description,
+    lessonType,
+    titleEn,
+    titleFa,
+    bodyEn,
+    bodyFa,
+    title: titleEn || titleFa || row.title,
+    description: bodyEn || bodyFa || row.description,
     videoUrl: row.video_url,
     sortOrder: row.sort_order,
     durationMinutes: row.duration_minutes,

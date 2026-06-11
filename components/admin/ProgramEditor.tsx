@@ -1,8 +1,9 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import RichTextEditor from "@/components/shared/RichTextEditor";
-import type { MemberProgram, ProgramLesson, UsefulLink } from "@/lib/members/types";
+import AdminLessonEditor from "@/components/admin/AdminLessonEditor";
+import type { LessonType, MemberProgram, ProgramLesson, UsefulLink } from "@/lib/members/types";
+import type { QuizQuestionPayload } from "@/lib/members/types";
 
 interface ProgramEditorProps {
   membersRequest: (action: string, payload?: Record<string, unknown>) => Promise<unknown>;
@@ -19,25 +20,6 @@ function slugify(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-function FieldLabel({
-  children,
-  htmlFor,
-  className = "",
-}: {
-  children: React.ReactNode;
-  htmlFor?: string;
-  className?: string;
-}) {
-  return (
-    <label
-      htmlFor={htmlFor}
-      className={`font-mono text-[10px] uppercase tracking-widest text-cream/45 ${className}`}
-    >
-      {children}
-    </label>
-  );
-}
-
 function Field({
   label,
   children,
@@ -49,7 +31,9 @@ function Field({
 }) {
   return (
     <label className={`flex flex-col gap-2 ${className}`}>
-      <FieldLabel>{label}</FieldLabel>
+      <span className="font-mono text-[10px] uppercase tracking-widest text-cream/45">
+        {label}
+      </span>
       {children}
     </label>
   );
@@ -67,12 +51,19 @@ const emptyProgram = (): Omit<MemberProgram, "id" | "createdAt" | "updatedAt"> &
   usefulLinks: [],
 });
 
+const LESSON_TYPE_OPTIONS: Array<{ type: LessonType; label: string; hint: string }> = [
+  { type: "video", label: "Video lesson", hint: "Video player + materials below" },
+  { type: "text", label: "Text lesson", hint: "Blog-style reading content" },
+  { type: "quiz", label: "Quiz lesson", hint: "Questions with 100% pass required" },
+];
+
 export default function ProgramEditor({ membersRequest, onStatus }: ProgramEditorProps) {
   const [programs, setPrograms] = useState<MemberProgram[]>([]);
   const [view, setView] = useState<View>("list");
   const [program, setProgram] = useState(emptyProgram());
   const [lessons, setLessons] = useState<ProgramLesson[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showTypePicker, setShowTypePicker] = useState(false);
 
   const loadList = useCallback(async () => {
     const data = (await membersRequest("list-programs")) as { programs: MemberProgram[] };
@@ -144,38 +135,97 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
     }
   }
 
-  async function saveLesson(lesson: Partial<ProgramLesson> & { published: boolean }) {
+  async function saveLesson(
+    lesson: Partial<ProgramLesson> & { published: boolean },
+    lessonType?: LessonType
+  ) {
     if (!program.id) {
       onStatus("Save the program first.");
-      return;
+      return null;
     }
     onStatus("Saving lesson…");
+    const data = (await membersRequest("save-lesson", {
+      lesson: {
+        id: lesson.id,
+        programId: program.id,
+        lessonType: lessonType ?? lesson.lessonType ?? "video",
+        titleEn: lesson.titleEn ?? lesson.title ?? "New lesson",
+        titleFa: lesson.titleFa ?? lesson.title ?? "",
+        bodyEn: lesson.bodyEn ?? lesson.description ?? "",
+        bodyFa: lesson.bodyFa ?? lesson.description ?? "",
+        videoUrl: lesson.videoUrl,
+        sortOrder: lesson.sortOrder ?? lessons.length,
+        durationMinutes: lesson.durationMinutes,
+        published: lesson.published,
+      },
+    })) as { lesson: ProgramLesson };
+
+    setLessons((prev) => {
+      const idx = prev.findIndex((l) => l.id === data.lesson.id);
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = data.lesson;
+        return next;
+      }
+      return [...prev, data.lesson];
+    });
+    onStatus("Lesson saved.");
+    return data.lesson;
+  }
+
+  async function createLesson(type: LessonType) {
+    setShowTypePicker(false);
     try {
-      const data = (await membersRequest("save-lesson", {
-        lesson: {
-          id: lesson.id,
-          programId: program.id,
-          title: lesson.title ?? "",
-          description: lesson.description ?? "",
-          videoUrl: lesson.videoUrl,
-          sortOrder: lesson.sortOrder ?? lessons.length,
-          durationMinutes: lesson.durationMinutes,
-          published: lesson.published,
+      await saveLesson(
+        {
+          titleEn: type === "quiz" ? "New quiz" : "New lesson",
+          titleFa: type === "quiz" ? "آزمون جدید" : "درس جدید",
+          bodyEn: "",
+          bodyFa: "",
+          sortOrder: lessons.length,
+          published: false,
         },
-      })) as { lesson: ProgramLesson };
-      setLessons((prev) => {
-        const idx = prev.findIndex((l) => l.id === data.lesson.id);
-        if (idx >= 0) {
-          const next = [...prev];
-          next[idx] = data.lesson;
-          return next;
-        }
-        return [...prev, data.lesson];
-      });
-      onStatus("Lesson saved.");
+        type
+      );
     } catch (err) {
       onStatus(err instanceof Error ? err.message : "Lesson save failed");
     }
+  }
+
+  async function loadQuizQuestions(lessonId: string): Promise<QuizQuestionPayload[]> {
+    const data = (await membersRequest("get-lesson-quiz", { lessonId })) as {
+      questions: Array<{
+        promptEn: string;
+        promptFa: string;
+        explanationEn: string;
+        explanationFa: string;
+        sortOrder: number;
+        options: Array<{
+          labelEn: string;
+          labelFa: string;
+          isCorrect: boolean;
+          sortOrder: number;
+        }>;
+      }>;
+    };
+    return (data.questions ?? []).map((question) => ({
+      promptEn: question.promptEn,
+      promptFa: question.promptFa,
+      explanationEn: question.explanationEn,
+      explanationFa: question.explanationFa,
+      sortOrder: question.sortOrder,
+      options: question.options.map((option) => ({
+        labelEn: option.labelEn,
+        labelFa: option.labelFa,
+        isCorrect: option.isCorrect,
+        sortOrder: option.sortOrder,
+      })),
+    }));
+  }
+
+  async function saveQuizQuestions(lessonId: string, questions: QuizQuestionPayload[]) {
+    await membersRequest("save-lesson-quiz", { lessonId, questions });
+    onStatus("Quiz saved.");
   }
 
   async function moveLesson(index: number, direction: -1 | 1) {
@@ -343,7 +393,9 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
         </Field>
 
         <div className="lg:col-span-2 flex flex-col gap-3">
-          <FieldLabel>Useful links</FieldLabel>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-cream/45">
+            Useful links
+          </span>
           {program.usefulLinks.map((link, i) => (
             <div key={i} className="grid gap-2 md:grid-cols-[1fr_2fr_auto]">
               <input
@@ -405,26 +457,42 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
             <h2 className="font-dm text-xl text-cream">Lessons</h2>
             <button
               type="button"
-              onClick={() =>
-                saveLesson({
-                  title: "New lesson",
-                  description: "",
-                  sortOrder: lessons.length,
-                  published: false,
-                })
-              }
+              onClick={() => setShowTypePicker(true)}
               className="border border-orange px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-orange hover:bg-orange hover:text-background"
             >
               Add lesson
             </button>
           </div>
 
+          {showTypePicker && (
+            <div className="grid gap-3 border border-orange/30 bg-orange/5 p-4 md:grid-cols-3">
+              {LESSON_TYPE_OPTIONS.map((option) => (
+                <button
+                  key={option.type}
+                  type="button"
+                  onClick={() => void createLesson(option.type)}
+                  className="rounded-xl border border-white/[0.08] bg-background/40 p-4 text-left transition-colors hover:border-orange/50 hover:bg-orange/10"
+                >
+                  <p className="font-dm text-sm font-semibold text-cream">{option.label}</p>
+                  <p className="mt-1 font-dm text-xs text-cream/55">{option.hint}</p>
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setShowTypePicker(false)}
+                className="md:col-span-3 self-start font-mono text-[10px] uppercase tracking-widest text-cream/50 hover:text-orange"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+
           {lessons.length === 0 ? (
             <p className="font-dm text-sm text-cream/60">No lessons yet.</p>
           ) : (
             <ul className="flex flex-col gap-4">
               {lessons.map((lesson, index) => (
-                <LessonRow
+                <AdminLessonEditor
                   key={lesson.id}
                   lesson={lesson}
                   index={index}
@@ -435,8 +503,10 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
                       ...lesson,
                       ...patch,
                       published: patch.published ?? !!lesson.publishedAt,
-                    })
+                    }).then(() => undefined)
                   }
+                  onSaveQuiz={(questions) => saveQuizQuestions(lesson.id, questions)}
+                  onLoadQuiz={() => loadQuizQuestions(lesson.id)}
                   onMove={(dir) => moveLesson(index, dir)}
                   onDelete={() => removeLesson(lesson.id)}
                 />
@@ -446,117 +516,5 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
         </div>
       )}
     </div>
-  );
-}
-
-function LessonRow({
-  lesson,
-  index,
-  total,
-  onImageUpload,
-  onSave,
-  onMove,
-  onDelete,
-}: {
-  lesson: ProgramLesson;
-  index: number;
-  total: number;
-  onImageUpload: (file: File) => Promise<string>;
-  onSave: (patch: Partial<ProgramLesson> & { published?: boolean }) => void;
-  onMove: (dir: -1 | 1) => void;
-  onDelete: () => void;
-}) {
-  const [title, setTitle] = useState(lesson.title);
-  const [description, setDescription] = useState(lesson.description);
-  const [videoUrl, setVideoUrl] = useState(lesson.videoUrl ?? "");
-  const [published, setPublished] = useState(!!lesson.publishedAt);
-
-  useEffect(() => {
-    setTitle(lesson.title);
-    setDescription(lesson.description);
-    setVideoUrl(lesson.videoUrl ?? "");
-    setPublished(!!lesson.publishedAt);
-  }, [lesson]);
-
-  return (
-    <li className="border border-surface bg-background/30 p-4">
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <span className="font-mono text-xs text-orange">#{index + 1}</span>
-        <button
-          type="button"
-          disabled={index === 0}
-          onClick={() => onMove(-1)}
-          className="font-mono text-xs text-cream/50 hover:text-orange disabled:opacity-30"
-        >
-          ↑
-        </button>
-        <button
-          type="button"
-          disabled={index >= total - 1}
-          onClick={() => onMove(1)}
-          className="font-mono text-xs text-cream/50 hover:text-orange disabled:opacity-30"
-        >
-          ↓
-        </button>
-        <label className="ms-auto flex items-center gap-2 font-mono text-xs text-cream/70">
-          <input
-            type="checkbox"
-            checked={published}
-            onChange={(e) => setPublished(e.target.checked)}
-          />
-          Published
-        </label>
-      </div>
-
-      <div className="grid gap-4">
-        <Field label="Lesson title">
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="form-field"
-            placeholder="Lesson name"
-          />
-        </Field>
-
-        <Field label="Lesson materials (bold, images, copyable code)">
-          <RichTextEditor
-            key={lesson.id}
-            value={description}
-            onChange={setDescription}
-            onImageUpload={onImageUpload}
-            placeholder="Add notes, images, and code snippets for students…"
-            minHeightClassName="min-h-[200px]"
-          />
-        </Field>
-
-        <Field label="Video URL (YouTube, Vimeo, or direct link)">
-          <input
-            value={videoUrl}
-            onChange={(e) => setVideoUrl(e.target.value)}
-            className="form-field font-mono text-xs"
-            placeholder="https://www.youtube.com/watch?v=…"
-          />
-        </Field>
-      </div>
-
-      <div className="mt-3 flex gap-2">
-        <button
-          type="button"
-          onClick={() =>
-            onSave({ title, description, videoUrl: videoUrl || null, published })
-          }
-          className="border border-orange px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-orange hover:bg-orange hover:text-background"
-        >
-          Save lesson
-        </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          className="border border-surface px-3 py-1.5 font-mono text-xs text-cream/50 hover:text-orange"
-        >
-          Delete
-        </button>
-      </div>
-    </li>
   );
 }

@@ -3,6 +3,7 @@ import type { LocaleCode } from "@/lib/supabase/database.types";
 export type ProgramStatus = "draft" | "published";
 export type EnrollmentStatus = "invited" | "active" | "suspended" | "expired";
 export type PaymentCurrency = "USD" | "GBP" | "IRR";
+export type LessonType = "video" | "text" | "quiz";
 
 export interface UsefulLink {
   label: string;
@@ -26,7 +27,14 @@ export interface MemberProgram {
 export interface ProgramLesson {
   id: string;
   programId: string;
+  lessonType: LessonType;
+  titleEn: string;
+  titleFa: string;
+  bodyEn: string;
+  bodyFa: string;
+  /** @deprecated Use titleEn/titleFa via resolveLessonTitle */
   title: string;
+  /** @deprecated Use bodyEn/bodyFa via resolveLessonBody */
   description: string;
   videoUrl: string | null;
   sortOrder: number;
@@ -34,6 +42,74 @@ export interface ProgramLesson {
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface LessonQuizOption {
+  id: string;
+  questionId: string;
+  sortOrder: number;
+  labelEn: string;
+  labelFa: string;
+  isCorrect: boolean;
+}
+
+export interface LessonQuizQuestion {
+  id: string;
+  lessonId: string;
+  sortOrder: number;
+  promptEn: string;
+  promptFa: string;
+  explanationEn: string;
+  explanationFa: string;
+  options: LessonQuizOption[];
+}
+
+export interface LessonQuizOptionStudent {
+  id: string;
+  sortOrder: number;
+  label: string;
+}
+
+export interface LessonQuizQuestionStudent {
+  id: string;
+  sortOrder: number;
+  prompt: string;
+  options: LessonQuizOptionStudent[];
+}
+
+export interface LessonQuizSubmitResult {
+  scorePercent: number;
+  passed: boolean;
+  totalQuestions: number;
+  correctCount: number;
+  results: Array<{
+    questionId: string;
+    prompt: string;
+    selectedOptionId: string | null;
+    correctOptionId: string;
+    correctLabel: string;
+    selectedLabel: string | null;
+    isCorrect: boolean;
+    explanation: string;
+  }>;
+}
+
+export interface QuizOptionPayload {
+  id?: string;
+  labelEn: string;
+  labelFa: string;
+  isCorrect: boolean;
+  sortOrder: number;
+}
+
+export interface QuizQuestionPayload {
+  id?: string;
+  promptEn: string;
+  promptFa: string;
+  explanationEn?: string;
+  explanationFa?: string;
+  sortOrder: number;
+  options: QuizOptionPayload[];
 }
 
 export interface StudentProfile {
@@ -103,8 +179,11 @@ export interface MemberProgramPayload {
 export interface ProgramLessonPayload {
   id?: string;
   programId: string;
-  title: string;
-  description: string;
+  lessonType: LessonType;
+  titleEn: string;
+  titleFa: string;
+  bodyEn: string;
+  bodyFa: string;
   videoUrl?: string | null;
   sortOrder: number;
   durationMinutes?: number | null;

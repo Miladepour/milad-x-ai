@@ -4,10 +4,16 @@ import StudentGlassCard from "@/components/members/StudentGlassCard";
 import StudentLessonCard from "@/components/members/StudentLessonCard";
 import StudentPortalButton from "@/components/members/StudentPortalButton";
 import { isEnrollmentActive } from "@/lib/members/access";
+import { buildLessonUnlockMap } from "@/lib/members/lesson-gating";
+import { resolveLessonBody, resolveLessonTitle } from "@/lib/members/lesson-localized";
 import { learnLessonPath, learnPath } from "@/lib/members/paths";
-import { getStudentEnrollmentForProgram, getStudentProgram } from "@/lib/members/store";
+import {
+  getCompletedLessonIds,
+  getStudentEnrollmentForProgram,
+  getStudentProgram,
+} from "@/lib/members/store";
+import type { LessonType } from "@/lib/members/types";
 import { urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
-import { localizedPath } from "@/lib/i18n/paths";
 import { getStudentUser } from "@/lib/supabase/require-student";
 import { translations } from "@/lib/i18n/translations";
 
@@ -47,6 +53,20 @@ export default async function LearnProgramPage({
     }
     notFound();
   }
+
+  const completedIds = await getCompletedLessonIds(
+    student.user.id,
+    data.lessons.map((lesson) => lesson.id)
+  );
+  const unlockMap = buildLessonUnlockMap(data.lessons, completedIds);
+
+  const typeLabels: Record<LessonType, string> = {
+    video: t.memberPortal.lessonTypeVideo,
+    text: t.memberPortal.lessonTypeText,
+    quiz: t.memberPortal.lessonTypeQuiz,
+  };
+
+  const sortedLessons = [...data.lessons].sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
     <div className="flex flex-col gap-5 pb-10 sm:gap-6">
@@ -90,17 +110,29 @@ export default async function LearnProgramPage({
       <StudentGlassCard>
         <h2 className="student-section-title">{t.memberPortal.lessonList}</h2>
         <ul className="mt-3 space-y-2">
-          {data.lessons.map((lesson, index) => (
-            <li key={lesson.id}>
-              <StudentLessonCard
-                href={learnLessonPath(data.program.slug, lesson.id, locale)}
-                index={index}
-                title={lesson.title}
-                description={lesson.description}
-                openLabel={t.memberPortal.openLesson}
-              />
-            </li>
-          ))}
+          {sortedLessons.map((lesson, index) => {
+            const unlock = unlockMap.get(lesson.id);
+            const locked = !unlock?.unlocked;
+            const completed = completedIds.has(lesson.id);
+
+            return (
+              <li key={lesson.id}>
+                <StudentLessonCard
+                  href={learnLessonPath(data.program.slug, lesson.id, locale)}
+                  index={index}
+                  title={resolveLessonTitle(lesson, internal)}
+                  description={resolveLessonBody(lesson, internal)}
+                  openLabel={t.memberPortal.openLesson}
+                  locked={locked}
+                  lockedLabel={t.memberPortal.lessonLockedTitle}
+                  completed={completed}
+                  completedLabel={t.memberPortal.completed}
+                  lessonType={lesson.lessonType}
+                  typeLabels={typeLabels}
+                />
+              </li>
+            );
+          })}
         </ul>
       </StudentGlassCard>
     </div>

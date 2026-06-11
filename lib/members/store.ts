@@ -157,13 +157,23 @@ export async function upsertProgramAdmin(
 export async function upsertLessonAdmin(
   payload: ProgramLessonPayload
 ): Promise<ProgramLesson> {
-  const supabase = createClient();
+  const supabase = createAdminDbClient();
+
+  const titleEn = payload.titleEn.trim();
+  const titleFa = payload.titleFa.trim();
+  const bodyEn = payload.bodyEn.trim();
+  const bodyFa = payload.bodyFa.trim();
 
   const row = {
     program_id: payload.programId,
-    title: payload.title.trim(),
-    description: payload.description.trim(),
-    video_url: payload.videoUrl?.trim() || null,
+    lesson_type: payload.lessonType,
+    title_en: titleEn,
+    title_fa: titleFa,
+    body_en: bodyEn,
+    body_fa: bodyFa,
+    title: titleEn || titleFa,
+    description: bodyEn || bodyFa,
+    video_url: payload.lessonType === "video" ? payload.videoUrl?.trim() || null : null,
     sort_order: payload.sortOrder,
     duration_minutes: payload.durationMinutes ?? null,
     published_at: payload.published ? new Date().toISOString() : null,
@@ -193,7 +203,7 @@ export async function reorderLessonsAdmin(
   programId: string,
   lessonIds: string[]
 ): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminDbClient();
   await Promise.all(
     lessonIds.map((id, index) =>
       supabase
@@ -206,7 +216,7 @@ export async function reorderLessonsAdmin(
 }
 
 export async function deleteLessonAdmin(lessonId: string): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminDbClient();
   const { error } = await supabase.from("program_lessons").delete().eq("id", lessonId);
   if (error) throw new Error(error.message);
 }
@@ -759,6 +769,24 @@ export async function upsertLessonProgress(
     .single();
   if (error) throw new Error(error.message);
   return progressRowToProgress(data as import("./mappers").LessonProgressRow);
+}
+
+export async function getCompletedLessonIds(
+  userId: string,
+  lessonIds: string[]
+): Promise<Set<string>> {
+  if (lessonIds.length === 0) return new Set();
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("lesson_progress")
+    .select("lesson_id")
+    .eq("student_id", userId)
+    .in("lesson_id", lessonIds)
+    .not("completed_at", "is", null);
+
+  if (error) throw new Error(error.message);
+  return new Set((data ?? []).map((row) => row.lesson_id as string));
 }
 
 // ---------------------------------------------------------------------------
