@@ -340,7 +340,7 @@ export async function addEnrollmentAdmin(
   payload: AddEnrollmentPayload,
   invitedBy: string
 ): Promise<ProgramEnrollment> {
-  const supabase = createClient();
+  const supabase = createAdminDbClient();
   const { data, error } = await supabase
     .from("program_enrollments")
     .upsert(
@@ -374,7 +374,7 @@ export async function updateEnrollmentAdmin(
     currency: PaymentCurrency | null;
   }>
 ): Promise<ProgramEnrollment> {
-  const supabase = createClient();
+  const supabase = createAdminDbClient();
   const row: Record<string, unknown> = {};
   if (updates.status) row.status = updates.status;
   if (updates.accessStartsAt) row.access_starts_at = updates.accessStartsAt;

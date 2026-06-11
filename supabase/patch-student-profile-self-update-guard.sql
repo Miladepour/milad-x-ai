@@ -40,5 +40,6 @@ create trigger guard_student_profile_self_update
   execute function public.guard_student_profile_self_update();
 
 -- Defense in depth: students should never update enrollments directly.
+-- Admin enrollment writes use the service role in app code (addEnrollmentAdmin).
 revoke update on public.program_enrollments from authenticated;
 grant select on public.program_enrollments to authenticated;

@@ -1,4 +1,5 @@
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createAdminDbClient } from "@/lib/supabase/admin-client";
+import { createServiceClient } from "@/lib/supabase/server";
 import type {
   StudentEmailAudienceType,
   StudentEmailCampaign,
@@ -99,7 +100,7 @@ export async function createStudentEmailCampaign(options: {
   sentBy: string;
   recipientCount: number;
 }): Promise<string> {
-  const supabase = createClient();
+  const supabase = createAdminDbClient();
   const { data, error } = await supabase
     .from("student_email_campaigns")
     .insert({
@@ -132,7 +133,7 @@ export async function recordStudentEmailDelivery(options: {
   resendMessageId?: string | null;
   statusDetail?: string | null;
 }): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminDbClient();
   const { error } = await supabase.from("student_email_deliveries").insert({
     campaign_id: options.campaignId,
     student_id: options.student.id,
@@ -156,7 +157,7 @@ export async function finalizeStudentEmailCampaignCounts(
   sentCount: number,
   failedCount: number
 ): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminDbClient();
   const { error } = await supabase
     .from("student_email_campaigns")
     .update({ sent_count: sentCount, failed_count: failedCount })
@@ -169,7 +170,7 @@ export async function finalizeStudentEmailCampaignCounts(
 }
 
 export async function listStudentEmailHistoryAdmin(): Promise<StudentEmailCampaign[]> {
-  const supabase = createClient();
+  const supabase = createAdminDbClient();
   const { data: campaigns, error } = await supabase
     .from("student_email_campaigns")
     .select("*")
