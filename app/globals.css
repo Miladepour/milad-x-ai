@@ -35,6 +35,14 @@
     @apply rounded-2xl border border-white/[0.12] bg-white/[0.08] shadow-[0_4px_24px_rgba(0,0,0,0.2)] backdrop-blur-xl;
   }
 
+  .premium-card-perspective {
+    perspective: 900px;
+  }
+
+  .premium-card-3d {
+    transform-style: preserve-3d;
+  }
+
   .student-section-title {
     @apply font-mono text-xs uppercase tracking-[0.14em] text-orange sm:text-sm;
   }
@@ -505,5 +513,47 @@ html.rtl .text-sm {
     background: rgba(245, 240, 232, 0.08);
     padding: 0.1rem 0.35rem;
     font-size: 0.85em;
+  }
+
+  .legal-content {
+    @apply flex flex-col gap-5 font-dm;
+  }
+
+  .legal-content h1 {
+    @apply type-course-page-title font-dm font-bold text-cream;
+  }
+
+  .legal-content h1 + p {
+    @apply font-mono text-xs uppercase tracking-widest text-orange;
+  }
+
+  html.rtl .legal-content h1 + p {
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .legal-content h2 {
+    @apply type-card-title font-dm font-semibold text-cream;
+  }
+
+  html.rtl .legal-content h2 {
+    line-height: 1.4;
+  }
+
+  .legal-content p {
+    @apply type-section-body font-dm leading-relaxed text-cream/85;
+  }
+
+  html.rtl .legal-content p {
+    line-height: 1.8;
+  }
+
+  .legal-content a {
+    @apply text-orange underline underline-offset-4 transition-colors hover:text-cream;
+  }
+
+  .legal-content strong,
+  .legal-content b {
+    @apply font-semibold text-cream;
   }
 }

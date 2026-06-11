@@ -6,6 +6,7 @@ import StudentPortalButton from "@/components/members/StudentPortalButton";
 import { accountLoginPath, learnAnnouncementsPath } from "@/lib/members/paths";
 import {
   getStudentDashboard,
+  getStudentEnrollmentCount,
   getStudentExpiredPrograms,
   listAnnouncementsForStudent,
 } from "@/lib/members/store";
@@ -45,11 +46,13 @@ export default async function LearnDashboardPage({
   const student = await getStudentUser();
   if (!student) redirect(accountLoginPath(locale));
 
-  const [programs, expiredPrograms, announcements, courses] = await Promise.all([
+  const [programs, expiredPrograms, announcements, courses, enrollmentCount] =
+    await Promise.all([
     getStudentDashboard(student.user.id),
     getStudentExpiredPrograms(student.user.id),
     listAnnouncementsForStudent(student.user.id, student.profile.locale),
     getCourses(internal),
+    getStudentEnrollmentCount(student.user.id),
   ]);
 
   const upcomingCourses = courses.filter((c) => c.status !== "Closed").slice(0, 2);
@@ -84,7 +87,7 @@ export default async function LearnDashboardPage({
         subtitle={t.memberPortal.dashboardSubtitle}
         initials={getInitials(student.profile.fullName, student.profile.email)}
         stats={[
-          { label: t.memberPortal.statPrograms, value: programs.length },
+          { label: t.memberPortal.statPrograms, value: enrollmentCount },
           {
             label: t.memberPortal.statLessonsDone,
             value: completedLessons,

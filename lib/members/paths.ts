@@ -25,6 +25,14 @@ export function learnProfilePath(locale: UrlLocale): string {
   return localizedPath("/learn/profile", locale);
 }
 
+export function learnClubCardPath(locale: UrlLocale): string {
+  return localizedPath("/learn/club-card", locale);
+}
+
+export function learnSupportPath(locale: UrlLocale): string {
+  return localizedPath("/learn/support", locale);
+}
+
 export function learnProgramPath(programSlug: string, locale: UrlLocale): string {
   return localizedPath(`/learn/${programSlug}`, locale);
 }

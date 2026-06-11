@@ -169,10 +169,21 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-6 border-t border-surface">
+        <div className="mt-12 pt-6 border-t border-surface flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="font-dm text-xs text-muted text-center sm:text-start">
             © {year} {f.copyrightName}. {f.rights}
           </p>
+          <nav
+            aria-label={f.legalTitle}
+            className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:justify-end"
+          >
+            <Link href={href("/privacy-policy")} className={footerLinkClass}>
+              {f.privacyPolicy}
+            </Link>
+            <Link href={href("/terms-and-conditions")} className={footerLinkClass}>
+              {f.termsAndConditions}
+            </Link>
+          </nav>
         </div>
       </div>
     </footer>

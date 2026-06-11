@@ -7,7 +7,9 @@ import {
   ArrowLeft,
   BookOpen,
   CalendarDays,
+  CreditCard,
   LayoutDashboard,
+  LifeBuoy,
   Link2,
   LogOut,
   Megaphone,
@@ -19,19 +21,23 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import StudentNavIcon from "@/components/members/StudentNavIcon";
+import StudentPremiumNavCard from "@/components/members/StudentPremiumNavCard";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { NotificationProvider } from "@/components/notifications/NotificationProvider";
 import NotificationToasts from "@/components/notifications/NotificationToasts";
 import {
   learnAnnouncementsPath,
+  learnClubCardPath,
   learnPath,
   learnProfilePath,
   learnProgramsPath,
   learnResourcesPath,
+  learnSupportPath,
   learnUpcomingCoursesPath,
 } from "@/lib/members/paths";
 import { localizedPath } from "@/lib/i18n/paths";
 import type { UrlLocale } from "@/lib/i18n/config";
+import type { MembershipTier, MembershipTierInfo } from "@/lib/members/membership-tier";
 
 export interface StudentNavLabels {
   overview: string;
@@ -40,6 +46,8 @@ export interface StudentNavLabels {
   upcomingCourses: string;
   resources: string;
   profile: string;
+  clubCard: string;
+  support: string;
   viewProfile: string;
   backToSite: string;
   signOut: string;
@@ -63,6 +71,18 @@ interface StudentDashboardShellProps {
   labels: StudentNavLabels;
   announcementUnreadCount?: number;
   continueWatching?: StudentContinueWatching | null;
+  membership?: MembershipTierInfo | null;
+  membershipLabels?: {
+    member: string;
+    courses: string;
+    next: string;
+    maxTier: string;
+    discountGold: string;
+    discountPlatinum: string;
+    discountActive: string;
+    discountPerksShort: string;
+    tierLabels: Record<MembershipTier, string>;
+  };
   children: React.ReactNode;
 }
 
@@ -98,6 +118,8 @@ function StudentDashboardShellInner({
   labels,
   announcementUnreadCount = 0,
   continueWatching,
+  membership,
+  membershipLabels,
   children,
 }: StudentDashboardShellProps) {
   const pathname = usePathname();
@@ -109,6 +131,8 @@ function StudentDashboardShellInner({
   const coursesHref = learnUpcomingCoursesPath(locale);
   const resourcesHref = learnResourcesPath(locale);
   const profileHref = learnProfilePath(locale);
+  const clubCardHref = learnClubCardPath(locale);
+  const supportHref = learnSupportPath(locale);
   const profileInitialsLabel = profileInitials(studentName, studentEmail);
 
   function pathMatches(href: string) {
@@ -121,8 +145,16 @@ function StudentDashboardShellInner({
   const isOnCourses = pathMatches(coursesHref);
   const isOnResources = pathMatches(resourcesHref);
   const isOnProfile = pathMatches(profileHref);
+  const isOnClubCard = pathMatches(clubCardHref);
+  const isOnSupport = pathMatches(supportHref);
   const isOnPortalSection =
-    isOnAnnouncements || isOnPrograms || isOnCourses || isOnResources || isOnProfile;
+    isOnAnnouncements ||
+    isOnPrograms ||
+    isOnCourses ||
+    isOnResources ||
+    isOnProfile ||
+    isOnClubCard ||
+    isOnSupport;
   const inProgram =
     pathname.includes("/learn/") && !isOnDashboard && !isOnPortalSection;
 
@@ -142,7 +174,9 @@ function StudentDashboardShellInner({
       icon: CalendarDays,
     },
     { id: "resources", label: labels.resources, href: resourcesHref, icon: Link2 },
+    { id: "support", label: labels.support, href: supportHref, icon: LifeBuoy },
     { id: "profile", label: labels.profile, href: profileHref, icon: User },
+    { id: "clubCard", label: labels.clubCard, href: clubCardHref, icon: CreditCard },
   ];
 
   function isActive(item: NavItem) {
@@ -151,7 +185,9 @@ function StudentDashboardShellInner({
     if (item.id === "programs") return isOnPrograms || inProgram;
     if (item.id === "courses") return isOnCourses;
     if (item.id === "resources") return isOnResources;
+    if (item.id === "support") return isOnSupport;
     if (item.id === "profile") return isOnProfile;
+    if (item.id === "clubCard") return isOnClubCard;
     return false;
   }
 
@@ -242,6 +278,25 @@ function StudentDashboardShellInner({
           <NavLink key={item.id} item={item} onNavigate={() => setMenuOpen(false)} />
         ))}
 
+        {membership && membershipLabels && (
+          <StudentPremiumNavCard
+            href={clubCardHref}
+            onNavigate={() => setMenuOpen(false)}
+            info={membership}
+            labels={{
+              member: membershipLabels.member,
+              courses: membershipLabels.courses,
+              next: membershipLabels.next,
+              maxTier: membershipLabels.maxTier,
+              discountGold: membershipLabels.discountGold,
+              discountPlatinum: membershipLabels.discountPlatinum,
+              discountActive: membershipLabels.discountActive,
+              discountPerksShort: membershipLabels.discountPerksShort,
+            }}
+            tierLabels={membershipLabels.tierLabels}
+          />
+        )}
+
         <div className="my-2 border-t border-white/[0.08]" aria-hidden />
 
         <Link
@@ -283,9 +338,24 @@ function StudentDashboardShellInner({
         <Link
           href={profileHref}
           onClick={() => setMenuOpen(false)}
-          className="truncate font-dm text-sm font-medium text-cream transition-colors hover:text-orange"
+          className="flex min-w-0 items-center gap-2"
         >
-          {studentName}
+          {membership && membershipLabels && (
+            <span
+              className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest ${
+                membership.tier === "platinum"
+                  ? "bg-gradient-to-r from-violet-400/30 to-cyan-300/30 text-violet-200"
+                  : membership.tier === "gold"
+                    ? "bg-amber-500/20 text-amber-300"
+                    : "bg-slate-400/20 text-slate-300"
+              }`}
+            >
+              {membershipLabels.tierLabels[membership.tier]}
+            </span>
+          )}
+          <span className="truncate font-dm text-sm font-medium text-cream transition-colors hover:text-orange">
+            {studentName}
+          </span>
         </Link>
         <NotificationBell />
       </div>

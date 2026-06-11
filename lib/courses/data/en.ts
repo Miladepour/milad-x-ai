@@ -8,7 +8,7 @@ export const promptToContentCourseEn: Course = {
   excerpt:
     "A hands-on intensive workshop to learn AI content creation the right way — from ideation and prompt writing to images, video, ads, and automation with Claude AI.",
   status: "Live",
-  date: "28 Jun 2026",
+  date: "5 Jul 2026",
   coverImage: "/images/prompt-to-content-cover.png",
   priceUsd: 75,
   meta: {
@@ -18,8 +18,8 @@ export const promptToContentCourseEn: Course = {
     partsCount: 2,
     timezone: "London, UK time",
     sessions: [
-      { id: "1", date: "28 Jun 2026", time: "16:00", durationHours: 4 },
-      { id: "2", date: "1 Jul 2026", time: "18:00", durationHours: 2 },
+      { id: "1", date: "5 Jul 2026", time: "16:00", durationHours: 4 },
+      { id: "2", date: "8 Jul 2026", time: "18:00", durationHours: 2 },
     ],
   },
   includes: [

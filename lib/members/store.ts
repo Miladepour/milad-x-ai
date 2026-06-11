@@ -771,6 +771,17 @@ export async function upsertLessonProgress(
   return progressRowToProgress(data as import("./mappers").LessonProgressRow);
 }
 
+export async function getStudentEnrollmentCount(userId: string): Promise<number> {
+  const supabase = createClient();
+  const { count, error } = await supabase
+    .from("program_enrollments")
+    .select("*", { count: "exact", head: true })
+    .eq("student_id", userId);
+
+  if (error) throw new Error(error.message);
+  return count ?? 0;
+}
+
 export async function getCompletedLessonIds(
   userId: string,
   lessonIds: string[]
