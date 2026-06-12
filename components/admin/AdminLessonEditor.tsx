@@ -218,12 +218,12 @@ export default function AdminLessonEditor({
 
         {lesson.lessonType === "video" && (
           <>
-            <Field label="Video URL (YouTube, Vimeo, or direct link)">
+            <Field label="Video URL (YouTube, Vimeo, Bunny, or direct link)">
               <input
                 value={videoUrl}
                 onChange={(e) => setVideoUrl(e.target.value)}
                 className="form-field font-mono text-xs"
-                placeholder="https://www.youtube.com/watch?v=…"
+                placeholder="https://iframe.mediadelivery.net/embed/… or Bunny play/HLS URL"
               />
             </Field>
             <Field label="Materials below video (English)">

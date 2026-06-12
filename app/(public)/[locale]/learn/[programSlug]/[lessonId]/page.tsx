@@ -146,6 +146,7 @@ export default async function LearnLessonPage({
           <LessonPlayer
             lessonId={data.lesson.id}
             videoUrl={data.lesson.videoUrl}
+            lessonTitle={title}
             initialPosition={data.progress?.lastPositionSeconds ?? 0}
             completed={isCompleted}
           />

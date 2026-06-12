@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { isBunnyUrl } from "@/lib/members/bunny";
 import {
   isVimeoUrl,
   isYoutubeUrl,
@@ -8,10 +9,12 @@ import {
   youtubeEmbedUrl,
 } from "@/lib/members/video";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import LessonVideoPoster from "@/components/members/LessonVideoPoster";
 
 interface LessonPlayerProps {
   lessonId: string;
   videoUrl: string | null;
+  lessonTitle?: string;
   initialPosition?: number;
   completed?: boolean;
 }
@@ -50,12 +53,17 @@ function LessonProgressActions({
 export default function LessonPlayer({
   lessonId,
   videoUrl,
+  lessonTitle = "",
   initialPosition = 0,
   completed = false,
 }: LessonPlayerProps) {
+  const t = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isComplete, setIsComplete] = useState(completed);
   const [status, setStatus] = useState("");
+  const [bunnyStarted, setBunnyStarted] = useState(false);
+  const [bunnyEmbed, setBunnyEmbed] = useState<string | null>(null);
+  const [bunnyLoadError, setBunnyLoadError] = useState("");
 
   const saveProgress = useCallback(
     async (opts: { lastPositionSeconds?: number; completed?: boolean }) => {
@@ -83,8 +91,54 @@ export default function LessonPlayer({
   }, [saveProgress]);
 
   useEffect(() => {
+    if (!videoUrl || !isBunnyUrl(videoUrl) || !bunnyStarted) {
+      if (!bunnyStarted) {
+        setBunnyEmbed(null);
+        setBunnyLoadError("");
+      }
+      return;
+    }
+
+    let cancelled = false;
+    setBunnyEmbed(null);
+    setBunnyLoadError("");
+
+    void (async () => {
+      try {
+        const qs = new URLSearchParams({
+          videoUrl,
+          autoplay: "true",
+          preload: "false",
+        });
+        const res = await fetch(`/api/members/bunny-embed?${qs.toString()}`, {
+          credentials: "same-origin",
+        });
+        const data = (await res.json()) as { embedUrl?: string; error?: string };
+        if (cancelled) return;
+        if (!res.ok || !data.embedUrl) {
+          setBunnyLoadError(data.error ?? "Could not load video.");
+          return;
+        }
+        setBunnyEmbed(data.embedUrl);
+      } catch {
+        if (!cancelled) setBunnyLoadError("Could not load video.");
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [videoUrl, bunnyStarted]);
+
+  useEffect(() => {
     const video = videoRef.current;
-    if (!video || !videoUrl || isYoutubeUrl(videoUrl) || isVimeoUrl(videoUrl)) {
+    if (
+      !video ||
+      !videoUrl ||
+      isYoutubeUrl(videoUrl) ||
+      isVimeoUrl(videoUrl) ||
+      isBunnyUrl(videoUrl)
+    ) {
       return;
     }
 
@@ -164,6 +218,45 @@ export default function LessonPlayer({
             allow="autoplay; fullscreen; picture-in-picture"
             allowFullScreen
           />
+        </div>
+        <LessonProgressActions
+          isComplete={isComplete}
+          status={status}
+          onMarkComplete={markComplete}
+        />
+      </div>
+    );
+  }
+
+  if (isBunnyUrl(videoUrl)) {
+    const playLabel = lessonTitle
+      ? `${t.memberPortal.playLesson}: ${lessonTitle}`
+      : t.memberPortal.playLesson;
+
+    return (
+      <div className="flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.04]">
+        <div className="relative aspect-video overflow-hidden bg-black">
+          {!bunnyStarted ? (
+            <LessonVideoPoster
+              title={lessonTitle || "Lesson video"}
+              playLabel={playLabel}
+              onPlay={() => setBunnyStarted(true)}
+            />
+          ) : bunnyEmbed ? (
+            <iframe
+              src={bunnyEmbed}
+              title="Lesson video"
+              className="absolute inset-0 h-full w-full border-0"
+              allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
+              allowFullScreen
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <p className="font-dm text-sm text-cream/60">
+                {bunnyLoadError || t.memberPortal.loadingVideo}
+              </p>
+            </div>
+          )}
         </div>
         <LessonProgressActions
           isComplete={isComplete}

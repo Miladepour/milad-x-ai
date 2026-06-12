@@ -382,6 +382,8 @@ export const translations = {
       lessonList: "Lessons",
       markComplete: "Mark complete",
       completed: "Completed",
+      playLesson: "Play lesson",
+      loadingVideo: "Loading video…",
       progressHintEmbed:
         "After you finish watching, tap Mark complete to save your progress.",
       progressHintText:
@@ -884,6 +886,8 @@ export const translations = {
       lessonList: "درس‌ها",
       markComplete: "تکمیل شد",
       completed: "تکمیل شده",
+      playLesson: "پخش درس",
+      loadingVideo: "در حال بارگذاری ویدیو…",
       progressHintEmbed:
         "بعد از تماشای ویدیو، «تکمیل شد» را بزنید تا پیشرفت شما ثبت شود.",
       progressHintText:

@@ -51,8 +51,8 @@ const nextConfig = {
               isDev
                 ? "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com ws://localhost:* ws://127.0.0.1:*"
                 : "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com",
-              "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://challenges.cloudflare.com",
-              "media-src 'self' https://res.cloudinary.com blob:",
+              "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://iframe.mediadelivery.net https://challenges.cloudflare.com",
+              "media-src 'self' https://res.cloudinary.com https://*.b-cdn.net blob:",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
