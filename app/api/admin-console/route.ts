@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { getBlogPostAdmin, listBlogPostsAdmin, upsertBlogPost } from "@/lib/blog/store";
+import { getBlogPostAdmin, listBlogPostsAdminMeta, upsertBlogPost } from "@/lib/blog/store";
 import type { BlogPost } from "@/lib/blog/types";
 import {
   getCourseAdmin,
@@ -32,14 +32,10 @@ export async function POST(request: Request) {
     const supabase = createClient();
 
     if (action === "bootstrap") {
-      const [insights, posts] = await Promise.all([buildAdminInsights(), listBlogPostsAdmin()]);
-
+      const insights = await buildAdminInsights();
       return NextResponse.json({
         ok: true,
         email: admin.email,
-        contactSubmissions: insights.contactSubmissions,
-        waitlistSubmissions: insights.waitlistSubmissions,
-        posts,
         insights,
       });
     }
@@ -134,7 +130,7 @@ export async function POST(request: Request) {
     }
 
     if (action === "list-posts") {
-      const posts = await listBlogPostsAdmin();
+      const posts = await listBlogPostsAdminMeta();
       return NextResponse.json({ ok: true, posts });
     }
 

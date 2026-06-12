@@ -5,6 +5,12 @@ import AdminLessonEditor from "@/components/admin/AdminLessonEditor";
 import type { LessonType, MemberProgram, ProgramLesson, UsefulLink } from "@/lib/members/types";
 import type { QuizQuestionPayload } from "@/lib/members/types";
 
+const LESSON_TYPE_LABELS: Record<LessonType, string> = {
+  video: "Video",
+  text: "Text",
+  quiz: "Quiz",
+};
+
 interface ProgramEditorProps {
   membersRequest: (action: string, payload?: Record<string, unknown>) => Promise<unknown>;
   onStatus: (message: string) => void;
@@ -64,6 +70,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
   const [lessons, setLessons] = useState<ProgramLesson[]>([]);
   const [loading, setLoading] = useState(false);
   const [showTypePicker, setShowTypePicker] = useState(false);
+  const [expandedLessonId, setExpandedLessonId] = useState<string | null>(null);
 
   const loadList = useCallback(async () => {
     const data = (await membersRequest("list-programs")) as { programs: MemberProgram[] };
@@ -100,6 +107,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
       };
       setProgram(data.program);
       setLessons(data.lessons ?? []);
+      setExpandedLessonId(null);
       setView("edit");
       onStatus("");
     } catch (e) {
@@ -176,7 +184,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
   async function createLesson(type: LessonType) {
     setShowTypePicker(false);
     try {
-      await saveLesson(
+      const saved = await saveLesson(
         {
           titleEn: type === "quiz" ? "New quiz" : "New lesson",
           titleFa: type === "quiz" ? "آزمون جدید" : "درس جدید",
@@ -187,6 +195,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
         },
         type
       );
+      if (saved) setExpandedLessonId(saved.id);
     } catch (err) {
       onStatus(err instanceof Error ? err.message : "Lesson save failed");
     }
@@ -245,6 +254,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
     if (!confirm("Delete this lesson?")) return;
     await membersRequest("delete-lesson", { lessonId });
     setLessons((prev) => prev.filter((l) => l.id !== lessonId));
+    setExpandedLessonId((current) => (current === lessonId ? null : current));
     onStatus("Lesson deleted.");
   }
 
@@ -491,26 +501,52 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
             <p className="font-dm text-sm text-cream/60">No lessons yet.</p>
           ) : (
             <ul className="flex flex-col gap-4">
-              {lessons.map((lesson, index) => (
-                <AdminLessonEditor
-                  key={lesson.id}
-                  lesson={lesson}
-                  index={index}
-                  total={lessons.length}
-                  onImageUpload={uploadLessonImage}
-                  onSave={(patch) =>
-                    saveLesson({
-                      ...lesson,
-                      ...patch,
-                      published: patch.published ?? !!lesson.publishedAt,
-                    }).then(() => undefined)
-                  }
-                  onSaveQuiz={(questions) => saveQuizQuestions(lesson.id, questions)}
-                  onLoadQuiz={() => loadQuizQuestions(lesson.id)}
-                  onMove={(dir) => moveLesson(index, dir)}
-                  onDelete={() => removeLesson(lesson.id)}
-                />
-              ))}
+              {lessons.map((lesson, index) =>
+                expandedLessonId === lesson.id ? (
+                  <AdminLessonEditor
+                    key={lesson.id}
+                    lesson={lesson}
+                    index={index}
+                    total={lessons.length}
+                    onImageUpload={uploadLessonImage}
+                    onSave={(patch) =>
+                      saveLesson({
+                        ...lesson,
+                        ...patch,
+                        published: patch.published ?? !!lesson.publishedAt,
+                      }).then(() => undefined)
+                    }
+                    onSaveQuiz={(questions) => saveQuizQuestions(lesson.id, questions)}
+                    onLoadQuiz={() => loadQuizQuestions(lesson.id)}
+                    onMove={(dir) => moveLesson(index, dir)}
+                    onDelete={() => removeLesson(lesson.id)}
+                    onCollapse={() => setExpandedLessonId(null)}
+                  />
+                ) : (
+                  <li
+                    key={lesson.id}
+                    className="flex flex-wrap items-center justify-between gap-3 border border-surface bg-background/20 p-4"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-dm text-cream">
+                        <span className="me-2 font-mono text-xs text-orange">#{index + 1}</span>
+                        {lesson.titleEn || lesson.titleFa || "Untitled lesson"}
+                      </p>
+                      <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-cream/45">
+                        {LESSON_TYPE_LABELS[lesson.lessonType]}
+                        {lesson.publishedAt ? " · Published" : " · Draft"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setExpandedLessonId(lesson.id)}
+                      className="border border-surface px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-cream hover:border-orange hover:text-orange"
+                    >
+                      Edit
+                    </button>
+                  </li>
+                )
+              )}
             </ul>
           )}
         </div>

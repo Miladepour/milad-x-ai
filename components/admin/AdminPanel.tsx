@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
-import type { BlogPost } from "@/lib/blog/types";
+import type { BlogPostListItem } from "@/lib/blog/types";
 import type { ContactSubmission } from "@/lib/contact/types";
 import type { WaitlistSubmission } from "@/lib/courses/types";
 import AdminLoginScreen from "@/components/admin/AdminLoginScreen";
@@ -22,13 +22,12 @@ const AdminDashboard = dynamic(() => import("@/components/admin/AdminDashboard")
 });
 
 interface AdminSummary {
-  email?: string;
   contactSubmissions: ContactSubmission[];
   waitlistSubmissions: WaitlistSubmission[];
 }
 
-interface BootstrapResponse extends AdminSummary {
-  posts: BlogPost[];
+interface BootstrapResponse {
+  email?: string;
   insights: AdminInsights;
 }
 
@@ -40,7 +39,11 @@ export default function AdminPanel() {
     contactSubmissions: [],
     waitlistSubmissions: [],
   });
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [summaryLoaded, setSummaryLoaded] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [blogPosts, setBlogPosts] = useState<BlogPostListItem[]>([]);
+  const [blogLoaded, setBlogLoaded] = useState(false);
+  const [blogLoading, setBlogLoading] = useState(false);
   const [insights, setInsights] = useState<AdminInsights | null>(null);
 
   const adminRequest = useCallback(async (action: string, payload = {}) => {
@@ -68,32 +71,59 @@ export default function AdminPanel() {
   }, []);
 
   const loadSummary = useCallback(async () => {
-    const data = (await adminRequest("summary")) as AdminSummary;
-    setSummary(data);
+    setSummaryLoading(true);
+    try {
+      const data = (await adminRequest("summary")) as AdminSummary;
+      setSummary({
+        contactSubmissions: data.contactSubmissions,
+        waitlistSubmissions: data.waitlistSubmissions,
+      });
+      setSummaryLoaded(true);
+    } finally {
+      setSummaryLoading(false);
+    }
   }, [adminRequest]);
 
   const loadBlogPosts = useCallback(async () => {
-    const data = (await adminRequest("list-posts")) as { posts: BlogPost[] };
-    setBlogPosts(data.posts ?? []);
+    setBlogLoading(true);
+    try {
+      const data = (await adminRequest("list-posts")) as { posts: BlogPostListItem[] };
+      setBlogPosts(data.posts ?? []);
+      setBlogLoaded(true);
+    } finally {
+      setBlogLoading(false);
+    }
   }, [adminRequest]);
+
+  const reloadBlogPosts = useCallback(async () => {
+    await loadBlogPosts();
+  }, [loadBlogPosts]);
+
+  const ensureSummaryLoaded = useCallback(async () => {
+    if (summaryLoaded || summaryLoading) return;
+    await loadSummary();
+  }, [loadSummary, summaryLoaded, summaryLoading]);
+
+  const ensureBlogLoaded = useCallback(async () => {
+    if (blogLoaded || blogLoading) return;
+    await loadBlogPosts();
+  }, [blogLoaded, blogLoading, loadBlogPosts]);
 
   const refreshDashboard = useCallback(async () => {
     setIsBootstrapping(true);
     try {
-      const [summaryData, insightsData] = await Promise.all([
-        adminRequest("summary") as Promise<AdminSummary>,
-        adminRequest("insights") as Promise<{ insights: AdminInsights }>,
-        loadBlogPosts(),
-      ]);
-      setSummary({
-        contactSubmissions: summaryData.contactSubmissions,
-        waitlistSubmissions: summaryData.waitlistSubmissions,
-      });
+      const insightsData = (await adminRequest("insights")) as { insights: AdminInsights };
       setInsights(insightsData.insights);
+      if (summaryLoaded) {
+        await loadSummary();
+      }
+      if (blogLoaded) {
+        await loadBlogPosts();
+      }
     } finally {
       setIsBootstrapping(false);
     }
-  }, [adminRequest, loadBlogPosts]);
+  }, [adminRequest, blogLoaded, loadBlogPosts, loadSummary, summaryLoaded]);
 
   const unlockWithSession = useCallback(async () => {
     setIsUnlocked(true);
@@ -101,11 +131,6 @@ export default function AdminPanel() {
 
     try {
       const data = (await adminRequest("bootstrap")) as BootstrapResponse;
-      setSummary({
-        contactSubmissions: data.contactSubmissions,
-        waitlistSubmissions: data.waitlistSubmissions,
-      });
-      setBlogPosts(data.posts ?? []);
       setInsights(data.insights ?? null);
       setAdminEmail(data.email ?? "");
     } catch (error) {
@@ -122,7 +147,9 @@ export default function AdminPanel() {
     setIsUnlocked(false);
     setAdminEmail("");
     setSummary({ contactSubmissions: [], waitlistSubmissions: [] });
+    setSummaryLoaded(false);
     setBlogPosts([]);
+    setBlogLoaded(false);
     setInsights(null);
   }
 
@@ -141,15 +168,20 @@ export default function AdminPanel() {
       <AdminDashboard
         adminEmail={adminEmail}
         summary={summary}
-        insights={insights}
+        summaryLoaded={summaryLoaded}
+        summaryLoading={summaryLoading}
         blogPosts={blogPosts}
+        blogLoaded={blogLoaded}
+        blogLoading={blogLoading}
+        insights={insights}
         isBootstrapping={isBootstrapping}
         onSignOut={handleSignOut}
         onRefresh={refreshDashboard}
         adminRequest={adminRequest}
         membersRequest={membersRequest}
-        loadSummary={loadSummary}
-        loadBlogPosts={loadBlogPosts}
+        onEnsureSummaryLoaded={ensureSummaryLoaded}
+        onEnsureBlogLoaded={ensureBlogLoaded}
+        onReloadBlogPosts={reloadBlogPosts}
       />
       <NotificationToasts />
     </NotificationProvider>

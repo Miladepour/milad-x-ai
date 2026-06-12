@@ -55,6 +55,7 @@ interface AdminLessonEditorProps {
   onLoadQuiz: () => Promise<QuizQuestionPayload[]>;
   onMove: (dir: -1 | 1) => void;
   onDelete: () => void;
+  onCollapse?: () => void;
 }
 
 export default function AdminLessonEditor({
@@ -67,6 +68,7 @@ export default function AdminLessonEditor({
   onLoadQuiz,
   onMove,
   onDelete,
+  onCollapse,
 }: AdminLessonEditorProps) {
   const [titleEn, setTitleEn] = useState(lesson.titleEn);
   const [titleFa, setTitleFa] = useState(lesson.titleFa);
@@ -193,6 +195,15 @@ export default function AdminLessonEditor({
           />
           Published
         </label>
+        {onCollapse && (
+          <button
+            type="button"
+            onClick={onCollapse}
+            className="font-mono text-xs uppercase tracking-widest text-cream/50 hover:text-orange"
+          >
+            Collapse
+          </button>
+        )}
       </div>
 
       <div className="grid gap-4">

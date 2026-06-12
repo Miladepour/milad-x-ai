@@ -1,8 +1,8 @@
-import { listBlogPostsAdmin } from "@/lib/blog/store";
+import { listBlogPostsAdminMeta } from "@/lib/blog/store";
 import type { ContactSubmission } from "@/lib/contact/types";
 import { listCoursesAdmin } from "@/lib/courses/store";
 import type { WaitlistSubmission } from "@/lib/courses/types";
-import { listEnrollmentsAdmin, listProgramsAdmin } from "@/lib/members/store";
+import { listProgramsAdmin } from "@/lib/members/store";
 import { contactRowToSubmission, waitlistRowToSubmission } from "@/lib/supabase/mappers";
 import { createClient } from "@/lib/supabase/server";
 
@@ -22,8 +22,6 @@ export interface AdminInsights {
     blogPostsEn: number;
     blogPostsFa: number;
   };
-  contactSubmissions: ContactSubmission[];
-  waitlistSubmissions: WaitlistSubmission[];
   recentUnopenedContact: ContactSubmission[];
   recentUnopenedWaitlist: WaitlistSubmission[];
   recentBlogPosts: Array<{
@@ -37,59 +35,94 @@ export interface AdminInsights {
 export async function buildAdminInsights(): Promise<AdminInsights> {
   const supabase = createClient();
 
-  const [contactResult, waitlistResult, studentsResult, programs, courses, posts, enrollments] =
-    await Promise.all([
-      supabase
-        .from("contact_submissions")
-        .select("*")
-        .order("submitted_at", { ascending: false }),
-      supabase
-        .from("waitlist_submissions")
-        .select("*")
-        .order("submitted_at", { ascending: false }),
-      supabase.from("student_profiles").select("id", { count: "exact", head: true }),
-      listProgramsAdmin(),
-      listCoursesAdmin(),
-      listBlogPostsAdmin(),
-      listEnrollmentsAdmin(),
-    ]);
+  const [
+    contactTotalResult,
+    unopenedContactCountResult,
+    waitlistTotalResult,
+    unopenedWaitlistCountResult,
+    studentsResult,
+    activeEnrollmentsResult,
+    programs,
+    courses,
+    blogMeta,
+    recentContactResult,
+    recentWaitlistResult,
+  ] = await Promise.all([
+    supabase
+      .from("contact_submissions")
+      .select("*", { count: "exact", head: true }),
+    supabase
+      .from("contact_submissions")
+      .select("*", { count: "exact", head: true })
+      .is("opened_at", null),
+    supabase
+      .from("waitlist_submissions")
+      .select("*", { count: "exact", head: true }),
+    supabase
+      .from("waitlist_submissions")
+      .select("*", { count: "exact", head: true })
+      .is("opened_at", null),
+    supabase.from("student_profiles").select("id", { count: "exact", head: true }),
+    supabase
+      .from("program_enrollments")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "active"),
+    listProgramsAdmin(),
+    listCoursesAdmin(),
+    listBlogPostsAdminMeta(),
+    supabase
+      .from("contact_submissions")
+      .select("*")
+      .is("opened_at", null)
+      .order("submitted_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("waitlist_submissions")
+      .select("*")
+      .is("opened_at", null)
+      .order("submitted_at", { ascending: false })
+      .limit(5),
+  ]);
 
-  if (contactResult.error) throw new Error(contactResult.error.message);
-  if (waitlistResult.error) throw new Error(waitlistResult.error.message);
+  if (contactTotalResult.error) throw new Error(contactTotalResult.error.message);
+  if (unopenedContactCountResult.error) {
+    throw new Error(unopenedContactCountResult.error.message);
+  }
+  if (waitlistTotalResult.error) throw new Error(waitlistTotalResult.error.message);
+  if (unopenedWaitlistCountResult.error) {
+    throw new Error(unopenedWaitlistCountResult.error.message);
+  }
   if (studentsResult.error) throw new Error(studentsResult.error.message);
+  if (activeEnrollmentsResult.error) {
+    throw new Error(activeEnrollmentsResult.error.message);
+  }
+  if (recentContactResult.error) throw new Error(recentContactResult.error.message);
+  if (recentWaitlistResult.error) throw new Error(recentWaitlistResult.error.message);
 
-  const contactSubmissions = (contactResult.data ?? []).map(contactRowToSubmission);
-  const waitlistSubmissions = (waitlistResult.data ?? []).map(waitlistRowToSubmission);
-
-  const unopenedContact = contactSubmissions.filter((c) => !c.openedAt);
-  const unopenedWaitlist = waitlistSubmissions.filter((w) => !w.openedAt);
-  const activeEnrollments = enrollments.filter((e) => e.status === "active").length;
   const publishedPrograms = programs.filter((p) => p.status === "published").length;
   const publishedCourses = courses.filter((c) => c.publishedAt).length;
-  const blogPostsEn = posts.filter((p) => p.locale === "EN").length;
-  const blogPostsFa = posts.filter((p) => p.locale === "FA").length;
+  const blogPostsEn = blogMeta.filter((p) => p.locale === "EN").length;
+  const blogPostsFa = blogMeta.filter((p) => p.locale === "FA").length;
 
   return {
     counts: {
       students: studentsResult.count ?? 0,
-      activeEnrollments,
+      activeEnrollments: activeEnrollmentsResult.count ?? 0,
       publishedCourses,
       coursesTotal: courses.length,
       publishedPrograms,
       programsTotal: programs.length,
-      unopenedContact: unopenedContact.length,
-      contactTotal: contactSubmissions.length,
-      unopenedWaitlist: unopenedWaitlist.length,
-      waitlistTotal: waitlistSubmissions.length,
-      blogPosts: posts.length,
+      unopenedContact: unopenedContactCountResult.count ?? 0,
+      contactTotal: contactTotalResult.count ?? 0,
+      unopenedWaitlist: unopenedWaitlistCountResult.count ?? 0,
+      waitlistTotal: waitlistTotalResult.count ?? 0,
+      blogPosts: blogMeta.length,
       blogPostsEn,
       blogPostsFa,
     },
-    contactSubmissions,
-    waitlistSubmissions,
-    recentUnopenedContact: unopenedContact.slice(0, 5),
-    recentUnopenedWaitlist: unopenedWaitlist.slice(0, 5),
-    recentBlogPosts: posts.slice(0, 5).map((p) => ({
+    recentUnopenedContact: (recentContactResult.data ?? []).map(contactRowToSubmission),
+    recentUnopenedWaitlist: (recentWaitlistResult.data ?? []).map(waitlistRowToSubmission),
+    recentBlogPosts: blogMeta.slice(0, 5).map((p) => ({
       slug: p.slug,
       title: p.title,
       locale: p.locale,

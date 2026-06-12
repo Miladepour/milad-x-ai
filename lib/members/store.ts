@@ -221,13 +221,67 @@ export async function deleteLessonAdmin(lessonId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-async function enrichEnrollmentRow(
+async function buildEnrollmentProgressContext(
   supabase: ReturnType<typeof createClient>,
+  enrollments: Array<
+    ProgramEnrollmentRow & {
+      student_profiles: StudentProfileRow | null;
+      member_programs: MemberProgramRow | null;
+    }
+  >
+) {
+  const programIds = Array.from(
+    new Set(
+      enrollments
+        .map((row) => row.member_programs?.id)
+        .filter((id): id is string => Boolean(id))
+    )
+  );
+  const studentIds = Array.from(new Set(enrollments.map((row) => row.student_id)));
+
+  const lessonsByProgram = new Map<string, string[]>();
+  if (programIds.length > 0) {
+    const { data: lessons, error: lessonsError } = await supabase
+      .from("program_lessons")
+      .select("id, program_id")
+      .in("program_id", programIds);
+
+    if (lessonsError) throw new Error(lessonsError.message);
+
+    for (const lesson of lessons ?? []) {
+      const existing = lessonsByProgram.get(lesson.program_id) ?? [];
+      existing.push(lesson.id);
+      lessonsByProgram.set(lesson.program_id, existing);
+    }
+  }
+
+  const completedByStudent = new Map<string, Set<string>>();
+  if (studentIds.length > 0) {
+    const { data: progress, error: progressError } = await supabase
+      .from("lesson_progress")
+      .select("student_id, lesson_id")
+      .in("student_id", studentIds)
+      .not("completed_at", "is", null);
+
+    if (progressError) throw new Error(progressError.message);
+
+    for (const row of progress ?? []) {
+      const existing = completedByStudent.get(row.student_id) ?? new Set<string>();
+      existing.add(row.lesson_id);
+      completedByStudent.set(row.student_id, existing);
+    }
+  }
+
+  return { lessonsByProgram, completedByStudent };
+}
+
+function enrichEnrollmentRowWithContext(
   row: ProgramEnrollmentRow & {
     student_profiles: StudentProfileRow | null;
     member_programs: MemberProgramRow | null;
-  }
-): Promise<EnrollmentWithDetails> {
+  },
+  context: Awaited<ReturnType<typeof buildEnrollmentProgressContext>>
+): EnrollmentWithDetails {
   const enrollment = enrollmentRowToEnrollment(row);
   const program = row.member_programs
     ? memberProgramRowToProgram(row.member_programs)
@@ -239,22 +293,12 @@ async function enrichEnrollmentRow(
   let completedLessons = 0;
   let totalLessons = 0;
   if (program) {
-    const { data: lessons } = await supabase
-      .from("program_lessons")
-      .select("id")
-      .eq("program_id", program.id);
-    totalLessons = lessons?.length ?? 0;
-
-    const { data: progress } = await supabase
-      .from("lesson_progress")
-      .select("id, completed_at, lesson_id")
-      .eq("student_id", enrollment.studentId)
-      .not("completed_at", "is", null);
-
-    const lessonIds = new Set((lessons ?? []).map((l) => l.id));
-    completedLessons = (progress ?? []).filter((p) =>
-      lessonIds.has(p.lesson_id)
-    ).length;
+    const lessonIds = context.lessonsByProgram.get(program.id) ?? [];
+    totalLessons = lessonIds.length;
+    const completedSet = context.completedByStudent.get(enrollment.studentId);
+    if (completedSet) {
+      completedLessons = lessonIds.filter((id) => completedSet.has(id)).length;
+    }
   }
 
   return {
@@ -265,6 +309,17 @@ async function enrichEnrollmentRow(
     totalLessons,
     progressPercent: computeProgressPercent(completedLessons, totalLessons),
   };
+}
+
+async function enrichEnrollmentRow(
+  supabase: ReturnType<typeof createClient>,
+  row: ProgramEnrollmentRow & {
+    student_profiles: StudentProfileRow | null;
+    member_programs: MemberProgramRow | null;
+  }
+): Promise<EnrollmentWithDetails> {
+  const context = await buildEnrollmentProgressContext(supabase, [row]);
+  return enrichEnrollmentRowWithContext(row, context);
 }
 
 export async function listEnrollmentsAdmin(): Promise<EnrollmentWithDetails[]> {
@@ -283,7 +338,8 @@ export async function listEnrollmentsAdmin(): Promise<EnrollmentWithDetails[]> {
     }
   >;
 
-  return Promise.all(enrollments.map((row) => enrichEnrollmentRow(supabase, row)));
+  const context = await buildEnrollmentProgressContext(supabase, enrollments);
+  return enrollments.map((row) => enrichEnrollmentRowWithContext(row, context));
 }
 
 export async function getStudentAdmin(

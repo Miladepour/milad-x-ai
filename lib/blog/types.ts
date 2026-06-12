@@ -10,3 +10,6 @@ export interface BlogPost {
   publishedAt: string;
   locale: "EN" | "FA";
 }
+
+/** Admin list view — excludes heavy HTML body. */
+export type BlogPostListItem = Omit<BlogPost, "content">;

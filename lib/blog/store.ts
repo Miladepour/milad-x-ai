@@ -1,4 +1,4 @@
-import type { BlogPost } from "./types";
+import type { BlogPost, BlogPostListItem } from "./types";
 import {
   createAnonClient,
   createClient,
@@ -104,6 +104,29 @@ export async function listBlogPostsAdmin(): Promise<BlogPost[]> {
   return (data ?? []).map((row) =>
     blogRowToPost(row as import("@/lib/supabase/database.types").BlogPostRow)
   );
+}
+
+export async function listBlogPostsAdminMeta(): Promise<BlogPostListItem[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("slug, title, author, cover_image, excerpt, date, published_at, locale")
+    .order("published_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row) => {
+    const typed = row as import("@/lib/supabase/database.types").BlogPostRow;
+    return {
+      slug: typed.slug,
+      title: typed.title,
+      author: typed.author,
+      coverImage: typed.cover_image,
+      excerpt: typed.excerpt,
+      date: typed.date,
+      publishedAt: typed.published_at,
+      locale: typed.locale,
+    };
+  });
 }
 
 export async function getBlogPostAdmin(
