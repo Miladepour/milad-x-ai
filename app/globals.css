@@ -47,6 +47,79 @@
     @apply font-mono text-xs uppercase tracking-[0.14em] text-orange sm:text-sm;
   }
 
+  .certificate-noise-overlay {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+  }
+
+  .certificate-vertical-label {
+    background: linear-gradient(
+      180deg,
+      #ff7a1a 0%,
+      #ff5c00 22%,
+      #d94800 48%,
+      #8f2d00 72%,
+      #1a0a00 100%
+    );
+  }
+
+  .certificate-badge {
+    background: transparent;
+  }
+
+  @keyframes certificate-verify-badge-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.55);
+    }
+    65% {
+      transform: scale(1.08);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes certificate-verify-stroke-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes certificate-verify-glow-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.12);
+    }
+    50% {
+      box-shadow: 0 0 32px rgba(16, 185, 129, 0.28);
+    }
+  }
+
+  .certificate-verify-badge {
+    animation:
+      certificate-verify-badge-in 0.6s cubic-bezier(0.34, 1.45, 0.64, 1) both,
+      certificate-verify-glow-pulse 2.4s ease-in-out 0.8s infinite;
+  }
+
+  .certificate-verify-ring {
+    stroke-dasharray: 138;
+    stroke-dashoffset: 138;
+    animation: certificate-verify-stroke-draw 0.65s ease-out 0.2s both;
+  }
+
+  .certificate-verify-tick {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: certificate-verify-stroke-draw 0.45s ease-out 0.7s both;
+  }
+
+  html.rtl .certificate-document .uppercase {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+
   @keyframes student-live-dot-pulse {
     0%,
     100% {

@@ -18,6 +18,7 @@ const config: Config = {
       },
       fontFamily: {
         cormorant: ["var(--font-cormorant)", "serif"],
+        script: ["var(--font-dancing-script)", "cursive"],
         dm: ["var(--font-poppins)", "sans-serif"],
         mono: ["var(--font-space-mono)", "monospace"],
         vazir: ["var(--font-vazir)", "sans-serif"],

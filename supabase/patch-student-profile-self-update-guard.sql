@@ -21,6 +21,10 @@ begin
     raise exception 'email cannot be changed by students';
   end if;
 
+  if new.student_number is distinct from old.student_number then
+    raise exception 'student number cannot be changed by students';
+  end if;
+
   if new.notes is distinct from old.notes then
     raise exception 'notes cannot be changed by students';
   end if;

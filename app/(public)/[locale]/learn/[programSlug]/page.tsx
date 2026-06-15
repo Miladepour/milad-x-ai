@@ -1,12 +1,23 @@
 import { notFound } from "next/navigation";
 import StudentAccessEnded from "@/components/members/StudentAccessEnded";
+import StudentProgramCompletionBanner from "@/components/members/StudentProgramCompletionBanner";
+import StudentCertificateBadge from "@/components/members/StudentCertificateBadge";
 import StudentGlassCard from "@/components/members/StudentGlassCard";
 import StudentLessonCard from "@/components/members/StudentLessonCard";
 import StudentPortalButton from "@/components/members/StudentPortalButton";
 import { isEnrollmentActive } from "@/lib/members/access";
+import {
+  getStudentCertificateForProgram,
+  issueCertificateIfEligible,
+} from "@/lib/members/certificate-store";
 import { buildLessonUnlockMap } from "@/lib/members/lesson-gating";
 import { resolveLessonBody, resolveLessonTitle } from "@/lib/members/lesson-localized";
-import { learnLessonPath, learnPath } from "@/lib/members/paths";
+import {
+  learnCertificatesPath,
+  learnLessonPath,
+  learnPath,
+  learnProgramCertificatePath,
+} from "@/lib/members/paths";
 import {
   getCompletedLessonIds,
   getStudentEnrollmentForProgram,
@@ -68,8 +79,44 @@ export default async function LearnProgramPage({
 
   const sortedLessons = [...data.lessons].sort((a, b) => a.sortOrder - b.sortOrder);
 
+  let certificate =
+    data.program.certificateEnabled
+      ? await getStudentCertificateForProgram(student.user.id, data.program.id)
+      : null;
+
+  if (
+    data.program.certificateEnabled &&
+    data.progressPercent === 100 &&
+    !certificate
+  ) {
+    certificate = await issueCertificateIfEligible(student.user.id, data.program.id);
+  }
+
+  const programCompleted = data.progressPercent === 100;
+  const showCertificateCta = Boolean(certificate);
+
   return (
     <div className="flex flex-col gap-5 pb-10 sm:gap-6">
+      {programCompleted && data.program.certificateEnabled && (
+        <StudentProgramCompletionBanner
+          title={t.memberPortal.programCompletedTitle}
+          body={
+            certificate
+              ? t.memberPortal.programCompletedBodyWithCert
+              : t.memberPortal.programCompletedBody
+          }
+          rewatchHint={t.memberPortal.programCompletedRewatchHint}
+          certificatesHref={learnCertificatesPath(locale)}
+          certificatesCta={t.memberPortal.programCompletedCertificatesCta}
+          certificateHref={
+            certificate
+              ? learnProgramCertificatePath(data.program.slug, locale)
+              : null
+          }
+          viewCertificateCta={t.memberPortal.certificateView}
+        />
+      )}
+
       <StudentGlassCard>
         <StudentPortalButton href={learnPath(locale)} variant="secondary">
           {t.memberPortal.backToDashboard}
@@ -90,6 +137,23 @@ export default async function LearnProgramPage({
             {data.totalLessons})
           </p>
         </div>
+        {data.program.certificateEnabled && (
+          <div className="mt-5 flex flex-col items-start gap-3">
+            <StudentCertificateBadge label={t.memberPortal.certificateIncluded} />
+            {showCertificateCta ? (
+              <StudentPortalButton
+                href={learnProgramCertificatePath(data.program.slug, locale)}
+                variant="primary"
+              >
+                {t.memberPortal.certificateView}
+              </StudentPortalButton>
+            ) : (
+              <p className="font-dm text-sm text-cream/60">
+                {t.memberPortal.certificateIncludedHint}
+              </p>
+            )}
+          </div>
+        )}
       </StudentGlassCard>
 
       {data.program.usefulLinks.length > 0 && (

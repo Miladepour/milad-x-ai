@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   ArrowLeft,
+  Award,
   BookOpen,
   CalendarDays,
   CreditCard,
@@ -27,6 +28,7 @@ import { NotificationProvider } from "@/components/notifications/NotificationPro
 import NotificationToasts from "@/components/notifications/NotificationToasts";
 import {
   learnAnnouncementsPath,
+  learnCertificatesPath,
   learnClubCardPath,
   learnPath,
   learnProfilePath,
@@ -42,6 +44,7 @@ import type { MembershipTier, MembershipTierInfo } from "@/lib/members/membershi
 export interface StudentNavLabels {
   overview: string;
   myPrograms: string;
+  certificates: string;
   announcements: string;
   upcomingCourses: string;
   resources: string;
@@ -49,6 +52,7 @@ export interface StudentNavLabels {
   clubCard: string;
   support: string;
   viewProfile: string;
+  studentId: string;
   backToSite: string;
   signOut: string;
   menu: string;
@@ -68,6 +72,7 @@ interface StudentDashboardShellProps {
   locale: UrlLocale;
   studentName: string;
   studentEmail: string;
+  studentNumber: string;
   labels: StudentNavLabels;
   announcementUnreadCount?: number;
   continueWatching?: StudentContinueWatching | null;
@@ -115,6 +120,7 @@ function StudentDashboardShellInner({
   locale,
   studentName,
   studentEmail,
+  studentNumber,
   labels,
   announcementUnreadCount = 0,
   continueWatching,
@@ -128,6 +134,7 @@ function StudentDashboardShellInner({
   const dashboardHref = learnPath(locale);
   const announcementsHref = learnAnnouncementsPath(locale);
   const programsHref = learnProgramsPath(locale);
+  const certificatesHref = learnCertificatesPath(locale);
   const coursesHref = learnUpcomingCoursesPath(locale);
   const resourcesHref = learnResourcesPath(locale);
   const profileHref = learnProfilePath(locale);
@@ -142,6 +149,7 @@ function StudentDashboardShellInner({
   const isOnDashboard = pathMatches(dashboardHref);
   const isOnAnnouncements = pathMatches(announcementsHref);
   const isOnPrograms = pathMatches(programsHref);
+  const isOnCertificates = pathMatches(certificatesHref);
   const isOnCourses = pathMatches(coursesHref);
   const isOnResources = pathMatches(resourcesHref);
   const isOnProfile = pathMatches(profileHref);
@@ -150,6 +158,7 @@ function StudentDashboardShellInner({
   const isOnPortalSection =
     isOnAnnouncements ||
     isOnPrograms ||
+    isOnCertificates ||
     isOnCourses ||
     isOnResources ||
     isOnProfile ||
@@ -161,6 +170,12 @@ function StudentDashboardShellInner({
   const navItems: NavItem[] = [
     { id: "overview", label: labels.overview, href: dashboardHref, icon: LayoutDashboard },
     { id: "programs", label: labels.myPrograms, href: programsHref, icon: BookOpen },
+    {
+      id: "certificates",
+      label: labels.certificates,
+      href: certificatesHref,
+      icon: Award,
+    },
     {
       id: "announcements",
       label: labels.announcements,
@@ -183,6 +198,7 @@ function StudentDashboardShellInner({
     if (item.id === "overview") return isOnDashboard;
     if (item.id === "announcements") return isOnAnnouncements;
     if (item.id === "programs") return isOnPrograms || inProgram;
+    if (item.id === "certificates") return isOnCertificates;
     if (item.id === "courses") return isOnCourses;
     if (item.id === "resources") return isOnResources;
     if (item.id === "support") return isOnSupport;
@@ -245,6 +261,12 @@ function StudentDashboardShellInner({
               <p className="mt-1 truncate font-dm text-sm font-medium text-cream group-hover:text-orange">
                 {studentName}
               </p>
+              {studentNumber ? (
+                <p className="mt-2.5 border-t border-white/[0.08] pt-2 font-mono text-xs text-orange">
+                  {labels.studentId}:{" "}
+                  <span className="font-semibold tracking-wider">{studentNumber}</span>
+                </p>
+              ) : null}
             </span>
           </Link>
           <NotificationBell />
@@ -338,24 +360,32 @@ function StudentDashboardShellInner({
         <Link
           href={profileHref}
           onClick={() => setMenuOpen(false)}
-          className="flex min-w-0 items-center gap-2"
+          className="flex min-w-0 flex-col items-end gap-0.5"
         >
-          {membership && membershipLabels && (
-            <span
-              className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest ${
-                membership.tier === "platinum"
-                  ? "bg-gradient-to-r from-violet-400/30 to-cyan-300/30 text-violet-200"
-                  : membership.tier === "gold"
-                    ? "bg-amber-500/20 text-amber-300"
-                    : "bg-slate-400/20 text-slate-300"
-              }`}
-            >
-              {membershipLabels.tierLabels[membership.tier]}
+          <span className="flex min-w-0 items-center gap-2">
+            {membership && membershipLabels && (
+              <span
+                className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest ${
+                  membership.tier === "platinum"
+                    ? "bg-gradient-to-r from-violet-400/30 to-cyan-300/30 text-violet-200"
+                    : membership.tier === "gold"
+                      ? "bg-amber-500/20 text-amber-300"
+                      : "bg-slate-400/20 text-slate-300"
+                }`}
+              >
+                {membershipLabels.tierLabels[membership.tier]}
+              </span>
+            )}
+            <span className="truncate font-dm text-sm font-medium text-cream transition-colors hover:text-orange">
+              {studentName}
             </span>
-          )}
-          <span className="truncate font-dm text-sm font-medium text-cream transition-colors hover:text-orange">
-            {studentName}
           </span>
+          {studentNumber ? (
+            <span className="truncate font-mono text-xs text-orange">
+              {labels.studentId}:{" "}
+              <span className="font-semibold tracking-wider">{studentNumber}</span>
+            </span>
+          ) : null}
         </Link>
         <NotificationBell />
       </div>

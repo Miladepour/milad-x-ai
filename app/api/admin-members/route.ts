@@ -30,6 +30,10 @@ import {
   upsertProgramAdmin,
 } from "@/lib/members/store";
 import {
+  issueCertificateAdmin,
+  revokeCertificateAdmin,
+} from "@/lib/members/certificate-store";
+import {
   getQuizForLessonAdmin,
   saveQuizForLessonAdmin,
 } from "@/lib/members/quiz-store";
@@ -524,6 +528,28 @@ export async function POST(request: Request) {
         total: recipients.length,
         campaignId,
       });
+    }
+
+    if (action === "issue-certificate") {
+      const studentId = String(body.studentId ?? "").trim();
+      const programId = String(body.programId ?? "").trim();
+      if (!studentId || !programId) {
+        return NextResponse.json(
+          { error: "studentId and programId required" },
+          { status: 400 }
+        );
+      }
+      const certificate = await issueCertificateAdmin(studentId, programId, admin.id);
+      return NextResponse.json({ ok: true, certificate });
+    }
+
+    if (action === "revoke-certificate") {
+      const certificateId = String(body.certificateId ?? "").trim();
+      if (!certificateId) {
+        return NextResponse.json({ error: "certificateId required" }, { status: 400 });
+      }
+      await revokeCertificateAdmin(certificateId);
+      return NextResponse.json({ ok: true });
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });

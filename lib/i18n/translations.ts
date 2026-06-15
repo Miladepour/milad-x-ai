@@ -405,6 +405,71 @@ export const translations = {
       quizCorrectAnswer: "Correct answer",
       quizSelectAnswer: "Please answer every question.",
       quizLockedNext: "Score 100% to unlock the next lesson.",
+      backToProgram: "Back to program",
+      certificateTitle: "Your certificate",
+      certificateSubtitle: "Congratulations on completing the program.",
+      certificateNotReady:
+        "Complete all lessons to unlock your certificate. Your progress is saved automatically.",
+      certificateHeading: "Certificate of completion",
+      certificateMainHeading: "CERTIFICATE",
+      certificateSubheading: "OF ACHIEVEMENT",
+      certificatePresentedTo: "This certificate is proudly presented to",
+      certificateRecognitionLine:
+        "In recognition for successfully completing {program} ({hours})",
+      certificateRecognitionPrefix:
+        "In recognition for successfully completing",
+      certificateBadgeCertified: "Certified",
+      certificateVerticalLabel: "Certificate",
+      certificateQuote:
+        "You are now part of a new generation of creators, builders, and thinkers powered by AI.",
+      certificateQuoteFa:
+        "شما حالا بخشی از نسل جدیدی هستید که با هوش مصنوعی می‌سازند، خلق می‌کنند و متفاوت فکر می‌کنند.",
+      certificateFooterTitle: "Certificate of achievement",
+      certificateSignatoryRole: "Director",
+      certificateDownloadPng: "Download PNG",
+      certificateDownloadPdf: "Download PDF",
+      certificateDownloading: "Preparing…",
+      certificateVerifyApprovedLabel: "Verified",
+      certificateVerifyApprovedBody:
+        "This certificate is authentic and was officially issued by {organization}.",
+      certificateAwardedTo: "Awarded to",
+      certificateForCompleting: "For successfully completing",
+      certificateTotalHours: "Total hours",
+      certificateIssuedOn: "Issued on",
+      certificateSignatory: "Authorized signatory",
+      certificateCredentialId: "Credential ID",
+      certificateVerifyAt: "Verify at",
+      certificateLinkedIn: "Add to LinkedIn",
+      certificateLinkedInPost: "Post on LinkedIn",
+      certificateLinkedInPostAuth: "Connected to LinkedIn. Publishing your post…",
+      certificateLinkedInPostSuccess:
+        "Published on LinkedIn. Your feed is opening in a new tab.",
+      certificateLinkedInPostNotConfigured:
+        "LinkedIn auto-post is not set up yet. Your academy admin needs to enable it.",
+      certificateLinkedInPostError: "Could not publish to LinkedIn. Try again.",
+      certificateVerifyLink: "Public verify page",
+      certificateView: "View certificate",
+      certificateEligible: "Certificate ready",
+      certificateIncluded: "Certificate included",
+      certificateIncludedHint:
+        "Complete all lessons in this program to unlock your certificate.",
+      programCompletedTitle: "Congratulations — you finished this program!",
+      programCompletedBody:
+        "Your certificate is ready. Open the Certificates page to view and download it.",
+      programCompletedBodyWithCert:
+        "Your certificate has been issued. Open the Certificates page to view it, add it to LinkedIn, or share your credential.",
+      programCompletedRewatchHint:
+        "You can keep watching lessons until your access expires — your progress and certificate stay saved.",
+      programCompletedCertificatesCta: "Go to Certificates",
+      certificateVerifyPageTitle: "Certificate verification",
+      certificateVerifyPageSubtitle:
+        "This credential was issued by MX AI Academy. Details below match our records.",
+      navCertificates: "Certificates",
+      certificatesPageTitle: "My certificates",
+      certificatesPageSubtitle:
+        "All completion certificates you have earned across your enrolled programs.",
+      noCertificates:
+        "You do not have any certificates yet. Complete a program with certificates enabled to earn one.",
       membershipBadgeTitle: "Premium member",
       membershipBadgeSubtitle: "Your tier is based on total programs enrolled — including expired access.",
       membershipTierSilver: "Silver",
@@ -465,6 +530,7 @@ export const translations = {
       profileWrongPassword: "Current password is incorrect.",
       profileSaveFailed: "Could not save profile.",
       profileViewProfile: "View profile",
+      studentIdLabel: "Student ID",
       profileNoEnrollments: "No enrollments yet.",
       profileCourse: "Course",
       profileStatus: "Status",
@@ -909,6 +975,70 @@ export const translations = {
       quizCorrectAnswer: "پاسخ صحیح",
       quizSelectAnswer: "لطفاً به همه سؤالات پاسخ دهید.",
       quizLockedNext: "برای باز شدن درس بعدی باید ۱۰۰٪ بزنید.",
+      backToProgram: "بازگشت به برنامه",
+      certificateTitle: "گواهینامه شما",
+      certificateSubtitle: "تبریک بابت اتمام برنامه.",
+      certificateNotReady:
+        "برای دریافت گواهینامه همه درس‌ها را کامل کنید. پیشرفت شما خودکار ذخیره می‌شود.",
+      certificateHeading: "گواهی اتمام دوره",
+      certificateMainHeading: "CERTIFICATE",
+      certificateSubheading: "OF ACHIEVEMENT",
+      certificatePresentedTo: "این گواهینامه با افتخار تقدیم می‌شود به",
+      certificateRecognitionLine:
+        "بابت تکمیل موفق {program} ({hours})",
+      certificateRecognitionPrefix: "با عنایت به تکمیل موفقیت‌آمیز",
+      certificateBadgeCertified: "گواهی‌شده",
+      certificateVerticalLabel: "گواهینامه",
+      certificateQuote:
+        "You are now part of a new generation of creators, builders, and thinkers powered by AI.",
+      certificateQuoteFa:
+        "شما حالا بخشی از نسل جدیدی هستید که با هوش مصنوعی می‌سازند، خلق می‌کنند و متفاوت فکر می‌کنند.",
+      certificateFooterTitle: "گواهی تکمیل دوره",
+      certificateSignatoryRole: "مدیر",
+      certificateDownloadPng: "دانلود PNG",
+      certificateDownloadPdf: "دانلود PDF",
+      certificateDownloading: "در حال آماده‌سازی…",
+      certificateVerifyApprovedLabel: "تأیید شد",
+      certificateVerifyApprovedBody:
+        "این گواهینامه معتبر است و به‌طور رسمی توسط {organization} صادر شده است.",
+      certificateAwardedTo: "اعطا شده به",
+      certificateForCompleting: "بابت تکمیل موفق",
+      certificateTotalHours: "مجموع ساعات",
+      certificateIssuedOn: "تاریخ صدور",
+      certificateSignatory: "امضای مجاز",
+      certificateCredentialId: "شناسه اعتبار",
+      certificateVerifyAt: "تأیید در",
+      certificateLinkedIn: "افزودن به لینکدین",
+      certificateLinkedInPost: "انتشار در لینکدین",
+      certificateLinkedInPostAuth: "اتصال به لینکدین برقرار شد. در حال انتشار پست…",
+      certificateLinkedInPostSuccess:
+        "در لینکدین منتشر شد. فید شما در تب جدید باز می‌شود.",
+      certificateLinkedInPostNotConfigured:
+        "انتشار خودکار در لینکدین هنوز فعال نشده است. از مدیر آکادمی بخواهید آن را فعال کند.",
+      certificateLinkedInPostError: "انتشار در لینکدین ممکن نشد. دوباره تلاش کنید.",
+      certificateVerifyLink: "صفحه تأیید عمومی",
+      certificateView: "مشاهده گواهینامه",
+      certificateEligible: "گواهینامه آماده است",
+      certificateIncluded: "شامل گواهینامه",
+      certificateIncludedHint:
+        "برای دریافت گواهینامه، همه درس‌های این برنامه را کامل کنید.",
+      programCompletedTitle: "تبریک — این برنامه را تمام کردید!",
+      programCompletedBody:
+        "گواهینامه شما آماده است. برای مشاهده و دریافت آن به صفحه گواهینامه‌ها بروید.",
+      programCompletedBodyWithCert:
+        "گواهینامه شما صادر شد. برای مشاهده، افزودن به لینکدین یا اشتراک‌گذاری به صفحه گواهینامه‌ها بروید.",
+      programCompletedRewatchHint:
+        "تا پایان دسترسی می‌توانید درس‌ها را دوباره ببینید — پیشرفت و گواهینامه شما ذخیره می‌ماند.",
+      programCompletedCertificatesCta: "رفتن به گواهینامه‌ها",
+      certificateVerifyPageTitle: "تأیید گواهینامه",
+      certificateVerifyPageSubtitle:
+        "این مدرک توسط آکادمی MX AI صادر شده است. جزئیات زیر با سوابق ما مطابقت دارد.",
+      navCertificates: "گواهینامه‌ها",
+      certificatesPageTitle: "گواهینامه‌های من",
+      certificatesPageSubtitle:
+        "همه گواهینامه‌های تکمیل دوره که در برنامه‌های ثبت‌نام‌شده کسب کرده‌اید.",
+      noCertificates:
+        "هنوز گواهینامه‌ای ندارید. برنامه‌ای با گواهینامه فعال را کامل کنید تا دریافت کنید.",
       membershipBadgeTitle: "عضو ویژه",
       membershipBadgeSubtitle: "سطح شما بر اساس کل برنامه‌های ثبت‌نام‌شده است — حتی برنامه‌های منقضی‌شده.",
       membershipTierSilver: "نقره‌ای",
@@ -969,6 +1099,7 @@ export const translations = {
       profileWrongPassword: "رمز فعلی اشتباه است.",
       profileSaveFailed: "ذخیره پروفایل انجام نشد.",
       profileViewProfile: "مشاهده پروفایل",
+      studentIdLabel: "شناسه دانشجو",
       profileNoEnrollments: "هنوز ثبت‌نامی وجود ندارد.",
       profileCourse: "دوره",
       profileStatus: "وضعیت",

@@ -167,6 +167,29 @@ export default function StudentProfilePanel({
     }
   }
 
+  async function handleIssueCertificate(programId: string) {
+    onStatus("Issuing certificate…");
+    try {
+      await membersRequest("issue-certificate", { studentId, programId });
+      await load();
+      onStatus("Certificate issued.");
+    } catch (err) {
+      onStatus(err instanceof Error ? err.message : "Could not issue certificate");
+    }
+  }
+
+  async function handleRevokeCertificate(certificateId: string) {
+    if (!confirm("Revoke this certificate? The student will no longer see it.")) return;
+    onStatus("Revoking certificate…");
+    try {
+      await membersRequest("revoke-certificate", { certificateId });
+      await load();
+      onStatus("Certificate revoked.");
+    } catch (err) {
+      onStatus(err instanceof Error ? err.message : "Could not revoke certificate");
+    }
+  }
+
   if (loading) {
     return (
       <div className="border border-surface bg-surface/30 p-8 font-dm text-cream/70">
@@ -202,6 +225,9 @@ export default function StudentProfilePanel({
           <h3 className="mt-1 font-dm text-2xl font-semibold text-cream">
             {data.profile.fullName || data.profile.email}
           </h3>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-orange/80">
+            {data.profile.studentNumber || "No student ID"}
+          </p>
           <p className="font-mono text-[10px] uppercase tracking-widest text-cream/50">
             {data.profile.email}
           </p>
@@ -216,6 +242,13 @@ export default function StudentProfilePanel({
       </div>
 
       <form onSubmit={handleSaveProfile} className="grid gap-4 md:grid-cols-2">
+        <input
+          value={data.profile.studentNumber}
+          className="form-field cursor-not-allowed font-mono opacity-70"
+          readOnly
+          disabled
+          aria-label="Student ID"
+        />
         <input
           value={profileForm.fullName}
           onChange={(e) => setProfileForm((f) => ({ ...f, fullName: e.target.value }))}
@@ -381,6 +414,37 @@ export default function StudentProfilePanel({
                       <p className="mt-1 font-dm text-xs text-amber-300/90">
                         Program has no URL slug — set an English slug in Programs.
                       </p>
+                    )}
+                    {item.program?.certificateEnabled && (
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        {data.certificatesByProgramId[item.programId] ? (
+                          <>
+                            <p className="font-mono text-[10px] uppercase tracking-widest text-emerald-400/90">
+                              Certificate:{" "}
+                              {data.certificatesByProgramId[item.programId].certificateNumber}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleRevokeCertificate(
+                                  data.certificatesByProgramId[item.programId].id
+                                )
+                              }
+                              className="border border-surface px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-cream/70 hover:border-red-400 hover:text-red-300"
+                            >
+                              Revoke
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleIssueCertificate(item.programId)}
+                            className="border border-orange px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-orange hover:bg-orange hover:text-background"
+                          >
+                            Issue certificate
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                   <button

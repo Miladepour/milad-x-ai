@@ -10,7 +10,7 @@ import StudentPortalButton from "@/components/members/StudentPortalButton";
 import { isEnrollmentActive } from "@/lib/members/access";
 import { isLessonUnlocked } from "@/lib/members/lesson-gating";
 import { resolveLessonBody, resolveLessonTitle } from "@/lib/members/lesson-localized";
-import { learnLessonPath, learnProgramPath } from "@/lib/members/paths";
+import { learnLessonPath, learnProgramPath, learnCertificatesPath, learnProgramCertificatePath } from "@/lib/members/paths";
 import { getQuizForStudent } from "@/lib/members/quiz-store";
 import { sanitizeLessonHtml } from "@/lib/members/sanitize-lesson-html";
 import {
@@ -126,6 +126,17 @@ export default async function LearnLessonPage({
       ? sanitizeLessonHtml(body)
       : "";
 
+  const celebrationLabels = {
+    title: t.memberPortal.programCompletedTitle,
+    body: t.memberPortal.programCompletedBody,
+    bodyWithCert: t.memberPortal.programCompletedBodyWithCert,
+    rewatchHint: t.memberPortal.programCompletedRewatchHint,
+    certificatesCta: t.memberPortal.programCompletedCertificatesCta,
+    viewCertificateCta: t.memberPortal.certificateView,
+  };
+  const certificatesHref = learnCertificatesPath(locale);
+  const programCertificateHref = learnProgramCertificatePath(params.programSlug, locale);
+
   return (
     <div className="flex flex-col gap-5 pb-10 sm:gap-6">
       <StudentGlassCard>
@@ -149,6 +160,9 @@ export default async function LearnLessonPage({
             lessonTitle={title}
             initialPosition={data.progress?.lastPositionSeconds ?? 0}
             completed={isCompleted}
+            certificateEnabled={data.program.certificateEnabled}
+            certificatesHref={certificatesHref}
+            programCertificateHref={programCertificateHref}
           />
           {body.trim() ? (
             <div className="border-t border-white/[0.08] px-4 py-5 sm:px-6">
@@ -163,7 +177,13 @@ export default async function LearnLessonPage({
           <div className="px-4 py-5 sm:px-6">
             <LessonContent content={body} />
           </div>
-          <LessonMarkComplete lessonId={data.lesson.id} completed={isCompleted} />
+          <LessonMarkComplete
+            lessonId={data.lesson.id}
+            completed={isCompleted}
+            certificateEnabled={data.program.certificateEnabled}
+            certificatesHref={certificatesHref}
+            programCertificateHref={programCertificateHref}
+          />
         </StudentGlassCard>
       )}
 
@@ -174,6 +194,10 @@ export default async function LearnLessonPage({
             lessonId={data.lesson.id}
             introHtml={quizIntroHtml}
             questions={quizQuestions}
+            certificateEnabled={data.program.certificateEnabled}
+            certificatesHref={certificatesHref}
+            programCertificateHref={programCertificateHref}
+            celebrationLabels={celebrationLabels}
             labels={quizLabels}
           />
         </StudentGlassCard>

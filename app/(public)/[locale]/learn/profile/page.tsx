@@ -36,6 +36,7 @@ export default async function LearnProfilePage({
         enrollmentsSection: t.memberPortal.profileEnrollmentsSection,
         passwordSection: t.memberPortal.profilePasswordSection,
         memberSince: t.memberPortal.profileMemberSince,
+        studentId: t.memberPortal.studentIdLabel,
         emailLocked: t.memberPortal.profileEmailLocked,
         fullName: t.memberPortal.profileFullName,
         email: t.memberPortal.email,

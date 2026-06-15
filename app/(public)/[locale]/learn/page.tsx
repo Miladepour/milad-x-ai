@@ -76,6 +76,7 @@ export default async function LearnDashboardPage({
     openProgram: t.memberPortal.openProgram,
     expiredOn: t.memberPortal.expiredOn,
     programLocked: t.memberPortal.programLocked,
+    certificateIncluded: t.memberPortal.certificateIncluded,
   };
 
   return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import LessonCompletionCelebration from "@/components/members/LessonCompletionCelebration";
 import type { LessonQuizQuestionStudent, LessonQuizSubmitResult } from "@/lib/members/types";
 
 interface LessonQuizPlayerProps {
@@ -8,6 +9,17 @@ interface LessonQuizPlayerProps {
   lessonId: string;
   introHtml: string;
   questions: LessonQuizQuestionStudent[];
+  certificateEnabled?: boolean;
+  certificatesHref?: string;
+  programCertificateHref?: string;
+  celebrationLabels?: {
+    title: string;
+    body: string;
+    bodyWithCert: string;
+    rewatchHint: string;
+    certificatesCta: string;
+    viewCertificateCta: string;
+  };
   labels: {
     submit: string;
     submitting: string;
@@ -27,12 +39,18 @@ export default function LessonQuizPlayer({
   lessonId,
   introHtml,
   questions,
+  certificateEnabled = false,
+  certificatesHref = "",
+  programCertificateHref = "",
+  celebrationLabels,
   labels,
 }: LessonQuizPlayerProps) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [result, setResult] = useState<LessonQuizSubmitResult | null>(null);
   const [status, setStatus] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [issuedCertificate, setIssuedCertificate] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -58,12 +76,27 @@ export default function LessonQuizPlayer({
           answers,
         }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as {
+        result?: LessonQuizSubmitResult;
+        error?: string;
+        programCompleted?: boolean;
+        certificateEnabled?: boolean;
+        certificate?: unknown | null;
+      };
       if (!res.ok) {
         setStatus(data.error || "Could not submit quiz.");
         return;
       }
       setResult(data.result as LessonQuizSubmitResult);
+      if (
+        data.result?.passed &&
+        data.programCompleted &&
+        (data.certificateEnabled || certificateEnabled) &&
+        celebrationLabels
+      ) {
+        setShowCelebration(true);
+        setIssuedCertificate(Boolean(data.certificate));
+      }
     } catch {
       setStatus("Could not submit quiz.");
     } finally {
@@ -139,6 +172,22 @@ export default function LessonQuizPlayer({
           >
             {labels.retake}
           </button>
+        )}
+
+        {showCelebration && celebrationLabels && certificatesHref && (
+          <LessonCompletionCelebration
+            title={celebrationLabels.title}
+            body={
+              issuedCertificate
+                ? celebrationLabels.bodyWithCert
+                : celebrationLabels.body
+            }
+            rewatchHint={celebrationLabels.rewatchHint}
+            certificatesHref={certificatesHref}
+            certificatesCta={celebrationLabels.certificatesCta}
+            certificateHref={issuedCertificate ? programCertificateHref : null}
+            viewCertificateCta={celebrationLabels.viewCertificateCta}
+          />
         )}
       </div>
     );

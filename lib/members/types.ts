@@ -20,8 +20,30 @@ export interface MemberProgram {
   sortOrder: number;
   status: ProgramStatus;
   usefulLinks: UsefulLink[];
+  certificateEnabled: boolean;
+  certificateTitleEn: string | null;
+  certificateTitleFa: string | null;
+  /** Admin override; when null, hours are summed from published lesson durations */
+  certificateHours: number | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ProgramCertificate {
+  id: string;
+  certificateNumber: string;
+  studentId: string;
+  programId: string;
+  enrollmentId: string | null;
+  studentName: string;
+  studentNumber: string;
+  programTitleEn: string;
+  programTitleFa: string;
+  totalHours: number;
+  issuedAt: string;
+  issuedBy: string | null;
+  revokedAt: string | null;
+  createdAt: string;
 }
 
 export interface ProgramLesson {
@@ -116,6 +138,8 @@ export interface StudentProfile {
   id: string;
   email: string;
   fullName: string;
+  /** Public student ID, e.g. MXAI10482 */
+  studentNumber: string;
   locale: LocaleCode;
   phone: string | null;
   notes: string | null;
@@ -174,6 +198,10 @@ export interface MemberProgramPayload {
   sortOrder: number;
   status: ProgramStatus;
   usefulLinks: UsefulLink[];
+  certificateEnabled?: boolean;
+  certificateTitleEn?: string | null;
+  certificateTitleFa?: string | null;
+  certificateHours?: number | null;
 }
 
 export interface ProgramLessonPayload {
@@ -246,6 +274,7 @@ export interface AddEnrollmentPayload {
 export interface StudentWithEnrollments {
   profile: StudentProfile;
   enrollments: EnrollmentWithDetails[];
+  certificatesByProgramId: Record<string, ProgramCertificate>;
 }
 
 export type AnnouncementLocale = "EN" | "FA" | "ALL";

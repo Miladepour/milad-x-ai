@@ -13,6 +13,10 @@ export function learnProgramsPath(locale: UrlLocale): string {
   return localizedPath("/learn/programs", locale);
 }
 
+export function learnCertificatesPath(locale: UrlLocale): string {
+  return localizedPath("/learn/certificates", locale);
+}
+
 export function learnUpcomingCoursesPath(locale: UrlLocale): string {
   return localizedPath("/learn/upcoming-courses", locale);
 }
@@ -35,6 +39,23 @@ export function learnSupportPath(locale: UrlLocale): string {
 
 export function learnProgramPath(programSlug: string, locale: UrlLocale): string {
   return localizedPath(`/learn/${programSlug}`, locale);
+}
+
+export function learnProgramCertificatePath(
+  programSlug: string,
+  locale: UrlLocale
+): string {
+  return localizedPath(`/learn/${programSlug}/certificate`, locale);
+}
+
+export function certificateVerifyPath(
+  certificateNumber: string,
+  locale: UrlLocale
+): string {
+  return localizedPath(
+    `/certificates/verify/${encodeURIComponent(certificateNumber)}`,
+    locale
+  );
 }
 
 export function learnLessonPath(

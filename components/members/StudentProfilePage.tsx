@@ -31,6 +31,7 @@ export interface StudentProfileLabels {
   enrollmentsSection: string;
   passwordSection: string;
   memberSince: string;
+  studentId: string;
   emailLocked: string;
   fullName: string;
   email: string;
@@ -234,6 +235,19 @@ export default function StudentProfilePage({
                 autoComplete="name"
                 required
                 maxLength={120}
+              />
+            </label>
+
+            <label className="flex flex-col gap-2">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-cream/45">
+                {labels.studentId}
+              </span>
+              <input
+                type="text"
+                value={profile.studentNumber || "—"}
+                className="form-field cursor-not-allowed font-mono tracking-wider opacity-70"
+                readOnly
+                disabled
               />
             </label>
 

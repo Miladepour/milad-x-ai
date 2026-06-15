@@ -14,13 +14,21 @@ export function buildLessonUnlockMap(
 
   for (let index = 0; index < sorted.length; index += 1) {
     const lesson = sorted[index];
+    const previousLesson = index > 0 ? sorted[index - 1] : null;
+
+    if (completedLessonIds.has(lesson.id)) {
+      map.set(lesson.id, { unlocked: true, previousLesson });
+      continue;
+    }
+
     if (index === 0) {
       map.set(lesson.id, { unlocked: true, previousLesson: null });
       continue;
     }
 
-    const previousLesson = sorted[index - 1];
-    const unlocked = completedLessonIds.has(previousLesson.id);
+    const unlocked = previousLesson
+      ? completedLessonIds.has(previousLesson.id)
+      : true;
     map.set(lesson.id, { unlocked, previousLesson });
   }
 

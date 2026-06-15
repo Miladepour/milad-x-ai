@@ -16,6 +16,7 @@ interface StudentProgramCardListProps {
     openProgram: string;
     expiredOn: string;
     programLocked: string;
+    certificateIncluded: string;
   };
 }
 
@@ -50,6 +51,8 @@ export default function StudentProgramCardList({
                 : labels.noExpiry
             }
             openLabel={locked ? labels.programLocked : labels.openProgram}
+            certificateIncluded={item.program.certificateEnabled}
+            certificateIncludedLabel={labels.certificateIncluded}
           />
         </li>
       ))}

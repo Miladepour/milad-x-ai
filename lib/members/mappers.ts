@@ -19,6 +19,10 @@ export interface MemberProgramRow {
   sort_order: number;
   status: string;
   useful_links: unknown;
+  certificate_enabled?: boolean | null;
+  certificate_title_en?: string | null;
+  certificate_title_fa?: string | null;
+  certificate_hours?: number | string | null;
   created_at: string;
   updated_at: string;
 }
@@ -45,6 +49,7 @@ export interface StudentProfileRow {
   id: string;
   email: string;
   full_name: string;
+  student_number?: string | null;
   locale: string;
   phone?: string | null;
   notes?: string | null;
@@ -96,6 +101,14 @@ function parseUsefulLinks(raw: unknown): UsefulLink[] {
 }
 
 export function memberProgramRowToProgram(row: MemberProgramRow): MemberProgram {
+  const hoursRaw = row.certificate_hours;
+  const certificateHours =
+    hoursRaw == null || hoursRaw === ""
+      ? null
+      : typeof hoursRaw === "number"
+        ? hoursRaw
+        : Number(hoursRaw);
+
   return {
     id: row.id,
     slug: row.slug,
@@ -105,6 +118,13 @@ export function memberProgramRowToProgram(row: MemberProgramRow): MemberProgram 
     sortOrder: row.sort_order,
     status: row.status as ProgramStatus,
     usefulLinks: parseUsefulLinks(row.useful_links),
+    certificateEnabled: Boolean(row.certificate_enabled),
+    certificateTitleEn: row.certificate_title_en?.trim() || null,
+    certificateTitleFa: row.certificate_title_fa?.trim() || null,
+    certificateHours:
+      certificateHours != null && Number.isFinite(certificateHours)
+        ? certificateHours
+        : null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -151,6 +171,7 @@ export function studentProfileRowToProfile(row: StudentProfileRow): StudentProfi
     id: row.id,
     email: row.email,
     fullName: row.full_name,
+    studentNumber: row.student_number ?? "",
     locale: row.locale === "FA" ? "FA" : "EN",
     phone: row.phone ?? null,
     notes: row.notes ?? null,

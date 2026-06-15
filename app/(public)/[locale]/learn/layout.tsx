@@ -58,6 +58,7 @@ export default async function LearnLayout({
         locale={locale}
         studentName={displayName}
         studentEmail={student.profile.email}
+        studentNumber={student.profile.studentNumber}
         announcementUnreadCount={announcementUnreadCount}
         continueWatching={
           continueItem?.continueLesson
@@ -77,6 +78,7 @@ export default async function LearnLayout({
         labels={{
           overview: t.memberPortal.navOverview,
           myPrograms: t.memberPortal.myPrograms,
+          certificates: t.memberPortal.navCertificates,
           announcements: t.memberPortal.navAnnouncements,
           upcomingCourses: t.memberPortal.navUpcomingCourses,
           resources: t.memberPortal.navResources,
@@ -84,6 +86,7 @@ export default async function LearnLayout({
           clubCard: t.memberPortal.navClubCard,
           support: t.memberPortal.navSupport,
           viewProfile: t.memberPortal.profileViewProfile,
+          studentId: t.memberPortal.studentIdLabel,
           backToSite: t.memberPortal.backToSite,
           signOut: t.memberPortal.signOut,
           menu: t.memberPortal.menu,

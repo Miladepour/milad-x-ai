@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Poppins, Space_Mono } from "next/font/google";
+import { Cormorant_Garamond, Dancing_Script, Poppins, Space_Mono } from "next/font/google";
 import { SITE_URL } from "@/lib/i18n/config";
 import "./globals.css";
 
@@ -35,6 +35,13 @@ const spaceMono = Space_Mono({
   display: "swap",
 });
 
+const dancingScript = Dancing_Script({
+  subsets: ["latin"],
+  weight: ["700"],
+  variable: "--font-dancing-script",
+  display: "swap",
+});
+
 export default function RootLayout({
   children,
 }: {
@@ -43,7 +50,7 @@ export default function RootLayout({
   return (
     <html
       suppressHydrationWarning
-      className={`${cormorant.variable} ${poppins.variable} ${spaceMono.variable}`}
+      className={`${cormorant.variable} ${poppins.variable} ${spaceMono.variable} ${dancingScript.variable}`}
     >
       <body className="bg-background text-cream font-dm antialiased min-h-screen flex flex-col">
         {children}

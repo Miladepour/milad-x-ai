@@ -9,6 +9,7 @@ import {
   youtubeEmbedUrl,
 } from "@/lib/members/video";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import LessonCompletionCelebration from "@/components/members/LessonCompletionCelebration";
 import LessonVideoPoster from "@/components/members/LessonVideoPoster";
 
 interface LessonPlayerProps {
@@ -17,6 +18,9 @@ interface LessonPlayerProps {
   lessonTitle?: string;
   initialPosition?: number;
   completed?: boolean;
+  certificateEnabled?: boolean;
+  certificatesHref?: string;
+  programCertificateHref?: string;
 }
 
 function LessonProgressActions({
@@ -56,11 +60,16 @@ export default function LessonPlayer({
   lessonTitle = "",
   initialPosition = 0,
   completed = false,
+  certificateEnabled = false,
+  certificatesHref = "",
+  programCertificateHref = "",
 }: LessonPlayerProps) {
   const t = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isComplete, setIsComplete] = useState(completed);
   const [status, setStatus] = useState("");
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [issuedCertificate, setIssuedCertificate] = useState(false);
   const [bunnyStarted, setBunnyStarted] = useState(false);
   const [bunnyEmbed, setBunnyEmbed] = useState<string | null>(null);
   const [bunnyLoadError, setBunnyLoadError] = useState("");
@@ -74,16 +83,25 @@ export default function LessonPlayer({
           credentials: "same-origin",
           body: JSON.stringify({ lessonId, ...opts }),
         });
+        const data = (await res.json()) as {
+          programCompleted?: boolean;
+          certificateEnabled?: boolean;
+          certificate?: unknown | null;
+        };
         if (!res.ok) throw new Error("Save failed");
         if (opts.completed) {
           setIsComplete(true);
           setStatus("");
+          if (data.programCompleted && (data.certificateEnabled || certificateEnabled)) {
+            setShowCelebration(true);
+            setIssuedCertificate(Boolean(data.certificate));
+          }
         }
       } catch {
         setStatus("Could not save progress.");
       }
     },
-    [lessonId]
+    [certificateEnabled, lessonId]
   );
 
   const markComplete = useCallback(() => {
@@ -168,6 +186,25 @@ export default function LessonPlayer({
     };
   }, [videoUrl, initialPosition, saveProgress]);
 
+  const celebrationBlock =
+    showCelebration && certificatesHref ? (
+      <div className="px-4 pb-4 sm:px-5">
+        <LessonCompletionCelebration
+          title={t.memberPortal.programCompletedTitle}
+          body={
+            issuedCertificate
+              ? t.memberPortal.programCompletedBodyWithCert
+              : t.memberPortal.programCompletedBody
+          }
+          rewatchHint={t.memberPortal.programCompletedRewatchHint}
+          certificatesHref={certificatesHref}
+          certificatesCta={t.memberPortal.programCompletedCertificatesCta}
+          certificateHref={issuedCertificate ? programCertificateHref : null}
+          viewCertificateCta={t.memberPortal.certificateView}
+        />
+      </div>
+    ) : null;
+
   if (!videoUrl) {
     return (
       <div className="flex aspect-video items-center justify-center border border-surface bg-surface/30">
@@ -201,6 +238,7 @@ export default function LessonPlayer({
           status={status}
           onMarkComplete={markComplete}
         />
+        {celebrationBlock}
       </div>
     );
   }
@@ -224,6 +262,7 @@ export default function LessonPlayer({
           status={status}
           onMarkComplete={markComplete}
         />
+        {celebrationBlock}
       </div>
     );
   }
@@ -263,6 +302,7 @@ export default function LessonPlayer({
           status={status}
           onMarkComplete={markComplete}
         />
+        {celebrationBlock}
       </div>
     );
   }
@@ -283,6 +323,7 @@ export default function LessonPlayer({
         status={status}
         onMarkComplete={markComplete}
       />
+      {celebrationBlock}
     </div>
   );
 }

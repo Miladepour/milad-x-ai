@@ -1,5 +1,6 @@
 import { createAdminDbClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
+import { certificatesByProgramIdForStudent } from "@/lib/members/certificate-store";
 import {
   getAnnouncementStatesForStudent,
   mergeAnnouncementsWithState,
@@ -121,7 +122,7 @@ export async function getProgramAdmin(idOrSlug: string): Promise<{
 export async function upsertProgramAdmin(
   payload: MemberProgramPayload
 ): Promise<MemberProgram> {
-  const supabase = createClient();
+  const supabase = createAdminDbClient();
   const slug = normalizeSlug(payload.slug || payload.title, payload.id);
 
   const row = {
@@ -132,6 +133,13 @@ export async function upsertProgramAdmin(
     sort_order: payload.sortOrder,
     status: payload.status,
     useful_links: usefulLinksToJson(payload.usefulLinks),
+    certificate_enabled: Boolean(payload.certificateEnabled),
+    certificate_title_en: payload.certificateTitleEn?.trim() || null,
+    certificate_title_fa: payload.certificateTitleFa?.trim() || null,
+    certificate_hours:
+      payload.certificateHours != null && payload.certificateHours > 0
+        ? payload.certificateHours
+        : null,
   };
 
   if (payload.id) {
@@ -375,9 +383,12 @@ export async function getStudentAdmin(
     )
   );
 
+  const certificatesByProgramId = await certificatesByProgramIdForStudent(studentId);
+
   return {
     profile: studentProfileRowToProfile(profileData as StudentProfileRow),
     enrollments,
+    certificatesByProgramId,
   };
 }
 

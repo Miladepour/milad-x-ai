@@ -96,6 +96,7 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
       const haystack = [
         profile.fullName,
         profile.email,
+        profile.studentNumber,
         profile.phone ?? "",
         profile.notes ?? "",
       ]
@@ -402,6 +403,7 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
                           {profile.fullName || profile.email}
                         </p>
                         <p className="font-mono text-[10px] uppercase tracking-widest text-cream/50">
+                          {profile.studentNumber ? `${profile.studentNumber} · ` : ""}
                           {profile.email}
                           {profile.phone ? ` · ${profile.phone}` : ""}
                         </p>

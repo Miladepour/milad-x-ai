@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { completeLessonCertificateFlow } from "@/lib/members/certificate-store";
 import { upsertLessonProgress } from "@/lib/members/store";
 import { SERVER_ERROR_MESSAGE } from "@/lib/security/api-errors";
 import { getStudentUser } from "@/lib/supabase/require-student";
@@ -24,7 +25,24 @@ export async function POST(request: Request) {
       completed: body.completed === true,
     });
 
-    return NextResponse.json({ ok: true, progress });
+    let certificate = null;
+    let programCompleted = false;
+    let certificateEnabled = false;
+
+    if (body.completed === true) {
+      const flow = await completeLessonCertificateFlow(student.user.id, lessonId);
+      certificate = flow.certificate;
+      programCompleted = flow.programCompleted;
+      certificateEnabled = flow.certificateEnabled;
+    }
+
+    return NextResponse.json({
+      ok: true,
+      progress,
+      certificate,
+      programCompleted,
+      certificateEnabled,
+    });
   } catch (error) {
     console.error("[members/progress]", error);
     return NextResponse.json({ error: SERVER_ERROR_MESSAGE }, { status: 500 });

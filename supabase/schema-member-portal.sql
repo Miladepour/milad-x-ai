@@ -46,10 +46,13 @@ create table if not exists public.student_profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text not null unique,
   full_name text not null default '',
+  student_number text not null unique,
   locale text not null default 'EN' check (locale in ('EN', 'FA')),
   phone text,
   notes text,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  constraint student_profiles_student_number_format_check
+    check (student_number ~ '^MXAI[0-9]{5}$')
 );
 
 -- ---------------------------------------------------------------------------

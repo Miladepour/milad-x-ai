@@ -55,6 +55,10 @@ const emptyProgram = (): Omit<MemberProgram, "id" | "createdAt" | "updatedAt"> &
   sortOrder: 0,
   status: "draft",
   usefulLinks: [],
+  certificateEnabled: false,
+  certificateTitleEn: null,
+  certificateTitleFa: null,
+  certificateHours: null,
 });
 
 const LESSON_TYPE_OPTIONS: Array<{ type: LessonType; label: string; hint: string }> = [
@@ -131,6 +135,10 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
           sortOrder: program.sortOrder,
           status: program.status,
           usefulLinks: program.usefulLinks,
+          certificateEnabled: program.certificateEnabled,
+          certificateTitleEn: program.certificateTitleEn,
+          certificateTitleFa: program.certificateTitleFa,
+          certificateHours: program.certificateHours,
         },
       });
       await loadList();
@@ -401,6 +409,67 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
             placeholder="Short summary shown on the student dashboard"
           />
         </Field>
+
+        <div className="lg:col-span-2 flex flex-col gap-4 rounded border border-surface/80 bg-surface/10 p-4">
+          <label className="flex items-center gap-3 font-dm text-sm text-cream">
+            <input
+              type="checkbox"
+              checked={program.certificateEnabled}
+              onChange={(e) =>
+                setProgram((p) => ({ ...p, certificateEnabled: e.target.checked }))
+              }
+              className="size-4 accent-orange"
+            />
+            Issue completion certificate for this program
+          </label>
+          {program.certificateEnabled && (
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Certificate title (English)">
+                <input
+                  value={program.certificateTitleEn ?? ""}
+                  onChange={(e) =>
+                    setProgram((p) => ({
+                      ...p,
+                      certificateTitleEn: e.target.value || null,
+                    }))
+                  }
+                  className="form-field"
+                  placeholder={program.title || "Same as program title"}
+                />
+              </Field>
+              <Field label="Certificate title (Farsi)">
+                <input
+                  value={program.certificateTitleFa ?? ""}
+                  onChange={(e) =>
+                    setProgram((p) => ({
+                      ...p,
+                      certificateTitleFa: e.target.value || null,
+                    }))
+                  }
+                  className="form-field"
+                  placeholder={program.title || "Same as program title"}
+                />
+              </Field>
+              <Field label="Hours override (optional)" className="md:col-span-2">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={program.certificateHours ?? ""}
+                  onChange={(e) => {
+                    const raw = e.target.value.trim();
+                    setProgram((p) => ({
+                      ...p,
+                      certificateHours: raw ? Number(raw) : null,
+                    }));
+                  }}
+                  className="form-field max-w-xs"
+                  placeholder="Auto from lesson durations"
+                />
+              </Field>
+            </div>
+          )}
+        </div>
 
         <div className="lg:col-span-2 flex flex-col gap-3">
           <span className="font-mono text-[10px] uppercase tracking-widest text-cream/45">

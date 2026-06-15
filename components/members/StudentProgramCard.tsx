@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import StudentCertificateBadge from "@/components/members/StudentCertificateBadge";
 
 interface StudentProgramCardProps {
   href?: string;
@@ -15,6 +16,8 @@ interface StudentProgramCardProps {
   progressLabel: string;
   lessonsLabel: string;
   openLabel: string;
+  certificateIncluded?: boolean;
+  certificateIncludedLabel?: string;
 }
 
 function LockIcon() {
@@ -50,6 +53,8 @@ export default function StudentProgramCard({
   progressLabel,
   lessonsLabel,
   openLabel,
+  certificateIncluded = false,
+  certificateIncludedLabel = "",
 }: StudentProgramCardProps) {
   const cardClassName = `student-glass-strong group flex h-full flex-col overflow-hidden rounded-2xl transition-colors ${
     locked
@@ -86,6 +91,14 @@ export default function StudentProgramCard({
             </div>
           </div>
         )}
+        {certificateIncluded && !locked && (
+          <div className="absolute start-3 top-3 z-10">
+            <StudentCertificateBadge
+              label={certificateIncludedLabel}
+              variant="cover"
+            />
+          </div>
+        )}
         <div className="absolute bottom-3 start-3 end-3">
           <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
             <div
@@ -108,6 +121,11 @@ export default function StudentProgramCard({
           >
             {title}
           </h3>
+          {certificateIncluded && (
+            <div className="mt-2 sm:hidden">
+              <StudentCertificateBadge label={certificateIncludedLabel} />
+            </div>
+          )}
           <p className="mt-2 line-clamp-2 flex-1 font-dm text-sm leading-relaxed text-cream/60">
             {description || "\u00a0"}
           </p>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { completeLessonCertificateFlow } from "@/lib/members/certificate-store";
 import { submitQuizAttempt } from "@/lib/members/quiz-store";
 import {
   getStudentLesson,
@@ -65,11 +66,25 @@ export async function POST(request: Request) {
       answers
     );
 
+    let certificate = null;
+    let programCompleted = false;
+    let certificateEnabled = false;
+
     if (result.passed) {
       await upsertLessonProgress(student.user.id, lessonId, { completed: true });
+      const flow = await completeLessonCertificateFlow(student.user.id, lessonId);
+      certificate = flow.certificate;
+      programCompleted = flow.programCompleted;
+      certificateEnabled = flow.certificateEnabled;
     }
 
-    return NextResponse.json({ ok: true, result });
+    return NextResponse.json({
+      ok: true,
+      result,
+      certificate,
+      programCompleted,
+      certificateEnabled,
+    });
   } catch (error) {
     console.error("[members/quiz]", error);
     return NextResponse.json({ error: SERVER_ERROR_MESSAGE }, { status: 500 });
