@@ -42,6 +42,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "This lesson is not a quiz." }, { status: 400 });
     }
 
+    if (lessonData.program.comingSoon) {
+      return NextResponse.json(
+        { error: "Course content is not available yet." },
+        { status: 403 }
+      );
+    }
+
     const completedIds = await getCompletedLessonIds(
       student.user.id,
       lessonData.lessons.map((lesson) => lesson.id)

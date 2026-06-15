@@ -23,6 +23,7 @@ export interface MemberProgramRow {
   certificate_title_en?: string | null;
   certificate_title_fa?: string | null;
   certificate_hours?: number | string | null;
+  coming_soon?: boolean | null;
   created_at: string;
   updated_at: string;
 }
@@ -125,6 +126,7 @@ export function memberProgramRowToProgram(row: MemberProgramRow): MemberProgram 
       certificateHours != null && Number.isFinite(certificateHours)
         ? certificateHours
         : null,
+    comingSoon: Boolean(row.coming_soon),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

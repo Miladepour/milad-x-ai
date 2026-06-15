@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import StudentAccessEnded from "@/components/members/StudentAccessEnded";
 import LessonContent from "@/components/members/LessonContent";
 import LessonLocked from "@/components/members/LessonLocked";
+import ProgramContentLocked from "@/components/members/ProgramContentLocked";
 import LessonMarkComplete from "@/components/members/LessonMarkComplete";
 import LessonPlayer from "@/components/members/LessonPlayer";
 import LessonQuizPlayer from "@/components/members/LessonQuizPlayer";
@@ -68,6 +69,20 @@ export default async function LearnLessonPage({
     data.lessons.map((lesson) => lesson.id)
   );
   const unlock = isLessonUnlocked(data.lessons, data.lesson.id, completedIds);
+
+  if (data.program.comingSoon) {
+    return (
+      <ProgramContentLocked
+        locale={locale}
+        programSlug={params.programSlug}
+        labels={{
+          title: t.memberPortal.programComingSoonTitle,
+          body: t.memberPortal.programComingSoonBody,
+          backToProgram: t.memberPortal.lessonLockedBackToProgram,
+        }}
+      />
+    );
+  }
 
   if (!unlock.unlocked && unlock.previousLesson) {
     return (

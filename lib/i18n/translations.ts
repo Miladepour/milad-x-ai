@@ -371,6 +371,10 @@ export const translations = {
       noExpiredPrograms: "No expired programs.",
       expiredOn: "Expired on",
       programLocked: "Access ended",
+      programComingSoonTitle: "Coming soon",
+      programComingSoonBody:
+        "You are enrolled in this program. Course videos and materials will be uploaded here after the live online session.",
+      programComingSoonShort: "Coming soon",
       accessUntil: "Access until",
       noExpiry: "No expiry",
       progress: "Progress",
@@ -941,6 +945,10 @@ export const translations = {
       noExpiredPrograms: "برنامه منقضی‌شده‌ای وجود ندارد.",
       expiredOn: "انقضا در",
       programLocked: "دسترسی پایان یافت",
+      programComingSoonTitle: "به زودی",
+      programComingSoonBody:
+        "شما در این برنامه ثبت‌نام کرده‌اید. ویدیوها و مطالب دوره پس از جلسه آنلاین زنده اینجا بارگذاری می‌شوند.",
+      programComingSoonShort: "به زودی",
       accessUntil: "دسترسی تا",
       noExpiry: "نامحدود",
       progress: "پیشرفت",

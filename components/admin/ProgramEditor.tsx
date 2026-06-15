@@ -59,6 +59,7 @@ const emptyProgram = (): Omit<MemberProgram, "id" | "createdAt" | "updatedAt"> &
   certificateTitleEn: null,
   certificateTitleFa: null,
   certificateHours: null,
+  comingSoon: true,
 });
 
 const LESSON_TYPE_OPTIONS: Array<{ type: LessonType; label: string; hint: string }> = [
@@ -139,6 +140,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
           certificateTitleEn: program.certificateTitleEn,
           certificateTitleFa: program.certificateTitleFa,
           certificateHours: program.certificateHours,
+          comingSoon: program.comingSoon,
         },
       });
       await loadList();
@@ -266,6 +268,32 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
     onStatus("Lesson deleted.");
   }
 
+  async function removeProgram(programId: string, title: string) {
+    if (
+      !confirm(
+        `Delete "${title}" permanently?\n\nThis removes all lessons, enrollments, student progress, and certificates for this program. This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+    setLoading(true);
+    onStatus("Deleting program…");
+    try {
+      await membersRequest("delete-program", { programId });
+      await loadList();
+      if (program.id === programId) {
+        setProgram(emptyProgram());
+        setLessons([]);
+        setView("list");
+      }
+      onStatus("Program deleted.");
+    } catch (err) {
+      onStatus(err instanceof Error ? err.message : "Delete failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function updateLink(index: number, patch: Partial<UsefulLink>) {
     setProgram((p) => {
       const links = [...p.usefulLinks];
@@ -308,16 +336,27 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
                   <p className="font-dm text-cream">{p.title}</p>
                   <p className="font-mono text-[10px] uppercase tracking-widest text-cream/50">
                     {p.slug} · {p.status}
+                    {p.comingSoon ? " · coming soon" : ""}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={() => openProgram(p.id)}
-                  className="border border-surface px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-cream hover:border-orange hover:text-orange"
-                >
-                  Edit
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => openProgram(p.id)}
+                    className="border border-surface px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-cream hover:border-orange hover:text-orange"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => removeProgram(p.id, p.title)}
+                    className="border border-red-500/40 px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-red-300 hover:border-red-400 hover:text-red-200"
+                  >
+                    Delete
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -377,6 +416,26 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
             <option value="published">Published</option>
           </select>
         </Field>
+
+        <div className="lg:col-span-2 rounded border border-surface/80 bg-surface/10 p-4">
+          <label className="flex items-start gap-3 font-dm text-sm text-cream">
+            <input
+              type="checkbox"
+              checked={program.comingSoon}
+              onChange={(e) =>
+                setProgram((p) => ({ ...p, comingSoon: e.target.checked }))
+              }
+              className="mt-1"
+            />
+            <span>
+              <span className="font-semibold text-orange">Coming soon</span>
+              <span className="mt-1 block text-cream/65">
+                Enrolled students can see this program on their dashboard, but all
+                lessons stay locked until you turn this off and upload materials.
+              </span>
+            </span>
+          </label>
+        </div>
 
         <Field label="Sort order">
           <input
@@ -528,6 +587,17 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
         >
           Save program
         </button>
+
+        {program.id ? (
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => removeProgram(program.id!, program.title)}
+            className="lg:col-span-2 border border-red-500/40 px-5 py-3 font-mono text-xs uppercase tracking-widest text-red-300 hover:border-red-400 hover:text-red-200"
+          >
+            Delete program
+          </button>
+        ) : null}
       </form>
 
       {program.id && (

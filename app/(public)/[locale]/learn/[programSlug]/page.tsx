@@ -94,10 +94,22 @@ export default async function LearnProgramPage({
 
   const programCompleted = data.progressPercent === 100;
   const showCertificateCta = Boolean(certificate);
+  const contentLocked = data.program.comingSoon;
 
   return (
     <div className="flex flex-col gap-5 pb-10 sm:gap-6">
-      {programCompleted && data.program.certificateEnabled && (
+      {contentLocked && (
+        <StudentGlassCard className="border border-orange/25 bg-orange/5">
+          <h2 className="font-dm text-lg font-semibold text-orange sm:text-xl">
+            {t.memberPortal.programComingSoonTitle}
+          </h2>
+          <p className="mt-2 font-dm text-sm leading-relaxed text-cream/70">
+            {t.memberPortal.programComingSoonBody}
+          </p>
+        </StudentGlassCard>
+      )}
+
+      {programCompleted && data.program.certificateEnabled && !contentLocked && (
         <StudentProgramCompletionBanner
           title={t.memberPortal.programCompletedTitle}
           body={
@@ -176,7 +188,7 @@ export default async function LearnProgramPage({
         <ul className="mt-3 space-y-2">
           {sortedLessons.map((lesson, index) => {
             const unlock = unlockMap.get(lesson.id);
-            const locked = !unlock?.unlocked;
+            const locked = contentLocked || !unlock?.unlocked;
             const completed = completedIds.has(lesson.id);
 
             return (
@@ -188,7 +200,11 @@ export default async function LearnProgramPage({
                   description={resolveLessonBody(lesson, internal)}
                   openLabel={t.memberPortal.openLesson}
                   locked={locked}
-                  lockedLabel={t.memberPortal.lessonLockedTitle}
+                  lockedLabel={
+                    contentLocked
+                      ? t.memberPortal.programComingSoonShort
+                      : t.memberPortal.lessonLockedTitle
+                  }
                   completed={completed}
                   completedLabel={t.memberPortal.completed}
                   lessonType={lesson.lessonType}

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { completeLessonCertificateFlow } from "@/lib/members/certificate-store";
-import { upsertLessonProgress } from "@/lib/members/store";
+import { isLessonContentLockedForStudent, upsertLessonProgress } from "@/lib/members/store";
 import { SERVER_ERROR_MESSAGE } from "@/lib/security/api-errors";
 import { getStudentUser } from "@/lib/supabase/require-student";
 
@@ -15,6 +15,13 @@ export async function POST(request: Request) {
     const lessonId = String(body.lessonId ?? "");
     if (!lessonId) {
       return NextResponse.json({ error: "lessonId required" }, { status: 400 });
+    }
+
+    if (await isLessonContentLockedForStudent(student.user.id, lessonId)) {
+      return NextResponse.json(
+        { error: "Course content is not available yet." },
+        { status: 403 }
+      );
     }
 
     const progress = await upsertLessonProgress(student.user.id, lessonId, {

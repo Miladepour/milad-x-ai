@@ -140,6 +140,7 @@ export async function upsertProgramAdmin(
       payload.certificateHours != null && payload.certificateHours > 0
         ? payload.certificateHours
         : null,
+    coming_soon: Boolean(payload.comingSoon),
   };
 
   if (payload.id) {
@@ -227,6 +228,52 @@ export async function deleteLessonAdmin(lessonId: string): Promise<void> {
   const supabase = createAdminDbClient();
   const { error } = await supabase.from("program_lessons").delete().eq("id", lessonId);
   if (error) throw new Error(error.message);
+}
+
+export async function deleteProgramAdmin(programId: string): Promise<void> {
+  const supabase = createAdminDbClient();
+  const { error } = await supabase.from("member_programs").delete().eq("id", programId);
+  if (error) throw new Error(error.message);
+}
+
+export async function isLessonContentLockedForStudent(
+  userId: string,
+  lessonId: string
+): Promise<boolean> {
+  const supabase = createClient();
+
+  const { data: lessonRow, error: lessonError } = await supabase
+    .from("program_lessons")
+    .select("program_id")
+    .eq("id", lessonId)
+    .maybeSingle();
+
+  if (lessonError) throw new Error(lessonError.message);
+  if (!lessonRow) return true;
+
+  const [{ data: enrollmentRow, error: enrollmentError }, { data: programRow, error: programError }] =
+    await Promise.all([
+      supabase
+        .from("program_enrollments")
+        .select("*")
+        .eq("student_id", userId)
+        .eq("program_id", lessonRow.program_id)
+        .maybeSingle(),
+      supabase
+        .from("member_programs")
+        .select("coming_soon")
+        .eq("id", lessonRow.program_id)
+        .maybeSingle(),
+    ]);
+
+  if (enrollmentError) throw new Error(enrollmentError.message);
+  if (programError) throw new Error(programError.message);
+  if (!enrollmentRow || !programRow) return true;
+
+  const enrollment = enrollmentRowToEnrollment(enrollmentRow as ProgramEnrollmentRow);
+  if (!isEnrollmentActive(enrollment)) return true;
+
+  return Boolean(programRow.coming_soon);
 }
 
 async function buildEnrollmentProgressContext(

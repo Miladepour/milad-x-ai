@@ -13,6 +13,7 @@ import {
   addEnrollmentAdmin,
   deleteAnnouncementAdmin,
   deleteLessonAdmin,
+  deleteProgramAdmin,
   getProgramAdmin,
   getStudentAdmin,
   inviteStudentAdmin,
@@ -190,6 +191,15 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "lessonId required" }, { status: 400 });
       }
       await deleteLessonAdmin(lessonId);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (action === "delete-program") {
+      const programId = String(body.programId ?? "");
+      if (!programId) {
+        return NextResponse.json({ error: "programId required" }, { status: 400 });
+      }
+      await deleteProgramAdmin(programId);
       return NextResponse.json({ ok: true });
     }
 

@@ -25,6 +25,8 @@ export interface MemberProgram {
   certificateTitleFa: string | null;
   /** Admin override; when null, hours are summed from published lesson durations */
   certificateHours: number | null;
+  /** When true, enrolled students see the program but lesson content stays locked. */
+  comingSoon: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -202,6 +204,7 @@ export interface MemberProgramPayload {
   certificateTitleEn?: string | null;
   certificateTitleFa?: string | null;
   certificateHours?: number | null;
+  comingSoon?: boolean;
 }
 
 export interface ProgramLessonPayload {
