@@ -46,6 +46,11 @@ export default function CourseDetailHero({
   coursesHref,
   detail,
 }: CourseDetailHeroProps) {
+  const tutorNames = [
+    course.meta.instructor,
+    ...(course.meta.tutors?.map((t) => t.name[lang]) ?? []),
+  ];
+
   return (
     <header
       className="border-b border-surface"
@@ -90,7 +95,7 @@ export default function CourseDetailHero({
         <ul className="flex flex-wrap gap-x-6 gap-y-2 font-dm text-sm text-cream/80">
           <li>
             {detail.createdBy}{" "}
-            <span className="text-cream font-medium">{course.meta.instructor}</span>
+            <span className="text-cream font-medium">{tutorNames.join(", ")}</span>
           </li>
           <li>
             {detail.workshopDate}:{" "}

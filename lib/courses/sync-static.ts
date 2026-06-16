@@ -21,6 +21,7 @@ export function mergeWithStaticCatalog(course: Course, locale: Locale): Course {
       ...course.meta,
       sessions: staticCourse.meta.sessions,
       applyUrl: staticCourse.meta.applyUrl ?? course.meta.applyUrl,
+      tutors: course.meta.tutors ?? staticCourse.meta.tutors,
     },
   };
 }

@@ -1,5 +1,5 @@
 import type { CourseAdminPayload, CourseLocaleContent, CourseLocaleInput } from "./cms-types";
-import type { CourseStatus } from "./types";
+import type { CourseStatus, TutorLocale, TutorProfile } from "./types";
 
 const STATUSES: CourseStatus[] = ["Live", "Coming Soon", "Closed"];
 
@@ -14,13 +14,68 @@ function requireString(value: unknown, field: string): string {
   return value.trim();
 }
 
+function parseTutorParagraphs(value: unknown, field: string): string[] {
+  if (Array.isArray(value)) {
+    const parts = value.map((v) => String(v).trim()).filter(Boolean);
+    if (parts.length === 0) throw new Error(`${field} must contain at least one paragraph`);
+    return parts;
+  }
+  if (typeof value === "string") {
+    const parts = value.split("\n").map((v) => v.trim()).filter(Boolean);
+    if (parts.length === 0) throw new Error(`${field} must contain at least one paragraph`);
+    return parts;
+  }
+  throw new Error(`${field} must be an array of strings (or a string)`);
+}
+
+function parseTutorProfile(value: unknown, label: string, tutorIndex: number): TutorProfile {
+  if (!isRecord(value)) throw new Error(`${label} meta.tutors[${tutorIndex}] invalid`);
+
+  const portraitSrc = requireString(
+    value.portraitSrc,
+    `${label} meta.tutors[${tutorIndex}].portraitSrc`
+  );
+
+  if (!isRecord(value.name)) {
+    throw new Error(`${label} meta.tutors[${tutorIndex}].name must be an object`);
+  }
+  if (!isRecord(value.about)) {
+    throw new Error(`${label} meta.tutors[${tutorIndex}].about must be an object`);
+  }
+
+  const name = value.name as Record<TutorLocale, unknown>;
+  const about = value.about as Record<TutorLocale, unknown>;
+
+  const parsedName: TutorProfile["name"] = {
+    EN: requireString(name.EN, `${label} meta.tutors[${tutorIndex}].name.EN`),
+    FA: requireString(name.FA, `${label} meta.tutors[${tutorIndex}].name.FA`),
+  };
+
+  const parsedAbout: TutorProfile["about"] = {
+    EN: parseTutorParagraphs(
+      about.EN,
+      `${label} meta.tutors[${tutorIndex}].about.EN`
+    ),
+    FA: parseTutorParagraphs(
+      about.FA,
+      `${label} meta.tutors[${tutorIndex}].about.FA`
+    ),
+  };
+
+  return { name: parsedName, portraitSrc, about: parsedAbout };
+}
+
 function parseLocaleContent(value: unknown, label: string): CourseLocaleContent {
   if (!isRecord(value)) throw new Error(`${label}: content must be an object`);
   const meta = value.meta;
   if (!isRecord(meta)) throw new Error(`${label}: meta is required`);
 
   const sessions = Array.isArray(meta.sessions) ? meta.sessions : [];
-  const parsedMeta = {
+  const tutors = Array.isArray(meta.tutors)
+    ? meta.tutors.map((tutor, i) => parseTutorProfile(tutor, label, i))
+    : undefined;
+
+  const parsedMeta: CourseLocaleContent["meta"] = {
     instructor: requireString(meta.instructor, `${label} meta.instructor`),
     format: requireString(meta.format, `${label} meta.format`),
     totalHours: requireString(meta.totalHours, `${label} meta.totalHours`),
@@ -35,6 +90,7 @@ function parseLocaleContent(value: unknown, label: string): CourseLocaleContent 
         durationHours: Number(s.durationHours) || 0,
       };
     }),
+    ...(tutors && tutors.length > 0 ? { tutors } : {}),
   };
 
   const includes = Array.isArray(value.includes) ? value.includes : [];

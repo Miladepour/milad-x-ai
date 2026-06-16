@@ -1,5 +1,13 @@
 export type CourseStatus = "Live" | "Coming Soon" | "Closed";
 
+export type TutorLocale = "EN" | "FA";
+
+export interface TutorProfile {
+  name: Record<TutorLocale, string>;
+  portraitSrc: string;
+  about: Record<TutorLocale, string[]>;
+}
+
 export type CourseBlock =
   | { type: "paragraph"; text: string }
   | { type: "heading"; level: 2 | 3; text: string }
@@ -34,6 +42,8 @@ export interface CourseSessionSchedule {
 
 export interface CourseMeta {
   instructor: string;
+  /** Optional additional tutors/guest instructors (besides primary instructor). */
+  tutors?: TutorProfile[];
   format: string;
   totalHours: string;
   partsCount: number;

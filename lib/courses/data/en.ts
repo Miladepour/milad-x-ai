@@ -13,6 +13,22 @@ export const promptToContentCourseEn: Course = {
   priceUsd: 75,
   meta: {
     instructor: "Milad",
+    tutors: [
+      {
+        name: { EN: "Sadegh Grafer", FA: "صادق گرافر" },
+        portraitSrc: "/images/Sadegh portrait.jpeg",
+        about: {
+          FA: [
+            "من صادق گرافر هستم؛ آرت دایرکتور، طراح گرافیک و تولیدکننده محتوای بصری. بیش از ۲۰ ساله که در حوزه طراحی، تبلیغات و برندینگ فعالیت می‌کنم. در سال‌های اخیر تمرکز من روی ترکیب طراحی و هوش مصنوعی بوده؛ از تصویرسازی و ویدیوسازی گرفته تا تولید محتوای تبلیغاتی و شبکه‌های اجتماعی. در این ورکشاپ تجربه عملی خودم را از استفاده حرفه‌ای از AI در تولید محتوا و پروژه‌های واقعی با شما به اشتراک میذارم.",
+          ],
+          EN: [
+            "My name is Sadegh Grafer. I am an Art Director, Graphic Designer, and Visual Content Creator.",
+            "I have been working in design, advertising, and branding for over 20 years. In recent years, my focus has been on combining design with artificial intelligence, from image and video creation to advertising content and social media production.",
+            "In this workshop, I will share my practical experience of using AI professionally in content creation and real world projects.",
+          ],
+        },
+      },
+    ],
     format: "Live online workshop",
     totalHours: "6 hours",
     partsCount: 2,
@@ -147,84 +163,84 @@ export const promptToContentCourseEn: Course = {
           type: "items",
           items: [
             {
-              title: "1. Principles of AI content creation",
+              title: "1. Principles of Content Creation with Artificial Intelligence",
               description:
-                "The full path from initial idea to final output for social, ads, and personal brand.",
+                "Understanding AI models, how they work, and how they can be used in real world projects.",
             },
             {
-              title: "2. Prompt engineering for image & video",
+              title: "2. Principles of Prompt Engineering",
               description:
-                "Write precise, controllable, professional prompts for high-quality images and video.",
+                "Learning the correct structure of prompt writing and how to communicate professionally with AI models.",
             },
             {
-              title: "3. Content automation with Claude AI",
+              title: "3. Prompting with ChatGPT and Claude",
               description:
-                "Use Claude for planning, ideation, scripts, prompts, workflow management, and speed.",
+                "Learning the right way to create prompts with ChatGPT and Claude for analysis, idea generation, project management, and workflow optimisation.",
             },
             {
-              title: "4. AI personal portrait photography",
+              title: "4. Introduction to Higgsfield and Its Features",
               description:
-                "Professional portraits for personal brand, profiles, LinkedIn, Instagram, covers, and ads.",
+                "Creating advertising, cinematic, and social media visuals in Higgsfield using the latest AI image generation models such as ChatGPT Image, Nano Banana, and other new image generation models.",
             },
             {
-              title: "5. AI product photography",
+              title: "5. Professional Content Design for Social Media",
               description:
-                "Luxury, professional product shots without studio, camera, or photo crew.",
+                "Creating YouTube thumbnails, post covers, stories, reels, shorts, and advertising content for brands, companies, and personal pages based on professional social media standards.",
             },
             {
-              title: "6. UGC content creation",
+              title: "6. Cinematic Visual Design",
               description:
-                "UGC-style promotional content for brands, products, and social campaigns.",
+                "Understanding camera angles, lighting, composition, cinematic framing, visual atmosphere, and art direction in AI content creation.",
             },
             {
-              title: "7. CGI images for advertising",
+              title: "7. Character Design and Pre Production",
               description:
-                "Creative, viral-ready concepts for ads, campaigns, and brand content.",
+                "Creating moodboards, character maps, character sheets, and storyboards for image and video projects.",
             },
             {
-              title: "8. Image quality enhancement",
+              title: "8. Professional Use of Reference Images",
               description:
-                "Upscale, fix lighting, improve detail, and prepare images for publish.",
+                "Learning how to use references to control style, composition, and consistency in designs.",
             },
             {
-              title: "9. YouTube thumbnail design",
+              title: "9. Image Upscaling",
               description:
-                "Click-worthy covers for YouTube, Reels, Shorts, and educational content.",
+                "Improving image quality, enhancing details, and preparing professional outputs with Higgsfield.",
             },
             {
-              title: "10. Promotional banner design",
+              title: "10. AI Video Production",
               description:
-                "Professional banners for ads, websites, social, and digital campaigns.",
+                "Creating cinematic videos, motion design, and AI commercial videos with Seedance, Veo, and Kling.",
             },
             {
-              title: "11. Multi-layer composite images",
+              title: "11. Creating Videos with Moodboards and Character Sheets",
               description:
-                "Combine subject, product, background, light, text, and graphics for pro ads.",
+                "Creating professional videos using storyboards, character sheets, and moodboards in Seedance.",
             },
             {
-              title: "12. AI video production fundamentals",
+              title: "12. AI Avatar and Lip Sync",
               description:
-                "Image-to-video basics, motion, camera angle, scene, lighting, and final output.",
+                "Creating avatars, generating voice, and synchronising lips and visuals with ElevenLabs, HeyGen, and Minimax.",
             },
             {
-              title: "13. Product video creation",
+              title: "13. Personal Portraits and Modelling",
               description:
-                "Short, professional brand videos from a single product photo.",
+                "Learning how to create personal portraits and generate models.",
             },
             {
-              title: "14. Video with Seedance 2.0",
+              title: "14. Advertising Content and UGC Design for Brands and Products",
               description:
-                "Realistic, cinematic, promotional video with Seedance 2.0.",
+                "Creating advertising content, UGC, visual campaigns, and product introduction videos without the need for a studio or filming.",
             },
             {
-              title: "15. Video with Kling",
+              title: "15. AI Agents and MCP",
               description:
-                "Kling workflows with better control of motion, camera, scene, and result.",
+                "Understanding agents and MCPs, and connecting AI tools to different services and systems.",
             },
             {
-              title: "16. Social-ready export",
+              title: "16. Preparing Outputs for Social Media with CapCut",
               description:
-                "Prepare content for Instagram, YouTube, ads, and commercial use.",
+                "Final preparation of content for Instagram, YouTube, and advertising campaigns.",
             },
           ],
         },

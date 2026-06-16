@@ -22,7 +22,7 @@ import CourseSectionCard from "./CourseSectionCard";
 import CourseSectionNav, { type CourseSectionNavLink } from "./CourseSectionNav";
 import CourseStructureAccordion from "./CourseStructureAccordion";
 import CourseWhatYouLearn from "./CourseWhatYouLearn";
-import InstructorAboutSection from "@/components/shared/InstructorAboutSection";
+import CourseTutorsSection from "@/components/courses/CourseTutorsSection";
 
 function resolveCourseCta(course: Course, waitlistHref: string) {
   const applyUrl = getCourseApplyUrl(course);
@@ -106,6 +106,12 @@ export default function CourseDetail({ course }: CourseDetailProps) {
                 priceLabel: p.priceLabel,
                 sidebarHighlights: d.sidebarHighlights,
                 allCourses: d.allCourses,
+                registrationDeadline: d.registrationDeadline,
+                registrationClosed: d.registrationClosed,
+                countdownDays: d.countdownDays,
+                countdownHours: d.countdownHours,
+                countdownMinutes: d.countdownMinutes,
+                countdownSeconds: d.countdownSeconds,
                 insights: p.insights,
               }}
             />
@@ -122,7 +128,7 @@ export default function CourseDetail({ course }: CourseDetailProps) {
               showLessLabel={d.showLess}
             />
 
-            <InstructorAboutSection title={d.courseTutor} />
+            <CourseTutorsSection course={course} title={d.courseTutor} lang={lang} />
 
             <CourseStructureAccordion
               id="structure"

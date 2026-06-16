@@ -1,8 +1,13 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import type { Course } from "@/lib/courses/types";
 import { formatCoursePrice } from "@/lib/courses";
+import { getRegistrationDeadlineMs } from "@/lib/courses/session-datetime";
 import CourseIranTelegramNote from "./CourseIranTelegramNote";
+import RegistrationDeadlineCountdown from "./RegistrationDeadlineCountdown";
 import type { Locale } from "@/lib/i18n/translations";
 import { toLocaleDigits } from "@/lib/i18n/digits";
 
@@ -24,6 +29,12 @@ interface CoursePurchaseSidebarProps {
     priceLabel: string;
     sidebarHighlights: string;
     allCourses: string;
+    registrationDeadline: string;
+    registrationClosed: string;
+    countdownDays: string;
+    countdownHours: string;
+    countdownMinutes: string;
+    countdownSeconds: string;
     insights: {
       audienceTitle: string;
       topicsTitle: string;
@@ -41,6 +52,39 @@ export default function CoursePurchaseSidebar({
   labels,
 }: CoursePurchaseSidebarProps) {
   const topicsCount = toLocaleDigits(course.insights.topicsCount, lang);
+
+  const session1 = course.meta.sessions[0];
+  const finalDeadlineMs = useMemo(() => {
+    if (course.status !== "Live") return null;
+    if (!session1) return null;
+
+    return getRegistrationDeadlineMs(
+      session1.date,
+      session1.time,
+      course.meta.timezone
+    );
+  }, [course.status, course.meta.timezone, session1?.date, session1?.time]);
+
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (finalDeadlineMs == null) return;
+
+    const id = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [finalDeadlineMs]);
+
+  const registrationClosed =
+    finalDeadlineMs != null ? nowMs >= finalDeadlineMs : false;
+
+  const countdownLabels = {
+    title: labels.registrationDeadline,
+    closed: labels.registrationClosed,
+    days: labels.countdownDays,
+    hours: labels.countdownHours,
+    minutes: labels.countdownMinutes,
+    seconds: labels.countdownSeconds,
+  };
 
   return (
     <aside className="lg:sticky lg:top-28 h-fit">
@@ -87,7 +131,22 @@ export default function CoursePurchaseSidebar({
             )}
           </div>
 
-          {ctaExternal ? (
+          {finalDeadlineMs != null && course.status === "Live" && (
+            <RegistrationDeadlineCountdown
+              deadlineMs={finalDeadlineMs}
+              lang={lang}
+              labels={countdownLabels}
+            />
+          )}
+
+          {registrationClosed ? (
+            <div
+              className={`${btnPrimary} opacity-60 cursor-not-allowed pointer-events-none`}
+              aria-disabled="true"
+            >
+              {labels.registrationClosed}
+            </div>
+          ) : ctaExternal ? (
             <a
               href={ctaHref}
               target="_blank"
