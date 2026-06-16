@@ -31,7 +31,7 @@ function TutorProfile({
   portraitSrc: string;
   heading: ReactNode;
   headingText: string;
-  paragraphs: string[];
+  paragraphs: readonly string[];
   headingLevel?: "h2" | "h3";
 }) {
   const HeadingTag = headingLevel;
