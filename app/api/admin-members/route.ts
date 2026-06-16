@@ -14,6 +14,7 @@ import {
   deleteAnnouncementAdmin,
   deleteLessonAdmin,
   deleteProgramAdmin,
+  deleteStudentAdmin,
   getProgramAdmin,
   getStudentAdmin,
   inviteStudentAdmin,
@@ -21,6 +22,7 @@ import {
   listEnrollmentsAdmin,
   listProgramsAdmin,
   reorderLessonsAdmin,
+  resendStudentInviteAdmin,
   resolveStudentEmailRecipients,
   syncExpiredEnrollments,
   type StudentEmailAudience,
@@ -340,6 +342,44 @@ export async function POST(request: Request) {
       });
 
       return NextResponse.json({ ok: true, student, enrollment });
+    }
+
+    if (action === "resend-student-invite") {
+      const studentId = String(body.studentId ?? "").trim();
+      const programId = String(body.programId ?? "").trim() || null;
+      if (!studentId) {
+        return NextResponse.json({ error: "studentId required" }, { status: 400 });
+      }
+
+      const { student, enrollment, inviteLink } = await resendStudentInviteAdmin(
+        studentId,
+        programId
+      );
+
+      if (!enrollment.program) {
+        return NextResponse.json({ error: "Program not found" }, { status: 404 });
+      }
+
+      await sendInviteEmail({
+        to: student.email,
+        fullName: student.fullName,
+        programTitle: enrollment.program.title,
+        accessStartsAt: enrollment.accessStartsAt,
+        accessEndsAt: enrollment.accessEndsAt,
+        inviteLink,
+        locale: student.locale,
+      });
+
+      return NextResponse.json({ ok: true, student, enrollment });
+    }
+
+    if (action === "delete-student") {
+      const studentId = String(body.studentId ?? "").trim();
+      if (!studentId) {
+        return NextResponse.json({ error: "studentId required" }, { status: 400 });
+      }
+      await deleteStudentAdmin(studentId);
+      return NextResponse.json({ ok: true });
     }
 
     if (action === "list-announcements") {

@@ -22,6 +22,7 @@ interface StudentProfilePanelProps {
   onClose: () => void;
   onStatus: (message: string) => void;
   onUpdated: () => Promise<void>;
+  onDeleted?: () => void;
 }
 
 const emptyEnrollment = () => ({
@@ -39,10 +40,12 @@ export default function StudentProfilePanel({
   onClose,
   onStatus,
   onUpdated,
+  onDeleted,
 }: StudentProfilePanelProps) {
   const [data, setData] = useState<StudentWithEnrollments | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [resendProgramId, setResendProgramId] = useState("");
   const [profileForm, setProfileForm] = useState({
     fullName: "",
     locale: "EN" as "EN" | "FA",
@@ -72,6 +75,12 @@ export default function StudentProfilePanel({
         locale: result.student.profile.locale,
         phone: result.student.profile.phone ?? "",
         notes: result.student.profile.notes ?? "",
+      });
+      setResendProgramId((current) => {
+        if (current && result.student.enrollments.some((item) => item.programId === current)) {
+          return current;
+        }
+        return result.student.enrollments[0]?.programId ?? "";
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Could not load student";
@@ -190,6 +199,43 @@ export default function StudentProfilePanel({
     }
   }
 
+  async function handleResendInvite() {
+    if (!data || data.enrollments.length === 0) {
+      onStatus("Add a program enrollment before resending an invite.");
+      return;
+    }
+    onStatus("Sending invite…");
+    try {
+      await membersRequest("resend-student-invite", {
+        studentId,
+        programId: resendProgramId || data.enrollments[0]?.programId,
+      });
+      onStatus("Invite email sent.");
+    } catch (err) {
+      onStatus(err instanceof Error ? err.message : "Could not resend invite");
+    }
+  }
+
+  async function handleDeleteStudent() {
+    if (!data) return;
+    const label = data.profile.fullName || data.profile.email;
+    if (
+      !confirm(
+        `Delete "${label}" permanently?\n\nThis removes their account, enrollments, progress, and certificates. This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+    onStatus("Deleting student…");
+    try {
+      await membersRequest("delete-student", { studentId });
+      onStatus("Student deleted.");
+      onDeleted?.();
+    } catch (err) {
+      onStatus(err instanceof Error ? err.message : "Could not delete student");
+    }
+  }
+
   if (loading) {
     return (
       <div className="border border-surface bg-surface/30 p-8 font-dm text-cream/70">
@@ -239,6 +285,51 @@ export default function StudentProfilePanel({
         >
           Close
         </button>
+      </div>
+
+      <div className="flex flex-col gap-3 border border-white/[0.08] p-4">
+        <p className="font-mono text-xs uppercase tracking-widest text-cream/50">
+          Account actions
+        </p>
+        {data.enrollments.length > 1 && (
+          <label className="grid max-w-md gap-1">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-cream/45">
+              Program for invite email
+            </span>
+            <select
+              value={resendProgramId}
+              onChange={(e) => setResendProgramId(e.target.value)}
+              className="form-field"
+            >
+              {data.enrollments.map((item) => (
+                <option key={item.id} value={item.programId}>
+                  {item.program?.title ?? item.programId}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={handleResendInvite}
+            disabled={data.enrollments.length === 0}
+            className="border border-orange px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-orange hover:bg-orange hover:text-background disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Resend invite
+          </button>
+          <button
+            type="button"
+            onClick={handleDeleteStudent}
+            className="border border-red-400/60 px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-red-300 hover:border-red-300 hover:bg-red-400/10"
+          >
+            Delete student
+          </button>
+        </div>
+        <p className="font-dm text-xs text-cream/50">
+          Resend invite sends a fresh password link. Delete removes the auth account and all
+          student data permanently.
+        </p>
       </div>
 
       <form onSubmit={handleSaveProfile} className="grid gap-4 md:grid-cols-2">

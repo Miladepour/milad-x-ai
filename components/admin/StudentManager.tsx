@@ -197,6 +197,58 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
     }
   }
 
+  function pickInviteProgramId(items: EnrollmentWithDetails[]): string | null {
+    if (items.length === 0) return null;
+    if (filterProgram) {
+      const match = items.find((item) => item.programId === filterProgram);
+      if (match) return match.programId;
+    }
+    return items[0]?.programId ?? null;
+  }
+
+  async function resendInvite(
+    profile: StudentProfile,
+    items: EnrollmentWithDetails[]
+  ) {
+    const programId = pickInviteProgramId(items);
+    if (!programId) {
+      onStatus("This student has no program enrollment to include in the invite email.");
+      return;
+    }
+    onStatus("Sending invite…");
+    try {
+      await membersRequest("resend-student-invite", {
+        studentId: profile.id,
+        programId,
+      });
+      onStatus(`Invite sent to ${profile.email}.`);
+    } catch (err) {
+      onStatus(err instanceof Error ? err.message : "Could not resend invite");
+    }
+  }
+
+  async function deleteStudent(profile: StudentProfile) {
+    const label = profile.fullName || profile.email;
+    if (
+      !confirm(
+        `Delete "${label}" permanently?\n\nThis removes their account, enrollments, progress, and certificates. This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+    onStatus("Deleting student…");
+    try {
+      await membersRequest("delete-student", { studentId: profile.id });
+      if (selectedStudentId === profile.id) {
+        setSelectedStudentId(null);
+      }
+      await load();
+      onStatus("Student deleted.");
+    } catch (err) {
+      onStatus(err instanceof Error ? err.message : "Could not delete student");
+    }
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap gap-2 border-b border-white/[0.08] pb-4">
@@ -359,6 +411,10 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
               onClose={() => setSelectedStudentId(null)}
               onStatus={onStatus}
               onUpdated={load}
+              onDeleted={async () => {
+                setSelectedStudentId(null);
+                await load();
+              }}
             />
           )}
 
@@ -412,13 +468,30 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
                           profile
                         </p>
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedStudentId(profile.id)}
-                        className="shrink-0 rounded-full border border-orange/50 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-orange hover:bg-orange hover:text-background"
-                      >
-                        Open profile
-                      </button>
+                      <div className="flex shrink-0 flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => resendInvite(profile, items)}
+                          disabled={items.length === 0}
+                          className="rounded-full border border-orange/50 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-orange hover:bg-orange hover:text-background disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Resend invite
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedStudentId(profile.id)}
+                          className="rounded-full border border-orange/50 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-orange hover:bg-orange hover:text-background"
+                        >
+                          Open profile
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteStudent(profile)}
+                          className="rounded-full border border-red-400/50 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-red-300 hover:border-red-300 hover:bg-red-400/10"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
 
                     <ul className="flex flex-col gap-2 border-t border-white/[0.06] pt-3">

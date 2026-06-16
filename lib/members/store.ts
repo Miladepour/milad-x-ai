@@ -918,57 +918,69 @@ export async function getCompletedLessonIds(
 // Invite (service role)
 // ---------------------------------------------------------------------------
 
+type StudentAuthLinkType = "invite" | "recovery" | "magiclink";
+
+function studentAuthCallbackUrl(nextPath: string): string {
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
+    "https://www.mxaiacademy.com";
+  return `${siteUrl}/auth/callback?next=${encodeURIComponent(nextPath)}`;
+}
+
+async function generateStudentAuthLink(
+  service: ReturnType<typeof createServiceClient>,
+  options: {
+    email: string;
+    fullName: string;
+    locale: "EN" | "FA";
+    linkOrder: StudentAuthLinkType[];
+  }
+): Promise<{ inviteLink: string; userId: string }> {
+  const urlLocale = internalToUrlLocale(options.locale);
+  const setPasswordPath = accountSetPasswordPath(urlLocale);
+  const learnRedirectPath = learnPath(urlLocale);
+  const email = options.email.trim().toLowerCase();
+  const fullName = options.fullName.trim();
+
+  // generateLink only — do NOT use inviteUserByEmail (that sends a second Supabase email).
+  for (const type of options.linkOrder) {
+    const redirectTo =
+      type === "magiclink"
+        ? studentAuthCallbackUrl(learnRedirectPath)
+        : studentAuthCallbackUrl(setPasswordPath);
+    const { data, error } = await service.auth.admin.generateLink({
+      type,
+      email,
+      options: {
+        redirectTo,
+        data: { full_name: fullName },
+      },
+    } as Parameters<typeof service.auth.admin.generateLink>[0]);
+    if (!error && data?.properties?.action_link && data.user?.id) {
+      return {
+        inviteLink: data.properties.action_link,
+        userId: data.user.id,
+      };
+    }
+  }
+
+  throw new Error("Could not create invite link");
+}
+
 export async function inviteStudentAdmin(
   payload: InviteStudentPayload,
   invitedBy: string
 ): Promise<{ student: StudentProfile; enrollment: ProgramEnrollment; inviteLink: string }> {
   const service = createServiceClient();
   const email = payload.email.trim().toLowerCase();
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-    "https://www.mxaiacademy.com";
-
-  const urlLocale = internalToUrlLocale(payload.locale);
-  const setPasswordPath = accountSetPasswordPath(urlLocale);
-  const learnRedirectPath = learnPath(urlLocale);
-  const authCallbackUrl = (nextPath: string) =>
-    `${siteUrl}/auth/callback?next=${encodeURIComponent(nextPath)}`;
   const fullName = payload.fullName.trim();
 
-  // generateLink only — do NOT use inviteUserByEmail (that sends a second Supabase email).
-  const { data: inviteLinkData, error: inviteLinkError } =
-    await service.auth.admin.generateLink({
-      type: "invite",
-      email,
-      options: {
-        redirectTo: authCallbackUrl(setPasswordPath),
-        data: { full_name: fullName },
-      },
-    });
-
-  let linkData = inviteLinkData;
-  let linkError = inviteLinkError;
-
-  if (linkError || !linkData?.user) {
-    const magic = await service.auth.admin.generateLink({
-      type: "magiclink",
-      email,
-      options: {
-        redirectTo: authCallbackUrl(learnRedirectPath),
-        data: { full_name: fullName },
-      },
-    });
-    linkData = magic.data;
-    linkError = magic.error;
-  }
-
-  if (linkError || !linkData?.user) {
-    throw new Error(linkError?.message ?? "Could not create invite link");
-  }
-
-  const userId = linkData.user.id;
-  const inviteLink =
-    linkData.properties?.action_link ?? `${siteUrl}${setPasswordPath}`;
+  const { inviteLink, userId } = await generateStudentAuthLink(service, {
+    email,
+    fullName,
+    locale: payload.locale === "FA" ? "FA" : "EN",
+    linkOrder: ["invite", "recovery", "magiclink"],
+  });
 
   const accessStartsAt =
     payload.accessStartsAt?.trim() || startOfTodayIso();
@@ -1018,6 +1030,56 @@ export async function inviteStudentAdmin(
     enrollment: enrollmentRowToEnrollment(enrollmentData as ProgramEnrollmentRow),
     inviteLink,
   };
+}
+
+export async function resendStudentInviteAdmin(
+  studentId: string,
+  programId?: string | null
+): Promise<{
+  student: StudentProfile;
+  enrollment: EnrollmentWithDetails;
+  inviteLink: string;
+}> {
+  const student = await getStudentAdmin(studentId);
+  if (!student) throw new Error("Student not found");
+
+  const enrollment =
+    (programId
+      ? student.enrollments.find((item) => item.programId === programId)
+      : student.enrollments[0]) ?? null;
+
+  if (!enrollment?.program) {
+    throw new Error("Student has no program enrollment to include in the invite email");
+  }
+
+  const service = createServiceClient();
+  const { inviteLink } = await generateStudentAuthLink(service, {
+    email: student.profile.email,
+    fullName: student.profile.fullName,
+    locale: student.profile.locale,
+    linkOrder: ["recovery", "invite", "magiclink"],
+  });
+
+  return {
+    student: student.profile,
+    enrollment,
+    inviteLink,
+  };
+}
+
+export async function deleteStudentAdmin(studentId: string): Promise<void> {
+  const service = createServiceClient();
+  const { data: profile, error: profileError } = await service
+    .from("student_profiles")
+    .select("id")
+    .eq("id", studentId)
+    .maybeSingle();
+
+  if (profileError) throw new Error(profileError.message);
+  if (!profile) throw new Error("Student not found");
+
+  const { error } = await service.auth.admin.deleteUser(studentId);
+  if (error) throw new Error(error.message);
 }
 
 export async function syncExpiredEnrollments(): Promise<void> {
