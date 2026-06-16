@@ -22,7 +22,7 @@ import {
   courseSlugs as staticCourseSlugs,
 } from "./data/index";
 
-function useStaticFallback(): boolean {
+function shouldUseStaticFallback(): boolean {
   return !isSupabaseConfigured();
 }
 
@@ -34,7 +34,7 @@ async function withPublicReadFallback<T>(
   query: () => Promise<T>,
   fallback: () => T
 ): Promise<T> {
-  if (useStaticFallback()) return fallback();
+  if (shouldUseStaticFallback()) return fallback();
   return query();
 }
 
