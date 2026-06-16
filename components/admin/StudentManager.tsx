@@ -11,6 +11,7 @@ import type {
   EnrollmentWithDetails,
   MemberProgram,
   PaymentCurrency,
+  StudentInviteCheck,
   StudentProfile,
 } from "@/lib/members/types";
 
@@ -53,6 +54,10 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
     amountPaid: "",
     currency: "USD" as PaymentCurrency,
   });
+  const [duplicatePrompt, setDuplicatePrompt] = useState<StudentInviteCheck | null>(null);
+  const [emailCheck, setEmailCheck] = useState<StudentInviteCheck | null>(null);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const [inviteSending, setInviteSending] = useState(false);
 
   const load = useCallback(async () => {
     const [programsData, enrollmentsData, studentsData] = await Promise.all([
@@ -70,6 +75,39 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
       onStatus(e instanceof Error ? e.message : "Could not load students")
     );
   }, [load, onStatus]);
+
+  useEffect(() => {
+    const email = invite.email.trim();
+    const programId = invite.programId;
+    if (!email || !programId || !email.includes("@")) {
+      setEmailCheck(null);
+      setCheckingEmail(false);
+      return;
+    }
+
+    setCheckingEmail(true);
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const result = (await membersRequest("check-student-invite", {
+            email,
+            programId,
+          })) as { check: StudentInviteCheck };
+          setEmailCheck(result.check);
+        } catch {
+          setEmailCheck(null);
+        } finally {
+          setCheckingEmail(false);
+        }
+      })();
+    }, 400);
+
+    return () => window.clearTimeout(timer);
+  }, [invite.email, invite.programId, membersRequest]);
+
+  useEffect(() => {
+    setDuplicatePrompt(null);
+  }, [invite.email, invite.programId]);
 
   const studentGroups = useMemo(() => {
     const map = new Map<string, StudentGroup>();
@@ -108,39 +146,104 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
 
   const allStudents = students;
 
+  function buildInvitePayload(allowExisting = false) {
+    return {
+      email: invite.email.trim(),
+      fullName: invite.fullName.trim(),
+      phone: invite.phone.trim() || null,
+      notes: invite.notes.trim() || null,
+      locale: invite.locale,
+      programId: invite.programId,
+      accessStartsAt: invite.accessStartsAt,
+      accessEndsAt: invite.accessEndsAt || null,
+      amountPaid: invite.amountPaid ? Number(invite.amountPaid) : null,
+      currency: invite.amountPaid ? invite.currency : null,
+      allowExisting,
+    };
+  }
+
+  async function completeInviteSuccess(message: string) {
+    setInvite((i) => ({
+      ...i,
+      email: "",
+      fullName: "",
+      phone: "",
+      notes: "",
+      amountPaid: "",
+    }));
+    setDuplicatePrompt(null);
+    setEmailCheck(null);
+    await load();
+    onStatus(message);
+    setSubTab("list");
+  }
+
+  async function sendInvite(allowExisting = false) {
+    setInviteSending(true);
+    try {
+      await membersRequest("invite-student", buildInvitePayload(allowExisting));
+      await completeInviteSuccess(
+        allowExisting ? "Program added and invite sent." : "Invite sent."
+      );
+    } finally {
+      setInviteSending(false);
+    }
+  }
+
   async function handleInvite(e: FormEvent) {
     e.preventDefault();
     if (!invite.email.trim() || !invite.programId) {
       onStatus("Email and program are required.");
       return;
     }
-    onStatus("Sending invite…");
+
+    onStatus("Checking email…");
     try {
-      await membersRequest("invite-student", {
+      const result = (await membersRequest("check-student-invite", {
         email: invite.email.trim(),
-        fullName: invite.fullName.trim(),
-        phone: invite.phone.trim() || null,
-        notes: invite.notes.trim() || null,
-        locale: invite.locale,
         programId: invite.programId,
-        accessStartsAt: invite.accessStartsAt,
-        accessEndsAt: invite.accessEndsAt || null,
-        amountPaid: invite.amountPaid ? Number(invite.amountPaid) : null,
-        currency: invite.amountPaid ? invite.currency : null,
-      });
-      setInvite((i) => ({
-        ...i,
-        email: "",
-        fullName: "",
-        phone: "",
-        notes: "",
-        amountPaid: "",
-      }));
-      await load();
-      onStatus("Invite sent.");
-      setSubTab("list");
+      })) as { check: StudentInviteCheck };
+
+      if (!result.check.exists) {
+        onStatus("Sending invite…");
+        await sendInvite(false);
+        return;
+      }
+
+      setDuplicatePrompt(result.check);
+      onStatus(
+        result.check.duplicateKind === "same_program"
+          ? "This student is already enrolled in this program."
+          : "A student with this email already exists."
+      );
     } catch (err) {
       onStatus(err instanceof Error ? err.message : "Invite failed");
+    }
+  }
+
+  async function confirmAddExistingStudent() {
+    onStatus("Adding program and sending invite…");
+    try {
+      await sendInvite(true);
+    } catch (err) {
+      onStatus(err instanceof Error ? err.message : "Invite failed");
+    }
+  }
+
+  async function confirmResendInvite() {
+    if (!duplicatePrompt?.student) return;
+    setInviteSending(true);
+    onStatus("Sending invite…");
+    try {
+      await membersRequest("resend-student-invite", {
+        studentId: duplicatePrompt.student.id,
+        programId: invite.programId,
+      });
+      await completeInviteSuccess(`Invite resent to ${duplicatePrompt.student.email}.`);
+    } catch (err) {
+      onStatus(err instanceof Error ? err.message : "Could not resend invite");
+    } finally {
+      setInviteSending(false);
     }
   }
 
@@ -309,6 +412,27 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
             placeholder="Email"
             required
           />
+          {(checkingEmail || emailCheck?.exists) && invite.email.trim() && invite.programId && (
+            <p
+              className={`md:col-span-2 font-dm text-sm ${
+                emailCheck?.exists ? "text-amber-300/90" : "text-cream/50"
+              }`}
+            >
+              {checkingEmail ? (
+                "Checking email…"
+              ) : emailCheck?.duplicateKind === "same_program" ? (
+                `Existing student: ${emailCheck.student?.fullName || emailCheck.student?.email} is already enrolled in ${emailCheck.programTitle}.`
+              ) : (
+                `Existing student: ${emailCheck?.student?.fullName || emailCheck?.student?.email}${
+                  emailCheck?.enrollments?.length
+                    ? ` (${emailCheck.enrollments.length} program${
+                        emailCheck.enrollments.length === 1 ? "" : "s"
+                      } enrolled)`
+                    : ""
+                }. Confirm before adding to ${emailCheck?.programTitle ?? "this program"}.`
+              )}
+            </p>
+          )}
           <input
             type="tel"
             value={invite.phone}
@@ -392,11 +516,73 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
             className="form-field min-h-[72px] resize-y md:col-span-2"
             placeholder="Notes (internal)"
           />
+
+          {duplicatePrompt?.exists && (
+            <div className="md:col-span-2 flex flex-col gap-3 rounded-2xl border border-amber-400/30 bg-amber-400/5 p-4">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-amber-300">
+                Duplicate email detected
+              </p>
+              <p className="font-dm text-sm text-cream">
+                <strong className="text-cream">
+                  {duplicatePrompt.student?.fullName || duplicatePrompt.student?.email}
+                </strong>
+                {duplicatePrompt.student?.studentNumber
+                  ? ` (${duplicatePrompt.student.studentNumber})`
+                  : ""}{" "}
+                is already in your student list.
+              </p>
+              {duplicatePrompt.enrollments && duplicatePrompt.enrollments.length > 0 && (
+                <ul className="font-dm text-xs text-cream/70">
+                  {duplicatePrompt.enrollments.map((item) => (
+                    <li key={item.id}>
+                      {item.program?.title ?? item.programId}
+                      {item.programId === invite.programId ? " (selected program)" : ""}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="font-dm text-sm text-cream/70">
+                {duplicatePrompt.duplicateKind === "same_program"
+                  ? `They are already enrolled in ${duplicatePrompt.programTitle}. You can resend the invite email or cancel.`
+                  : `Add them to ${duplicatePrompt.programTitle} and send a new invite email, or cancel.`}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {duplicatePrompt.duplicateKind === "same_program" ? (
+                  <button
+                    type="button"
+                    onClick={() => void confirmResendInvite()}
+                    disabled={inviteSending}
+                    className="bg-orange px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-background hover:bg-cream disabled:opacity-50"
+                  >
+                    Resend invite
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => void confirmAddExistingStudent()}
+                    disabled={inviteSending}
+                    className="bg-orange px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-background hover:bg-cream disabled:opacity-50"
+                  >
+                    Add to program & send invite
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setDuplicatePrompt(null)}
+                  className="border border-white/[0.12] px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-cream hover:border-orange"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
           <button
             type="submit"
-            className="md:col-span-2 bg-orange px-5 py-3 font-mono text-xs uppercase tracking-widest text-background hover:bg-cream"
+            disabled={inviteSending}
+            className="md:col-span-2 bg-orange px-5 py-3 font-mono text-xs uppercase tracking-widest text-background hover:bg-cream disabled:opacity-50"
           >
-            Send invite
+            {inviteSending ? "Sending…" : "Send invite"}
           </button>
         </form>
       )}

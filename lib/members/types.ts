@@ -221,6 +221,17 @@ export interface ProgramLessonPayload {
   published: boolean;
 }
 
+export type StudentInviteDuplicateKind = "none" | "new_program" | "same_program";
+
+export interface StudentInviteCheck {
+  exists: boolean;
+  duplicateKind: StudentInviteDuplicateKind;
+  programTitle: string;
+  student?: StudentProfile;
+  existingEnrollment?: EnrollmentWithDetails;
+  enrollments?: EnrollmentWithDetails[];
+}
+
 export interface InviteStudentPayload {
   email: string;
   fullName: string;
@@ -232,6 +243,7 @@ export interface InviteStudentPayload {
   accessEndsAt?: string | null;
   amountPaid?: number | null;
   currency?: PaymentCurrency | null;
+  allowExisting?: boolean;
 }
 
 export interface UpdateStudentPayload {

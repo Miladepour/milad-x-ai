@@ -18,6 +18,7 @@ import {
   getProgramAdmin,
   getStudentAdmin,
   inviteStudentAdmin,
+  checkStudentInviteAdmin,
   listAnnouncementsAdmin,
   listEnrollmentsAdmin,
   listProgramsAdmin,
@@ -296,6 +297,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, enrollment });
     }
 
+    if (action === "check-student-invite") {
+      const email = String(body.email ?? "").trim();
+      const programId = String(body.programId ?? "").trim();
+      if (!email || !programId) {
+        return NextResponse.json(
+          { error: "email and programId are required" },
+          { status: 400 }
+        );
+      }
+
+      const check = await checkStudentInviteAdmin(email, programId);
+      return NextResponse.json({ ok: true, check });
+    }
+
     if (action === "invite-student") {
       const payload = body as InviteStudentPayload & { action?: string };
       if (!payload.email?.trim() || !payload.programId) {
@@ -323,6 +338,7 @@ export async function POST(request: Request) {
           amountPaid:
             payload.amountPaid != null ? Number(payload.amountPaid) : null,
           currency: parseCurrency(payload.currency),
+          allowExisting: Boolean(payload.allowExisting),
         },
         admin.id
       );

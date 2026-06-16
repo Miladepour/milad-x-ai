@@ -34,6 +34,7 @@ import type {
   AnnouncementLocale,
   EnrollmentWithDetails,
   InviteStudentPayload,
+  StudentInviteCheck,
   LessonProgress,
   MemberProgram,
   MemberProgramPayload,
@@ -967,10 +968,66 @@ async function generateStudentAuthLink(
   throw new Error("Could not create invite link");
 }
 
+export async function checkStudentInviteAdmin(
+  email: string,
+  programId: string
+): Promise<StudentInviteCheck> {
+  const service = createServiceClient();
+  const normalizedEmail = email.trim().toLowerCase();
+  const programData = await getProgramAdmin(programId);
+  const programTitle = programData?.program.title ?? "Selected program";
+
+  if (!normalizedEmail) {
+    return { exists: false, duplicateKind: "none", programTitle };
+  }
+
+  const { data: profileData, error } = await service
+    .from("student_profiles")
+    .select("*")
+    .eq("email", normalizedEmail)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!profileData) {
+    return { exists: false, duplicateKind: "none", programTitle };
+  }
+
+  const student = await getStudentAdmin(profileData.id);
+  if (!student) {
+    return { exists: false, duplicateKind: "none", programTitle };
+  }
+
+  const existingEnrollment =
+    student.enrollments.find((item) => item.programId === programId) ?? undefined;
+
+  return {
+    exists: true,
+    duplicateKind: existingEnrollment ? "same_program" : "new_program",
+    programTitle,
+    student: student.profile,
+    existingEnrollment,
+    enrollments: student.enrollments,
+  };
+}
+
 export async function inviteStudentAdmin(
   payload: InviteStudentPayload,
   invitedBy: string
 ): Promise<{ student: StudentProfile; enrollment: ProgramEnrollment; inviteLink: string }> {
+  const duplicateCheck = await checkStudentInviteAdmin(payload.email, payload.programId);
+  if (duplicateCheck.exists) {
+    if (duplicateCheck.duplicateKind === "same_program") {
+      throw new Error(
+        "This student is already enrolled in this program. Use Resend invite instead."
+      );
+    }
+    if (!payload.allowExisting) {
+      throw new Error(
+        "A student with this email already exists. Confirm adding them to this program."
+      );
+    }
+  }
+
   const service = createServiceClient();
   const email = payload.email.trim().toLowerCase();
   const fullName = payload.fullName.trim();
