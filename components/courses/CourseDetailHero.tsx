@@ -47,8 +47,8 @@ export default function CourseDetailHero({
   detail,
 }: CourseDetailHeroProps) {
   const tutorNames = [
-    course.meta.instructor,
     ...(course.meta.tutors?.map((t) => t.name[lang]) ?? []),
+    course.meta.instructor,
   ];
 
   return (

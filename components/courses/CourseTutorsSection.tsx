@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import type { ReactNode } from "react";
 import type { Course } from "@/lib/courses";
 import { INSTRUCTOR_PORTRAIT_SRC } from "@/lib/instructor/constants";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -17,6 +18,47 @@ function tutorHeading(label: string, name: string) {
       <span className="uppercase">{label}</span>
       <span> : {name}</span>
     </>
+  );
+}
+
+function TutorProfile({
+  portraitSrc,
+  heading,
+  headingText,
+  paragraphs,
+  headingLevel = "h3",
+}: {
+  portraitSrc: string;
+  heading: ReactNode;
+  headingText: string;
+  paragraphs: string[];
+  headingLevel?: "h2" | "h3";
+}) {
+  const HeadingTag = headingLevel;
+
+  return (
+    <div className="flex flex-col md:flex-row gap-10 md:gap-12 items-start">
+      <div className="relative w-full max-w-[280px] mx-auto md:mx-0 aspect-[3/4] shrink-0 overflow-hidden rounded-sm border border-surface bg-surface">
+        <Image
+          src={portraitSrc}
+          alt={headingText}
+          fill
+          className="object-cover object-top"
+          sizes="(max-width: 768px) 280px, 280px"
+        />
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <HeadingTag className="font-mono text-xs text-orange tracking-widest rtl:tracking-normal mb-4">
+          {heading}
+        </HeadingTag>
+        <div className="space-y-6 font-dm text-cream/85 leading-relaxed max-w-2xl">
+          {paragraphs.map((paragraph, index) => (
+            <p key={`${headingText}-${index}`}>{paragraph}</p>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -38,60 +80,30 @@ export default function CourseTutorsSection({
   return (
     <section id="instructor" className="pt-12 border-t border-surface scroll-mt-28">
       <div className="space-y-14">
-        <div className="flex flex-col md:flex-row gap-10 md:gap-12 items-start">
-          <div className="relative w-full max-w-[280px] mx-auto md:mx-0 aspect-[3/4] shrink-0 overflow-hidden rounded-sm border border-surface bg-surface">
-            <Image
-              src={INSTRUCTOR_PORTRAIT_SRC}
-              alt={miladHeadingText}
-              fill
-              className="object-cover object-top"
-              sizes="(max-width: 768px) 280px, 280px"
-            />
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <h2 className="font-mono text-xs text-orange tracking-widest rtl:tracking-normal mb-4">
-              {miladHeading}
-            </h2>
-            <div className="space-y-4 font-dm text-cream/85 leading-relaxed max-w-2xl">
-              {miladAbout.paragraphs.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
-              ))}
-            </div>
-          </div>
-        </div>
-
         {additionalTutors.map((tutor, idx) => {
           const heading = tutorHeading(title, tutor.name[lang]);
           const headingText = `${title} : ${tutor.name[lang]}`;
 
           return (
-          <div key={`${tutor.portraitSrc}-${idx}`} className="flex flex-col md:flex-row gap-10 md:gap-12 items-start">
-            <div className="relative w-full max-w-[280px] mx-auto md:mx-0 aspect-[3/4] shrink-0 overflow-hidden rounded-sm border border-surface bg-surface">
-              <Image
-                src={tutorPortraitSrc(tutor)}
-                alt={headingText}
-                fill
-                className="object-cover object-top"
-                sizes="(max-width: 768px) 280px, 280px"
-              />
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <h3 className="font-mono text-xs text-orange tracking-widest rtl:tracking-normal mb-4">
-                {heading}
-              </h3>
-              <div className="space-y-4 font-dm text-cream/85 leading-relaxed max-w-2xl">
-                {tutor.about[lang].map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
-              </div>
-            </div>
-          </div>
+            <TutorProfile
+              key={`${tutor.portraitSrc}-${idx}`}
+              portraitSrc={tutorPortraitSrc(tutor)}
+              heading={heading}
+              headingText={headingText}
+              paragraphs={tutor.about[lang]}
+              headingLevel="h2"
+            />
           );
         })}
+
+        <TutorProfile
+          portraitSrc={INSTRUCTOR_PORTRAIT_SRC}
+          heading={miladHeading}
+          headingText={miladHeadingText}
+          paragraphs={miladAbout.paragraphs}
+          headingLevel="h2"
+        />
       </div>
     </section>
   );
 }
-
