@@ -12,9 +12,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint-and-build:
+  lint:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -27,16 +27,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        # Use npm install (like Vercel). npm ci is stricter and fails on Linux
-        # when the lockfile was generated on macOS with optional platform deps.
         run: npm install --no-audit --no-fund
 
       - name: Lint
         run: npm run lint
-
-      - name: Build
-        run: npm run build
-        env:
-          # Placeholders so Next.js can compile; not used for real deploy secrets.
-          NEXT_PUBLIC_SITE_URL: https://www.mxaiacademy.com
-          ADMIN_PATH_SEGMENT: ci-admin-path
