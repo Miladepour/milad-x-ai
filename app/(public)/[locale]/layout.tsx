@@ -4,6 +4,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import SiteJsonLd from "@/components/layout/SiteJsonLd";
 import HtmlDirSync from "@/components/layout/HtmlDirSync";
+import SentryTestTrigger from "@/components/dev/SentryTestTrigger";
 import { LanguageProvider } from "@/lib/i18n/context";
 import { isValidLocale, locales, type UrlLocale } from "@/lib/i18n/config";
 import { pageAlternates, siteMetadata } from "@/lib/i18n/metadata";
@@ -54,6 +55,7 @@ export default function LocaleLayout({ children, params }: LocaleLayoutProps) {
       <Navbar />
       <main className="flex-1 flex flex-col min-h-0">{children}</main>
       <Footer />
+      <SentryTestTrigger />
     </LanguageProvider>
   );
 }
