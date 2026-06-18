@@ -48,5 +48,8 @@ next-env.d.ts
 # cursor (local agent state — not for the repo)
 .cursor/
 
+# local planning notes (not for the repo)
+/notes/
+
 # duplicate source images (site uses public/images)
 /Images/

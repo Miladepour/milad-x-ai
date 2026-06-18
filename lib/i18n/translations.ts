@@ -316,6 +316,14 @@ export const translations = {
       tutorialsCta: "Free tutorials",
       contactCta: "Contact",
     },
+    errorPage: {
+      errorLabel: "Error",
+      errorTitle: "Something went wrong",
+      errorDescription:
+        "We couldn't load this page. Try again, or contact support if the problem continues.",
+      errorRetryCta: "Try again",
+      errorSupportCta: "Get support",
+    },
     memberPortal: {
       loginQuoteEn: "One lesson today can change what you build tomorrow.",
       loginQuoteFa: "یک درس امروز، می‌تواند چیزی را که فردا می‌سازی تغییر دهد.",
@@ -895,6 +903,14 @@ export const translations = {
       coursesCta: "مشاهده دوره‌ها",
       tutorialsCta: "آموزش رایگان",
       contactCta: "تماس",
+    },
+    errorPage: {
+      errorLabel: "خطا",
+      errorTitle: "مشکلی پیش آمد",
+      errorDescription:
+        "بارگذاری این صفحه ممکن نشد. دوباره تلاش کنید یا در صورت ادامه مشکل با پشتیبانی تماس بگیرید.",
+      errorRetryCta: "تلاش دوباره",
+      errorSupportCta: "پشتیبانی",
     },
     memberPortal: {
       loginQuoteEn: "One lesson today can change what you build tomorrow.",

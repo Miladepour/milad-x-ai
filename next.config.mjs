@@ -1,5 +1,10 @@
+import { withSentryConfig } from "@sentry/nextjs";
+
 /** @type {import('next').NextConfig} */
 const isDev = process.env.NODE_ENV === "development";
+
+const sentryConnectSrc =
+  "https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io";
 
 const nextConfig = {
   images: {
@@ -54,8 +59,8 @@ const nextConfig = {
               "img-src 'self' data: blob: https://res.cloudinary.com https://i.ytimg.com https://*.supabase.co https://images.unsplash.com https://challenges.cloudflare.com https://sayclick.co.uk",
               "font-src 'self' data:",
               isDev
-                ? "connect-src 'self' data: blob: https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://api.linkedin.com https://www.linkedin.com https://*.linkedin.com ws://localhost:* ws://127.0.0.1:*"
-                : "connect-src 'self' data: blob: https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://api.linkedin.com https://www.linkedin.com https://*.linkedin.com",
+                ? `connect-src 'self' data: blob: https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://api.linkedin.com https://www.linkedin.com https://*.linkedin.com ${sentryConnectSrc} ws://localhost:* ws://127.0.0.1:*`
+                : `connect-src 'self' data: blob: https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://api.linkedin.com https://www.linkedin.com https://*.linkedin.com ${sentryConnectSrc}`,
               "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://iframe.mediadelivery.net https://challenges.cloudflare.com",
               "media-src 'self' https://res.cloudinary.com https://*.b-cdn.net blob:",
               "object-src 'none'",
@@ -89,4 +94,13 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  sourcemaps: {
+    disable: !process.env.SENTRY_AUTH_TOKEN,
+  },
+});
