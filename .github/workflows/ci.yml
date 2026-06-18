@@ -27,9 +27,9 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: |
-          npm install -g npm@11
-          npm ci
+        # Use npm install (like Vercel). npm ci is stricter and fails on Linux
+        # when the lockfile was generated on macOS with optional platform deps.
+        run: npm install --no-audit --no-fund
 
       - name: Lint
         run: npm run lint
