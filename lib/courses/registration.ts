@@ -3,6 +3,7 @@ import type { Course } from "./types";
 
 /** Slugs that use Telegram apply flow when `meta.applyUrl` is missing in the database. */
 const APPLY_URL_BY_SLUG: Record<string, string> = {
+  "prompt-to-content": TELEGRAM_APPLY_URL,
   "prompt-to-website": TELEGRAM_APPLY_URL,
 };
 

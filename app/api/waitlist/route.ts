@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCountryName } from "@/lib/countries";
-import { isPublishedCourseSlug } from "@/lib/courses/store";
+import { courseUsesExternalApply } from "@/lib/courses/registration";
+import { getCourseBySlug, isPublishedCourseSlug } from "@/lib/courses/store";
 import {
   assertPublicFormAllowed,
   clampField,
@@ -31,6 +32,16 @@ export async function POST(request: Request) {
 
     if (!courseSlug || !(await isPublishedCourseSlug(courseSlug))) {
       return NextResponse.json({ error: "Invalid course" }, { status: 400 });
+    }
+
+    const course =
+      (await getCourseBySlug(courseSlug, "EN")) ??
+      (await getCourseBySlug(courseSlug, "FA"));
+    if (course && courseUsesExternalApply(course)) {
+      return NextResponse.json(
+        { error: "Registration is open. Please apply via the course page." },
+        { status: 403 }
+      );
     }
     if (fullName.length < 2) {
       return NextResponse.json({ error: "Invalid name" }, { status: 400 });
