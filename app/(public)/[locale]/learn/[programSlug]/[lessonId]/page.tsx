@@ -21,6 +21,7 @@ import {
   getCompletedLessonIds,
   getStudentEnrollmentForProgram,
   getStudentLesson,
+  touchLessonActivity,
 } from "@/lib/members/store";
 import { urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { getStudentUser } from "@/lib/supabase/require-student";
@@ -106,6 +107,10 @@ export default async function LearnLessonPage({
         }}
       />
     );
+  }
+
+  if (unlock.unlocked) {
+    await touchLessonActivity(student.user.id, data.lesson.id);
   }
 
   const sortedLessons = [...data.lessons].sort((a, b) => a.sortOrder - b.sortOrder);

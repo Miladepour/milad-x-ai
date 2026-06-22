@@ -195,6 +195,8 @@ export interface StudentDashboardProgram {
   completedLessons: number;
   totalLessons: number;
   continueLesson: ProgramLesson | null;
+  /** Timestamp used to pick the most recently active program for Continue watching. */
+  continueWatchingAt: number;
 }
 
 export interface MemberProgramPayload {

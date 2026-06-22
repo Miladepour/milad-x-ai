@@ -10,6 +10,7 @@ import {
   listAnnouncementsForStudent,
   syncExpiredEnrollments,
 } from "@/lib/members/store";
+import { pickContinueWatchingProgram } from "@/lib/members/continue-watching";
 import { getMembershipTierInfo } from "@/lib/members/membership-tier";
 import { isValidLocale, urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { getStudentUser } from "@/lib/supabase/require-student";
@@ -47,7 +48,7 @@ export default async function LearnLayout({
     listAnnouncementsForStudent(student.user.id, student.profile.locale),
     getStudentEnrollmentCount(student.user.id),
   ]);
-  const continueItem = programs.find((p) => p.continueLesson);
+  const continueItem = pickContinueWatchingProgram(programs);
   const announcementUnreadCount = announcements.filter((item) => !item.isRead).length;
   const membership = getMembershipTierInfo(enrollmentCount);
 

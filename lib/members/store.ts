@@ -26,7 +26,9 @@ import {
   type ProgramLessonRow,
   type StudentProfileRow,
 } from "./mappers";
+import { buildLessonUnlockMap } from "./lesson-gating";
 import { internalToUrlLocale } from "@/lib/i18n/config";
+import { resolveContinueLesson } from "./continue-watching";
 import { accountSetPasswordPath, learnPath } from "@/lib/members/paths";
 import { startOfTodayIso } from "./dates";
 import type {
@@ -749,16 +751,9 @@ async function loadStudentDashboardProgram(
     progressMap.get(id)?.completedAt
   ).length;
 
-  let continueLesson: ProgramLesson | null = null;
-  if (includeLessons) {
-    for (const lesson of lessons) {
-      const prog = progressMap.get(lesson.id);
-      if (!prog?.completedAt) {
-        continueLesson = lesson;
-        break;
-      }
-    }
-  }
+  const { lesson: continueLesson, watchedAt: continueWatchingAt } = includeLessons
+    ? resolveContinueLesson(lessons, progressMap, enrollment.lastAccessedAt)
+    : { lesson: null, watchedAt: timestamp(enrollment.lastAccessedAt) };
 
   const totalLessons = lessonIds.length;
 
@@ -770,7 +765,14 @@ async function loadStudentDashboardProgram(
     completedLessons,
     totalLessons,
     continueLesson,
+    continueWatchingAt,
   };
+}
+
+function timestamp(value: string | null | undefined): number {
+  if (!value) return 0;
+  const ms = new Date(value).getTime();
+  return Number.isFinite(ms) ? ms : 0;
 }
 
 export async function getStudentDashboard(
@@ -950,6 +952,13 @@ export async function getStudentLesson(
       : null,
     enrollment: programData.enrollment,
   };
+}
+
+export async function touchLessonActivity(
+  userId: string,
+  lessonId: string
+): Promise<void> {
+  await upsertLessonProgress(userId, lessonId, {});
 }
 
 export async function upsertLessonProgress(
