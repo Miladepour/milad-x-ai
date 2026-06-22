@@ -242,8 +242,110 @@ export async function deleteLessonAdmin(lessonId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+async function deleteStudentProgramProgress(
+  supabase: ReturnType<typeof createAdminDbClient>,
+  studentId: string,
+  programId: string
+): Promise<void> {
+  const { data: lessons, error: lessonsError } = await supabase
+    .from("program_lessons")
+    .select("id")
+    .eq("program_id", programId);
+
+  if (lessonsError) throw new Error(lessonsError.message);
+
+  const lessonIds = (lessons ?? []).map((lesson) => lesson.id);
+  if (lessonIds.length > 0) {
+    const { error: progressError } = await supabase
+      .from("lesson_progress")
+      .delete()
+      .eq("student_id", studentId)
+      .in("lesson_id", lessonIds);
+    if (progressError) throw new Error(progressError.message);
+
+    const { error: quizError } = await supabase
+      .from("lesson_quiz_attempts")
+      .delete()
+      .eq("student_id", studentId)
+      .in("lesson_id", lessonIds);
+    if (quizError) throw new Error(quizError.message);
+  }
+
+  const { error: certError } = await supabase
+    .from("program_certificates")
+    .delete()
+    .eq("student_id", studentId)
+    .eq("program_id", programId);
+  if (certError) throw new Error(certError.message);
+}
+
+export async function deleteEnrollmentAdmin(enrollmentId: string): Promise<void> {
+  const supabase = createAdminDbClient();
+
+  const { data: enrollment, error: fetchError } = await supabase
+    .from("program_enrollments")
+    .select("id, student_id, program_id")
+    .eq("id", enrollmentId)
+    .maybeSingle();
+
+  if (fetchError) throw new Error(fetchError.message);
+  if (!enrollment) throw new Error("Enrollment not found");
+
+  await deleteStudentProgramProgress(
+    supabase,
+    enrollment.student_id,
+    enrollment.program_id
+  );
+
+  const { error } = await supabase
+    .from("program_enrollments")
+    .delete()
+    .eq("id", enrollmentId);
+  if (error) throw new Error(error.message);
+}
+
 export async function deleteProgramAdmin(programId: string): Promise<void> {
   const supabase = createAdminDbClient();
+
+  const { data: lessons, error: lessonsError } = await supabase
+    .from("program_lessons")
+    .select("id")
+    .eq("program_id", programId);
+  if (lessonsError) throw new Error(lessonsError.message);
+
+  const lessonIds = (lessons ?? []).map((lesson) => lesson.id);
+  if (lessonIds.length > 0) {
+    const { error: progressError } = await supabase
+      .from("lesson_progress")
+      .delete()
+      .in("lesson_id", lessonIds);
+    if (progressError) throw new Error(progressError.message);
+
+    const { error: quizError } = await supabase
+      .from("lesson_quiz_attempts")
+      .delete()
+      .in("lesson_id", lessonIds);
+    if (quizError) throw new Error(quizError.message);
+  }
+
+  const { error: certError } = await supabase
+    .from("program_certificates")
+    .delete()
+    .eq("program_id", programId);
+  if (certError) throw new Error(certError.message);
+
+  const { error: enrollmentError } = await supabase
+    .from("program_enrollments")
+    .delete()
+    .eq("program_id", programId);
+  if (enrollmentError) throw new Error(enrollmentError.message);
+
+  const { error: lessonsDeleteError } = await supabase
+    .from("program_lessons")
+    .delete()
+    .eq("program_id", programId);
+  if (lessonsDeleteError) throw new Error(lessonsDeleteError.message);
+
   const { error } = await supabase.from("member_programs").delete().eq("id", programId);
   if (error) throw new Error(error.message);
 }

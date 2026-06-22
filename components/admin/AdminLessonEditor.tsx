@@ -49,6 +49,7 @@ interface AdminLessonEditorProps {
   lesson: ProgramLesson;
   index: number;
   total: number;
+  embedded?: boolean;
   onImageUpload: (file: File) => Promise<string>;
   onSave: (patch: Partial<ProgramLesson> & { published?: boolean }) => Promise<void>;
   onSaveQuiz: (questions: QuizQuestionPayload[]) => Promise<void>;
@@ -62,6 +63,7 @@ export default function AdminLessonEditor({
   lesson,
   index,
   total,
+  embedded = false,
   onImageUpload,
   onSave,
   onSaveQuiz,
@@ -164,28 +166,39 @@ export default function AdminLessonEditor({
     );
   }
 
+  const Wrapper = embedded ? "div" : "li";
+  const wrapperClass = embedded
+    ? "pt-4"
+    : "border border-surface bg-background/30 p-4";
+
   return (
-    <li className="border border-surface bg-background/30 p-4">
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <span className="font-mono text-xs text-orange">#{index + 1}</span>
-        <span className="rounded-full border border-orange/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-orange">
-          {LESSON_TYPE_LABELS[lesson.lessonType]}
-        </span>
+    <Wrapper className={wrapperClass}>
+      <div className={`flex flex-wrap items-center gap-2 ${embedded ? "mb-4" : "mb-3"}`}>
+        {!embedded && (
+          <>
+            <span className="font-mono text-xs text-orange">#{index + 1}</span>
+            <span className="rounded-full border border-orange/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-orange">
+              {LESSON_TYPE_LABELS[lesson.lessonType]}
+            </span>
+          </>
+        )}
         <button
           type="button"
           disabled={index === 0}
           onClick={() => onMove(-1)}
-          className="font-mono text-xs text-cream/50 hover:text-orange disabled:opacity-30"
+          className="border border-surface px-2 py-1 font-mono text-xs text-cream/60 hover:border-orange hover:text-orange disabled:opacity-30"
+          aria-label="Move lesson up"
         >
-          ↑
+          ↑ Up
         </button>
         <button
           type="button"
           disabled={index >= total - 1}
           onClick={() => onMove(1)}
-          className="font-mono text-xs text-cream/50 hover:text-orange disabled:opacity-30"
+          className="border border-surface px-2 py-1 font-mono text-xs text-cream/60 hover:border-orange hover:text-orange disabled:opacity-30"
+          aria-label="Move lesson down"
         >
-          ↓
+          ↓ Down
         </button>
         <label className="ms-auto flex items-center gap-2 font-mono text-xs text-cream/70">
           <input
@@ -195,7 +208,7 @@ export default function AdminLessonEditor({
           />
           Published
         </label>
-        {onCollapse && (
+        {onCollapse && !embedded && (
           <button
             type="button"
             onClick={onCollapse}
@@ -431,23 +444,23 @@ export default function AdminLessonEditor({
         )}
       </div>
 
-      <div className="mt-3 flex gap-2">
+      <div className="mt-4 flex flex-wrap gap-2 border-t border-surface/60 pt-4">
         <button
           type="button"
           disabled={saving}
           onClick={() => void handleSave()}
-          className="border border-orange px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-orange hover:bg-orange hover:text-background disabled:opacity-50"
+          className="bg-orange px-4 py-2 font-mono text-xs uppercase tracking-widest text-background hover:bg-cream disabled:opacity-50"
         >
           {saving ? "Saving…" : "Save lesson"}
         </button>
         <button
           type="button"
           onClick={onDelete}
-          className="border border-surface px-3 py-1.5 font-mono text-xs text-cream/50 hover:text-orange"
+          className="border border-red-500/40 px-4 py-2 font-mono text-xs uppercase tracking-widest text-red-300 hover:border-red-400 hover:text-red-200"
         >
           Delete
         </button>
       </div>
-    </li>
+    </Wrapper>
   );
 }

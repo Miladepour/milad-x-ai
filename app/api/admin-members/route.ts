@@ -12,6 +12,7 @@ import {
 import {
   addEnrollmentAdmin,
   deleteAnnouncementAdmin,
+  deleteEnrollmentAdmin,
   deleteLessonAdmin,
   deleteProgramAdmin,
   deleteStudentAdmin,
@@ -273,6 +274,15 @@ export async function POST(request: Request) {
         admin.id
       );
       return NextResponse.json({ ok: true, enrollment });
+    }
+
+    if (action === "delete-enrollment") {
+      const enrollmentId = String(body.enrollmentId ?? "");
+      if (!enrollmentId) {
+        return NextResponse.json({ error: "enrollmentId required" }, { status: 400 });
+      }
+      await deleteEnrollmentAdmin(enrollmentId);
+      return NextResponse.json({ ok: true });
     }
 
     if (action === "update-enrollment") {

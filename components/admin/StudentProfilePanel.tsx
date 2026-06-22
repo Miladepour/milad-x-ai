@@ -176,6 +176,29 @@ export default function StudentProfilePanel({
     }
   }
 
+  async function handleRemoveEnrollment(item: EnrollmentWithDetails) {
+    const programTitle = item.program?.title ?? "this program";
+    if (
+      !confirm(
+        `Remove "${programTitle}" from this student?\n\nThis deletes their enrollment, lesson progress, quiz attempts, and certificate for this program. The program itself is not deleted.`
+      )
+    ) {
+      return;
+    }
+    onStatus("Removing program enrollment…");
+    try {
+      await membersRequest("delete-enrollment", { enrollmentId: item.id });
+      if (editingEnrollmentId === item.id) {
+        setEditingEnrollmentId(null);
+      }
+      await load();
+      await onUpdated();
+      onStatus("Program enrollment removed.");
+    } catch (err) {
+      onStatus(err instanceof Error ? err.message : "Could not remove enrollment");
+    }
+  }
+
   async function handleIssueCertificate(programId: string) {
     onStatus("Issuing certificate…");
     try {
@@ -538,13 +561,22 @@ export default function StudentProfilePanel({
                       </div>
                     )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => startEditEnrollment(item)}
-                    className="border border-surface px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-cream hover:border-orange"
-                  >
-                    Edit
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => startEditEnrollment(item)}
+                      className="border border-surface px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-cream hover:border-orange"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveEnrollment(item)}
+                      className="border border-red-500/40 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-red-300 hover:border-red-400 hover:text-red-200"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               )}
             </li>

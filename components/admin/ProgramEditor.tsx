@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import AdminLessonEditor from "@/components/admin/AdminLessonEditor";
 import type { LessonType, MemberProgram, ProgramLesson, UsefulLink } from "@/lib/members/types";
 import type { QuizQuestionPayload } from "@/lib/members/types";
@@ -80,6 +80,27 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
   const [loading, setLoading] = useState(false);
   const [showTypePicker, setShowTypePicker] = useState(false);
   const [expandedLessonId, setExpandedLessonId] = useState<string | null>(null);
+  const lessonsSectionRef = useRef<HTMLDivElement>(null);
+
+  function collapseLessons() {
+    setExpandedLessonId(null);
+  }
+
+  function openLessonEditor(lessonId: string) {
+    setShowTypePicker(false);
+    setExpandedLessonId(lessonId);
+  }
+
+  function handleAddLessonClick() {
+    collapseLessons();
+    setShowTypePicker(true);
+    lessonsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function resetLessonUi() {
+    setExpandedLessonId(null);
+    setShowTypePicker(false);
+  }
 
   const loadList = useCallback(async () => {
     const data = (await membersRequest("list-programs")) as { programs: MemberProgram[] };
@@ -116,7 +137,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
       };
       setProgram(data.program);
       setLessons(data.lessons ?? []);
-      setExpandedLessonId(null);
+      resetLessonUi();
       setView("edit");
       onStatus("");
     } catch (e) {
@@ -153,6 +174,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
       setView("list");
       setProgram(emptyProgram());
       setLessons([]);
+      resetLessonUi();
       onStatus("Program saved.");
     } catch (err) {
       onStatus(err instanceof Error ? err.message : "Save failed");
@@ -199,6 +221,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
 
   async function createLesson(type: LessonType) {
     setShowTypePicker(false);
+    collapseLessons();
     try {
       const saved = await saveLesson(
         {
@@ -211,7 +234,14 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
         },
         type
       );
-      if (saved) setExpandedLessonId(saved.id);
+      if (saved) {
+        setExpandedLessonId(saved.id);
+        requestAnimationFrame(() => {
+          document
+            .getElementById(`lesson-${saved.id}`)
+            ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      }
     } catch (err) {
       onStatus(err instanceof Error ? err.message : "Lesson save failed");
     }
@@ -271,6 +301,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
     await membersRequest("delete-lesson", { lessonId });
     setLessons((prev) => prev.filter((l) => l.id !== lessonId));
     setExpandedLessonId((current) => (current === lessonId ? null : current));
+    setShowTypePicker(false);
     onStatus("Lesson deleted.");
   }
 
@@ -320,6 +351,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
             onClick={() => {
               setProgram(emptyProgram());
               setLessons([]);
+              resetLessonUi();
               setView("edit");
             }}
             className="border border-orange px-4 py-2 font-mono text-xs uppercase tracking-widest text-orange hover:bg-orange hover:text-background"
@@ -378,6 +410,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
       <button
         type="button"
         onClick={() => {
+          resetLessonUi();
           setView("list");
           loadList();
         }}
@@ -633,91 +666,134 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
       </form>
 
       {program.id && (
-        <div className="flex flex-col gap-4 border border-surface bg-surface/10 p-5">
-          <div className="flex items-center justify-between">
-            <h2 className="font-dm text-xl text-cream">Lessons</h2>
-            <button
-              type="button"
-              onClick={() => setShowTypePicker(true)}
-              className="border border-orange px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-orange hover:bg-orange hover:text-background"
-            >
-              Add lesson
-            </button>
-          </div>
-
-          {showTypePicker && (
-            <div className="grid gap-3 border border-orange/30 bg-orange/5 p-4 md:grid-cols-3">
-              {LESSON_TYPE_OPTIONS.map((option) => (
-                <button
-                  key={option.type}
-                  type="button"
-                  onClick={() => void createLesson(option.type)}
-                  className="rounded-xl border border-white/[0.08] bg-background/40 p-4 text-left transition-colors hover:border-orange/50 hover:bg-orange/10"
-                >
-                  <p className="font-dm text-sm font-semibold text-cream">{option.label}</p>
-                  <p className="mt-1 font-dm text-xs text-cream/55">{option.hint}</p>
-                </button>
-              ))}
+        <div
+          ref={lessonsSectionRef}
+          className="flex flex-col gap-0 border border-surface bg-surface/10"
+        >
+          <div className="sticky top-20 z-10 border-b border-surface bg-background/95 px-5 py-4 backdrop-blur-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="font-dm text-xl text-cream">Lessons</h2>
+                <p className="mt-1 font-dm text-xs text-cream/55">
+                  {lessons.length === 0
+                    ? "No lessons yet. Add your first lesson below."
+                    : `${lessons.length} lesson${lessons.length === 1 ? "" : "s"} · click a row to edit`}
+                </p>
+              </div>
               <button
                 type="button"
-                onClick={() => setShowTypePicker(false)}
-                className="md:col-span-3 self-start font-mono text-[10px] uppercase tracking-widest text-cream/50 hover:text-orange"
+                onClick={handleAddLessonClick}
+                className="border border-orange px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-orange hover:bg-orange hover:text-background"
               >
-                Cancel
+                Add lesson
               </button>
             </div>
-          )}
+
+            {showTypePicker && (
+              <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                {LESSON_TYPE_OPTIONS.map((option) => (
+                  <button
+                    key={option.type}
+                    type="button"
+                    onClick={() => void createLesson(option.type)}
+                    className="rounded-lg border border-orange/30 bg-orange/5 p-3 text-left transition-colors hover:border-orange/60 hover:bg-orange/10"
+                  >
+                    <p className="font-dm text-sm font-semibold text-cream">{option.label}</p>
+                    <p className="mt-1 font-dm text-xs text-cream/55">{option.hint}</p>
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setShowTypePicker(false)}
+                  className="sm:col-span-3 self-start font-mono text-[10px] uppercase tracking-widest text-cream/50 hover:text-orange"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
 
           {lessons.length === 0 ? (
-            <p className="font-dm text-sm text-cream/60">No lessons yet.</p>
+            <p className="p-5 font-dm text-sm text-cream/60">
+              Lessons appear here as compact rows. Only one editor opens at a time.
+            </p>
           ) : (
-            <ul className="flex flex-col gap-4">
-              {lessons.map((lesson, index) =>
-                expandedLessonId === lesson.id ? (
-                  <AdminLessonEditor
-                    key={lesson.id}
-                    lesson={lesson}
-                    index={index}
-                    total={lessons.length}
-                    onImageUpload={uploadLessonImage}
-                    onSave={(patch) =>
-                      saveLesson({
-                        ...lesson,
-                        ...patch,
-                        published: patch.published ?? !!lesson.publishedAt,
-                      }).then(() => undefined)
-                    }
-                    onSaveQuiz={(questions) => saveQuizQuestions(lesson.id, questions)}
-                    onLoadQuiz={() => loadQuizQuestions(lesson.id)}
-                    onMove={(dir) => moveLesson(index, dir)}
-                    onDelete={() => removeLesson(lesson.id)}
-                    onCollapse={() => setExpandedLessonId(null)}
-                  />
-                ) : (
+            <ul className="divide-y divide-surface">
+              {lessons.map((lesson, index) => {
+                const isExpanded = expandedLessonId === lesson.id;
+                const title = lesson.titleEn || lesson.titleFa || "Untitled lesson";
+
+                return (
                   <li
                     key={lesson.id}
-                    className="flex flex-wrap items-center justify-between gap-3 border border-surface bg-background/20 p-4"
+                    id={`lesson-${lesson.id}`}
+                    className={
+                      isExpanded
+                        ? "bg-background/30"
+                        : "bg-background/10 transition-colors hover:bg-background/20"
+                    }
                   >
-                    <div className="min-w-0">
-                      <p className="font-dm text-cream">
-                        <span className="me-2 font-mono text-xs text-orange">#{index + 1}</span>
-                        {lesson.titleEn || lesson.titleFa || "Untitled lesson"}
-                      </p>
-                      <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-cream/45">
-                        {LESSON_TYPE_LABELS[lesson.lessonType]}
-                        {lesson.publishedAt ? " · Published" : " · Draft"}
-                      </p>
+                    <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          isExpanded ? collapseLessons() : openLessonEditor(lesson.id)
+                        }
+                        className="min-w-0 flex-1 text-left"
+                      >
+                        <p className="font-dm text-cream">
+                          <span className="me-2 font-mono text-xs text-orange">#{index + 1}</span>
+                          {title}
+                        </p>
+                        <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-cream/45">
+                          {LESSON_TYPE_LABELS[lesson.lessonType]}
+                          {lesson.publishedAt ? " · Published" : " · Draft"}
+                          {lesson.durationMinutes
+                            ? ` · ${lesson.durationMinutes} min`
+                            : ""}
+                        </p>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          isExpanded ? collapseLessons() : openLessonEditor(lesson.id)
+                        }
+                        className={`shrink-0 border px-3 py-1.5 font-mono text-xs uppercase tracking-widest ${
+                          isExpanded
+                            ? "border-orange/60 text-orange"
+                            : "border-surface text-cream hover:border-orange hover:text-orange"
+                        }`}
+                      >
+                        {isExpanded ? "Close" : "Edit"}
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setExpandedLessonId(lesson.id)}
-                      className="border border-surface px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-cream hover:border-orange hover:text-orange"
-                    >
-                      Edit
-                    </button>
+
+                    {isExpanded && (
+                      <div className="border-t border-surface px-5 pb-5">
+                        <AdminLessonEditor
+                          lesson={lesson}
+                          index={index}
+                          total={lessons.length}
+                          embedded
+                          onImageUpload={uploadLessonImage}
+                          onSave={(patch) =>
+                            saveLesson({
+                              ...lesson,
+                              ...patch,
+                              published: patch.published ?? !!lesson.publishedAt,
+                            }).then(() => undefined)
+                          }
+                          onSaveQuiz={(questions) => saveQuizQuestions(lesson.id, questions)}
+                          onLoadQuiz={() => loadQuizQuestions(lesson.id)}
+                          onMove={(dir) => moveLesson(index, dir)}
+                          onDelete={() => removeLesson(lesson.id)}
+                          onCollapse={collapseLessons}
+                        />
+                      </div>
+                    )}
                   </li>
-                )
-              )}
+                );
+              })}
             </ul>
           )}
         </div>
