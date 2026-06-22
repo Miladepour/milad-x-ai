@@ -13,6 +13,10 @@ import {
 import { buildLessonUnlockMap } from "@/lib/members/lesson-gating";
 import { resolveLessonBody, resolveLessonTitle } from "@/lib/members/lesson-localized";
 import {
+  resolveProgramDescription,
+  resolveProgramTitle,
+} from "@/lib/members/program-localized";
+import {
   learnCertificatesPath,
   learnLessonPath,
   learnPath,
@@ -52,7 +56,7 @@ export default async function LearnProgramPage({
       return (
         <StudentAccessEnded
           locale={locale}
-          programTitle={enrollmentView.program.title}
+          programTitle={resolveProgramTitle(enrollmentView.program, internal)}
           labels={{
             title: t.memberPortal.accessEndedTitle,
             body: t.memberPortal.accessEndedBody,
@@ -77,6 +81,9 @@ export default async function LearnProgramPage({
     quiz: t.memberPortal.lessonTypeQuiz,
   };
 
+  const programTitle = resolveProgramTitle(data.program, internal);
+  const programDescription = resolveProgramDescription(data.program, internal);
+
   const sortedLessons = [...data.lessons].sort((a, b) => a.sortOrder - b.sortOrder);
 
   let certificate =
@@ -93,7 +100,6 @@ export default async function LearnProgramPage({
   }
 
   const programCompleted = data.progressPercent === 100;
-  const showCertificateCta = Boolean(certificate);
   const contentLocked = data.program.comingSoon;
 
   return (
@@ -134,9 +140,9 @@ export default async function LearnProgramPage({
           {t.memberPortal.backToDashboard}
         </StudentPortalButton>
         <h1 className="mt-5 font-dm text-2xl font-semibold text-orange sm:text-3xl">
-          {data.program.title}
+          {programTitle}
         </h1>
-        <p className="mt-3 font-dm text-cream/70">{data.program.description}</p>
+        <p className="mt-3 font-dm text-cream/70">{programDescription}</p>
         <div className="mt-5 flex items-center gap-3">
           <div className="h-2 max-w-xs flex-1 overflow-hidden rounded-full bg-white/10">
             <div
@@ -152,18 +158,18 @@ export default async function LearnProgramPage({
         {data.program.certificateEnabled && (
           <div className="mt-5 flex flex-col items-start gap-3">
             <StudentCertificateBadge label={t.memberPortal.certificateIncluded} />
-            {showCertificateCta ? (
-              <StudentPortalButton
-                href={learnProgramCertificatePath(data.program.slug, locale)}
-                variant="primary"
-              >
-                {t.memberPortal.certificateView}
-              </StudentPortalButton>
-            ) : (
+            <StudentPortalButton
+              href={learnProgramCertificatePath(data.program.slug, locale)}
+              variant="primary"
+              disabled={!programCompleted}
+            >
+              {t.memberPortal.certificateView}
+            </StudentPortalButton>
+            {!programCompleted ? (
               <p className="font-dm text-sm text-cream/60">
                 {t.memberPortal.certificateIncludedHint}
               </p>
-            )}
+            ) : null}
           </div>
         )}
       </StudentGlassCard>
@@ -198,6 +204,7 @@ export default async function LearnProgramPage({
                   index={index}
                   title={resolveLessonTitle(lesson, internal)}
                   description={resolveLessonBody(lesson, internal)}
+                  durationMinutes={lesson.durationMinutes}
                   openLabel={t.memberPortal.openLesson}
                   locked={locked}
                   lockedLabel={

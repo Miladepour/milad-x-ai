@@ -13,6 +13,10 @@ import type {
 export interface MemberProgramRow {
   id: string;
   slug: string;
+  title_en?: string | null;
+  title_fa?: string | null;
+  description_en?: string | null;
+  description_fa?: string | null;
   title: string;
   description: string;
   cover_image: string | null;
@@ -110,11 +114,20 @@ export function memberProgramRowToProgram(row: MemberProgramRow): MemberProgram 
         ? hoursRaw
         : Number(hoursRaw);
 
+  const titleEn = (row.title_en ?? row.title ?? "").trim();
+  const titleFa = (row.title_fa ?? row.title ?? "").trim();
+  const descriptionEn = (row.description_en ?? row.description ?? "").trim();
+  const descriptionFa = (row.description_fa ?? row.description ?? "").trim();
+
   return {
     id: row.id,
     slug: row.slug,
-    title: row.title,
-    description: row.description,
+    titleEn,
+    titleFa,
+    descriptionEn,
+    descriptionFa,
+    title: titleEn || titleFa || row.title,
+    description: descriptionEn || descriptionFa || row.description,
     coverImage: row.cover_image,
     sortOrder: row.sort_order,
     status: row.status as ProgramStatus,

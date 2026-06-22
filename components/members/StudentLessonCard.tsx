@@ -14,6 +14,8 @@ interface StudentLessonCardProps {
   completedLabel?: string;
   lessonType?: LessonType;
   typeLabels?: Partial<Record<LessonType, string>>;
+  durationMinutes?: number | null;
+  durationLabel?: string;
 }
 
 const TYPE_BADGE: Record<LessonType, string> = {
@@ -21,6 +23,13 @@ const TYPE_BADGE: Record<LessonType, string> = {
   text: "¶",
   quiz: "?",
 };
+
+function formatDuration(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return remainder > 0 ? `${hours}h ${remainder}m` : `${hours}h`;
+}
 
 export default function StudentLessonCard({
   href,
@@ -34,27 +43,41 @@ export default function StudentLessonCard({
   completedLabel = "Completed",
   lessonType = "video",
   typeLabels = {},
+  durationMinutes,
+  durationLabel,
 }: StudentLessonCardProps) {
-  const excerpt = description ? previewText(description, 120) : "";
   const typeLabel = typeLabels[lessonType] ?? lessonType;
+  const plainDescription = description ? previewText(description, 120) : "";
+  const plainTitle = previewText(title, 200);
+  const showExcerpt =
+    plainDescription.length > 0 &&
+    plainDescription !== plainTitle &&
+    !(lessonType === "text" && plainDescription === title.trim());
 
   const inner = (
     <div className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-4 sm:py-3">
       <div className="min-w-0 flex-1">
-        <p
-          className={`font-dm text-base font-semibold leading-snug sm:text-lg ${
-            locked ? "text-cream/45" : "text-cream group-hover:text-orange"
-          }`}
-        >
-          <span className="me-2 font-mono text-xs text-orange">#{index + 1}</span>
-          <span className="me-2 font-mono text-[10px] uppercase tracking-widest text-cream/40">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="font-mono text-xs text-orange">#{index + 1}</span>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-cream/40">
             {TYPE_BADGE[lessonType]} {typeLabel}
           </span>
-          {title}
+          {durationMinutes != null && durationMinutes > 0 ? (
+            <span className="font-mono text-[10px] uppercase tracking-widest text-cream/40">
+              {durationLabel ?? formatDuration(durationMinutes)}
+            </span>
+          ) : null}
+        </div>
+        <p
+          className={`mt-1 font-dm text-base font-semibold leading-snug sm:text-lg ${
+            locked ? "text-cream/45" : "text-orange group-hover:text-cream"
+          }`}
+        >
+          {title || "\u00a0"}
         </p>
-        {excerpt ? (
+        {showExcerpt ? (
           <p className="mt-1 line-clamp-2 font-dm text-xs leading-relaxed text-cream/60 sm:text-sm">
-            {excerpt}
+            {plainDescription}
           </p>
         ) : null}
       </div>

@@ -1,7 +1,11 @@
 import StudentProgramCard from "@/components/members/StudentProgramCard";
+import { urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
+import {
+  resolveProgramDescription,
+  resolveProgramTitle,
+} from "@/lib/members/program-localized";
 import { learnProgramPath } from "@/lib/members/paths";
 import type { StudentDashboardProgram } from "@/lib/members/types";
-import type { UrlLocale } from "@/lib/i18n/config";
 
 interface StudentProgramCardListProps {
   programs: StudentDashboardProgram[];
@@ -29,6 +33,8 @@ export default function StudentProgramCardList({
 }: StudentProgramCardListProps) {
   if (programs.length === 0) return null;
 
+  const internal = urlLocaleToInternal(locale);
+
   return (
     <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {programs.map((item) => (
@@ -36,8 +42,8 @@ export default function StudentProgramCardList({
           <StudentProgramCard
             href={locked ? undefined : learnProgramPath(item.program.slug, locale)}
             locked={locked}
-            title={item.program.title}
-            description={item.program.description}
+            title={resolveProgramTitle(item.program, internal)}
+            description={resolveProgramDescription(item.program, internal)}
             coverImage={item.program.coverImage}
             progressPercent={item.progressPercent}
             completedLessons={item.completedLessons}

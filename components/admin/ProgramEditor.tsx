@@ -49,6 +49,10 @@ const emptyProgram = (): Omit<MemberProgram, "id" | "createdAt" | "updatedAt"> &
   id?: string;
 } => ({
   slug: "",
+  titleEn: "",
+  titleFa: "",
+  descriptionEn: "",
+  descriptionFa: "",
   title: "",
   description: "",
   coverImage: null,
@@ -88,7 +92,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
     );
   }, [loadList, onStatus]);
 
-  const uploadSlug = program.slug || slugify(program.title) || "member-lesson";
+  const uploadSlug = program.slug || slugify(program.titleEn || program.titleFa) || "member-lesson";
 
   async function uploadLessonImage(file: File): Promise<string> {
     const form = new FormData();
@@ -129,9 +133,11 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
       await membersRequest("save-program", {
         program: {
           id: program.id,
-          slug: program.slug || slugify(program.title),
-          title: program.title,
-          description: program.description,
+          slug: program.slug || slugify(program.titleEn || program.titleFa),
+          titleEn: program.titleEn,
+          titleFa: program.titleFa,
+          descriptionEn: program.descriptionEn,
+          descriptionFa: program.descriptionFa,
           coverImage: program.coverImage,
           sortOrder: program.sortOrder,
           status: program.status,
@@ -333,7 +339,9 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
                 className="flex flex-wrap items-center justify-between gap-3 p-4 hover:bg-surface/30"
               >
                 <div>
-                  <p className="font-dm text-cream">{p.title}</p>
+                  <p className="font-dm text-cream">
+                    {p.titleEn || p.titleFa || p.title}
+                  </p>
                   <p className="font-mono text-[10px] uppercase tracking-widest text-cream/50">
                     {p.slug} · {p.status}
                     {p.comingSoon ? " · coming soon" : ""}
@@ -351,7 +359,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
                   <button
                     type="button"
                     disabled={loading}
-                    onClick={() => removeProgram(p.id, p.title)}
+                    onClick={() => removeProgram(p.id, p.titleEn || p.titleFa || p.title)}
                     className="border border-red-500/40 px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-red-300 hover:border-red-400 hover:text-red-200"
                   >
                     Delete
@@ -382,13 +390,23 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
         onSubmit={handleSaveProgram}
         className="grid gap-4 border border-surface bg-surface/20 p-5 lg:grid-cols-2"
       >
-        <Field label="Program title" className="lg:col-span-2">
+        <Field label="Program title (English)" className="lg:col-span-2">
           <input
-            value={program.title}
-            onChange={(e) => setProgram((p) => ({ ...p, title: e.target.value }))}
+            value={program.titleEn}
+            onChange={(e) => setProgram((p) => ({ ...p, titleEn: e.target.value }))}
             className="form-field"
-            placeholder="e.g. Claude AI Webinar"
+            placeholder="e.g. From Prompt to Website"
             required
+          />
+        </Field>
+
+        <Field label="Program title (Farsi)" className="lg:col-span-2">
+          <input
+            value={program.titleFa}
+            onChange={(e) => setProgram((p) => ({ ...p, titleFa: e.target.value }))}
+            className="form-field"
+            placeholder="مثلاً از پرامپت تا وب‌سایت"
+            dir="rtl"
           />
         </Field>
 
@@ -397,7 +415,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
             value={program.slug}
             onChange={(e) => setProgram((p) => ({ ...p, slug: e.target.value }))}
             className="form-field"
-            placeholder={slugify(program.title) || "program-slug"}
+            placeholder={slugify(program.titleEn || program.titleFa) || "program-slug"}
           />
         </Field>
 
@@ -460,12 +478,26 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
           />
         </Field>
 
-        <Field label="Program description" className="lg:col-span-2">
+        <Field label="Program description (English)" className="lg:col-span-2">
           <textarea
-            value={program.description}
-            onChange={(e) => setProgram((p) => ({ ...p, description: e.target.value }))}
+            value={program.descriptionEn}
+            onChange={(e) =>
+              setProgram((p) => ({ ...p, descriptionEn: e.target.value }))
+            }
             className="form-field min-h-24"
             placeholder="Short summary shown on the student dashboard"
+          />
+        </Field>
+
+        <Field label="Program description (Farsi)" className="lg:col-span-2">
+          <textarea
+            value={program.descriptionFa}
+            onChange={(e) =>
+              setProgram((p) => ({ ...p, descriptionFa: e.target.value }))
+            }
+            className="form-field min-h-24"
+            placeholder="خلاصه کوتاه برای داشبورد دانشجو"
+            dir="rtl"
           />
         </Field>
 
@@ -493,7 +525,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
                     }))
                   }
                   className="form-field"
-                  placeholder={program.title || "Same as program title"}
+                  placeholder={program.titleEn || program.titleFa || "Same as program title"}
                 />
               </Field>
               <Field label="Certificate title (Farsi)">
@@ -506,7 +538,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
                     }))
                   }
                   className="form-field"
-                  placeholder={program.title || "Same as program title"}
+                  placeholder={program.titleEn || program.titleFa || "Same as program title"}
                 />
               </Field>
               <Field label="Hours override (optional)" className="md:col-span-2">
@@ -592,7 +624,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
           <button
             type="button"
             disabled={loading}
-            onClick={() => removeProgram(program.id!, program.title)}
+            onClick={() => removeProgram(program.id!, program.titleEn || program.titleFa || program.title)}
             className="lg:col-span-2 border border-red-500/40 px-5 py-3 font-mono text-xs uppercase tracking-widest text-red-300 hover:border-red-400 hover:text-red-200"
           >
             Delete program

@@ -58,10 +58,11 @@ function resolveCertificateTitles(program: MemberProgram): {
   programTitleEn: string;
   programTitleFa: string;
 } {
-  const fallback = program.title.trim();
+  const fallbackEn = program.titleEn.trim() || program.title.trim();
+  const fallbackFa = program.titleFa.trim() || program.title.trim();
   return {
-    programTitleEn: (program.certificateTitleEn ?? "").trim() || fallback,
-    programTitleFa: (program.certificateTitleFa ?? "").trim() || fallback,
+    programTitleEn: (program.certificateTitleEn ?? "").trim() || fallbackEn,
+    programTitleFa: (program.certificateTitleFa ?? "").trim() || fallbackFa,
   };
 }
 

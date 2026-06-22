@@ -14,7 +14,13 @@ export interface UsefulLink {
 export interface MemberProgram {
   id: string;
   slug: string;
+  titleEn: string;
+  titleFa: string;
+  descriptionEn: string;
+  descriptionFa: string;
+  /** @deprecated Use titleEn/titleFa via resolveProgramTitle */
   title: string;
+  /** @deprecated Use descriptionEn/descriptionFa via resolveProgramDescription */
   description: string;
   coverImage: string | null;
   sortOrder: number;
@@ -194,8 +200,10 @@ export interface StudentDashboardProgram {
 export interface MemberProgramPayload {
   id?: string;
   slug: string;
-  title: string;
-  description: string;
+  titleEn: string;
+  titleFa: string;
+  descriptionEn: string;
+  descriptionFa: string;
   coverImage?: string | null;
   sortOrder: number;
   status: ProgramStatus;

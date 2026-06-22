@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import StudentDashboardShell from "@/components/members/StudentDashboardShell";
+import { resolveLessonTitle } from "@/lib/members/lesson-localized";
+import { resolveProgramTitle } from "@/lib/members/program-localized";
 import { accountLoginPath, learnLessonPath } from "@/lib/members/paths";
 import {
   getStudentDashboard,
@@ -68,8 +70,11 @@ export default async function LearnLayout({
                   continueItem.continueLesson.id,
                   locale
                 ),
-                lessonTitle: continueItem.continueLesson.title,
-                programTitle: continueItem.program.title,
+                lessonTitle: resolveLessonTitle(
+                  continueItem.continueLesson,
+                  internal
+                ),
+                programTitle: resolveProgramTitle(continueItem.program, internal),
                 label: t.memberPortal.continueWatching,
                 cta: t.memberPortal.continueCta,
               }

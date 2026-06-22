@@ -124,12 +124,23 @@ export async function upsertProgramAdmin(
   payload: MemberProgramPayload
 ): Promise<MemberProgram> {
   const supabase = createAdminDbClient();
-  const slug = normalizeSlug(payload.slug || payload.title, payload.id);
+  const titleEn = payload.titleEn.trim();
+  const titleFa = payload.titleFa.trim();
+  const descriptionEn = payload.descriptionEn.trim();
+  const descriptionFa = payload.descriptionFa.trim();
+  const slug = normalizeSlug(
+    payload.slug || titleEn || titleFa,
+    payload.id
+  );
 
   const row = {
     slug,
-    title: payload.title.trim(),
-    description: payload.description.trim(),
+    title_en: titleEn,
+    title_fa: titleFa,
+    description_en: descriptionEn,
+    description_fa: descriptionFa,
+    title: titleEn || titleFa,
+    description: descriptionEn || descriptionFa,
     cover_image: payload.coverImage ?? null,
     sort_order: payload.sortOrder,
     status: payload.status,

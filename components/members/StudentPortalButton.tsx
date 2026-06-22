@@ -10,12 +10,16 @@ const variantClasses: Record<Variant, string> = {
     "rounded-full border border-orange/50 px-4 py-2.5 font-mono text-xs uppercase tracking-widest text-orange transition-colors hover:bg-orange hover:text-background",
 };
 
+const disabledClasses =
+  "pointer-events-none cursor-not-allowed opacity-45 saturate-50";
+
 interface StudentPortalButtonProps {
   href: string;
   children: ReactNode;
   variant?: Variant;
   className?: string;
   external?: boolean;
+  disabled?: boolean;
 }
 
 export default function StudentPortalButton({
@@ -24,8 +28,17 @@ export default function StudentPortalButton({
   variant = "primary",
   className = "",
   external = false,
+  disabled = false,
 }: StudentPortalButtonProps) {
-  const classes = `inline-flex items-center justify-center gap-2 ${variantClasses[variant]} ${className}`;
+  const classes = `inline-flex items-center justify-center gap-2 ${variantClasses[variant]} ${disabled ? disabledClasses : ""} ${className}`;
+
+  if (disabled) {
+    return (
+      <span className={classes} aria-disabled="true">
+        {children}
+      </span>
+    );
+  }
 
   if (external) {
     return (

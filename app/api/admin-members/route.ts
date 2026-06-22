@@ -134,8 +134,12 @@ export async function POST(request: Request) {
 
     if (action === "save-program") {
       const payload = body.program as MemberProgramPayload;
-      if (!payload?.title?.trim()) {
-        return NextResponse.json({ error: "title is required" }, { status: 400 });
+      const hasTitle = payload?.titleEn?.trim() || payload?.titleFa?.trim();
+      if (!hasTitle) {
+        return NextResponse.json(
+          { error: "Program title (English or Farsi) is required" },
+          { status: 400 }
+        );
       }
       const program = await upsertProgramAdmin(payload);
       return NextResponse.json({ ok: true, program });

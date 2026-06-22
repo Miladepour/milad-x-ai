@@ -11,6 +11,9 @@ import StudentPortalButton from "@/components/members/StudentPortalButton";
 import { isEnrollmentActive } from "@/lib/members/access";
 import { isLessonUnlocked } from "@/lib/members/lesson-gating";
 import { resolveLessonBody, resolveLessonTitle } from "@/lib/members/lesson-localized";
+import {
+  resolveProgramTitle,
+} from "@/lib/members/program-localized";
 import { learnLessonPath, learnProgramPath, learnCertificatesPath, learnProgramCertificatePath } from "@/lib/members/paths";
 import { getQuizForStudent } from "@/lib/members/quiz-store";
 import { sanitizeLessonHtml } from "@/lib/members/sanitize-lesson-html";
@@ -51,7 +54,7 @@ export default async function LearnLessonPage({
       return (
         <StudentAccessEnded
           locale={locale}
-          programTitle={enrollmentView.program.title}
+          programTitle={resolveProgramTitle(enrollmentView.program, internal)}
           labels={{
             title: t.memberPortal.accessEndedTitle,
             body: t.memberPortal.accessEndedBody,
@@ -113,6 +116,7 @@ export default async function LearnLessonPage({
       ? sortedLessons[lessonIndex + 1]
       : null;
 
+  const programTitle = resolveProgramTitle(data.program, internal);
   const title = resolveLessonTitle(data.lesson, internal);
   const body = resolveLessonBody(data.lesson, internal);
   const isCompleted = !!data.progress?.completedAt;
@@ -159,9 +163,9 @@ export default async function LearnLessonPage({
           href={learnProgramPath(params.programSlug, locale)}
           variant="secondary"
         >
-          {data.program.title}
+          {programTitle}
         </StudentPortalButton>
-        <p className="mt-5 student-section-title">{data.program.title}</p>
+        <p className="mt-5 student-section-title">{programTitle}</p>
         <h1 className="mt-2 font-dm text-4xl font-semibold text-cream sm:text-5xl">
           {title}
         </h1>
