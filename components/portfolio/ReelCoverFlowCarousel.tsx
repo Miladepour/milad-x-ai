@@ -103,6 +103,7 @@ export default function ReelCoverFlowCarousel({
 
     setPlayingId(reel.id);
     video.currentTime = 0;
+    video.muted = false;
 
     try {
       await video.play();
@@ -209,6 +210,9 @@ export default function ReelCoverFlowCarousel({
             const { x, scale, rotateY, zIndex, opacity } = cardTransform(offset);
             const isActive = offset === 0;
             const isPlaying = playingId === reel.id && isActive;
+            const isNearby = Math.abs(offset) <= 2;
+            const useVideoFrame = !reel.poster;
+            const showVideo = isPlaying || useVideoFrame;
 
             return (
               <div
@@ -228,32 +232,43 @@ export default function ReelCoverFlowCarousel({
                     videoRefs.current[reel.id] = el;
                   }}
                   className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
-                    isPlaying ? "opacity-100" : "opacity-0 pointer-events-none"
+                    showVideo ? "opacity-100" : "opacity-0 pointer-events-none"
                   }`}
-                  src={reel.src}
-                  poster={reel.poster}
+                  src={isNearby ? reel.src : undefined}
+                  poster={reel.poster || undefined}
                   playsInline
-                  preload="metadata"
+                  preload={isNearby ? "auto" : "none"}
                   loop
-                  muted={false}
+                  muted={!isPlaying}
                   aria-label={reel.title}
+                  onLoadedData={(e) => {
+                    const video = e.currentTarget;
+                    if (playingId !== reel.id) {
+                      video.pause();
+                      video.currentTime = 0;
+                    }
+                  }}
                 />
 
-                <div
-                  className="absolute inset-0 bg-cover bg-center transition-opacity duration-300"
-                  style={{
-                    backgroundImage: `url(${reel.poster})`,
-                    opacity: isPlaying ? 0 : 1,
-                  }}
-                  aria-hidden
-                />
+                {reel.poster ? (
+                  <div
+                    className="absolute inset-0 bg-cover bg-center transition-opacity duration-300"
+                    style={{
+                      backgroundImage: `url(${reel.poster})`,
+                      opacity: isPlaying ? 0 : 1,
+                    }}
+                    aria-hidden
+                  />
+                ) : null}
 
                 <div
                   className="absolute inset-0 pointer-events-none transition-opacity duration-300"
                   style={{
                     background: isPlaying
                       ? "linear-gradient(180deg, transparent 45%, rgba(13,13,13,0.55) 75%, rgba(13,13,13,0.92) 100%)"
-                      : "linear-gradient(180deg, rgba(255,92,0,0.35) 0%, rgba(255,92,0,0.12) 35%, rgba(13,13,13,0.5) 70%, rgba(13,13,13,0.85) 100%)",
+                      : useVideoFrame
+                        ? "linear-gradient(180deg, rgba(13,13,13,0.1) 0%, rgba(13,13,13,0.25) 55%, rgba(13,13,13,0.82) 100%)"
+                        : "linear-gradient(180deg, rgba(255,92,0,0.35) 0%, rgba(255,92,0,0.12) 35%, rgba(13,13,13,0.5) 70%, rgba(13,13,13,0.85) 100%)",
                   }}
                 />
 

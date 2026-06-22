@@ -1,4 +1,4 @@
-const CLOUD = "https://res.cloudinary.com/dbwrh0pfu";
+const BUNNY_REELS = "https://mxai-portfolio.b-cdn.net/Reels";
 
 export interface PortfolioReel {
   id: string;
@@ -21,176 +21,111 @@ export interface PortfolioApplication {
   tags: string[];
 }
 
-function reelVideo(versionPath: string, fileName: string) {
-  return `${CLOUD}/video/upload/q_auto,f_mp4/${versionPath}/${fileName}`;
+function reelId(title: string) {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
-function reelPoster(versionPath: string, publicId: string) {
-  return `${CLOUD}/video/upload/so_0,ar_9:16,c_fill,w_720,h_1280,q_auto,f_jpg/${versionPath}/${publicId}.jpg`;
-}
-
-/** 1080×1080 square delivery from Cloudinary image uploads */
-export function squareImage(publicId: string) {
-  return `${CLOUD}/image/upload/w_1080,h_1080,c_fill,q_auto,f_auto/${publicId}`;
+function bunnyReel(title: string, fileName: string): PortfolioReel {
+  return {
+    id: reelId(title),
+    title,
+    src: `${BUNNY_REELS}/${encodeURIComponent(fileName)}`,
+    poster: "",
+  };
 }
 
 const AI_BY_MILAD_TITLE = "Created with Ai By Milad";
 
-function cloudinaryImagePathFromUrl(url: string): string {
-  const marker = "/image/upload/";
-  const index = url.indexOf(marker);
-  if (index === -1) return url;
-  return url.slice(index + marker.length);
-}
-
-function aiByMiladSquare(id: string, uploadUrl: string): PortfolioSquareImage {
+function bunnySquare(id: string, src: string): PortfolioSquareImage {
   return {
     id,
     title: AI_BY_MILAD_TITLE,
-    src: squareImage(cloudinaryImagePathFromUrl(uploadUrl)),
+    src,
   };
 }
 
 export const portfolioReels: PortfolioReel[] = [
-  {
-    id: "madar",
-    title: "DJ Aligator - Madar",
-    src: reelVideo("v1779612912", "0524_1_a6pvie.mp4"),
-    poster: reelPoster("v1779612912", "0524_1_a6pvie"),
-  },
-  {
-    id: "florial",
-    title: "Florial - Perfume Ad",
-    src: reelVideo("v1779613750", "0429_lnxozx.mov"),
-    poster: reelPoster("v1779613750", "0429_lnxozx"),
-  },
-  {
-    id: "hair-transplant",
-    title: "Hair Transplant - Interview",
-    src: reelVideo("v1779613874", "0512_1_bosvrz.mov"),
-    poster: reelPoster("v1779613874", "0512_1_bosvrz"),
-  },
-  {
-    id: "danlee",
-    title: "Danlee Pharma - Device Ad",
-    src: reelVideo("v1779613891", "0501_ukiwtc.mov"),
-    poster: reelPoster("v1779613891", "0501_ukiwtc"),
-  },
-  {
-    id: "dac",
-    title: "DAC Clinic - Academy Ad",
-    src: reelVideo("v1779613921", "0326-copy_pphcye.mov"),
-    poster: reelPoster("v1779613921", "0326-copy_pphcye"),
-  },
-  {
-    id: "florial-beauty-1204",
-    title: "Florial - Beauty Brand",
-    src: reelVideo("v1780308681", "1204_1_jzyvkc.mov"),
-    poster: reelPoster("v1780308681", "1204_1_jzyvkc"),
-  },
-  {
-    id: "instagram-reels-1208",
-    title: "Instagram Reels Project",
-    src: reelVideo("v1780309021", "1208_4_-copy-copy_utltyq.mov"),
-    poster: reelPoster("v1780309021", "1208_4_-copy-copy_utltyq"),
-  },
-  {
-    id: "florial-beauty-1213",
-    title: "Florial - Beauty Brand",
-    src: reelVideo("v1780308769", "1213_1_1_mlnppf.mov"),
-    poster: reelPoster("v1780308769", "1213_1_1_mlnppf"),
-  },
-  {
-    id: "madar-promo",
-    title: "DJ Aligator - Madar Promo",
-    src: reelVideo("v1780309160", "0601_x87zt8.mov"),
-    poster: reelPoster("v1780309160", "0601_x87zt8"),
-  },
-  {
-    id: "dac-ugc-ai",
-    title: "UGC with AI - DAC Clinic",
-    src: reelVideo("v1780309607", "0601_7_q6krh0.mov"),
-    poster: reelPoster("v1780309607", "0601_7_q6krh0"),
-  },
-  {
-    id: "youtube-ai-0601-6",
-    title: "YouTube AI Video",
-    src: reelVideo("v1780309622", "0601_6_orsjql.mp4"),
-    poster: reelPoster("v1780309622", "0601_6_orsjql"),
-  },
-  {
-    id: "youtube-ai-0601-5",
-    title: "YouTube AI Video",
-    src: reelVideo("v1780309635", "0601_5_tsf3pc.mp4"),
-    poster: reelPoster("v1780309635", "0601_5_tsf3pc"),
-  },
-  {
-    id: "instagram-iran-0601-3",
-    title: "Instagram Video for Iran",
-    src: reelVideo("v1780309676", "0601_3_qyiihc.mov"),
-    poster: reelPoster("v1780309676", "0601_3_qyiihc"),
-  },
-  {
-    id: "instagram-iran-0601-2",
-    title: "Instagram Video for Iran",
-    src: reelVideo("v1780309687", "0601_2_afmwiy.mov"),
-    poster: reelPoster("v1780309687", "0601_2_afmwiy"),
-  },
+  bunnyReel(
+    "AI Video Showcase",
+    "hf_20260428_092928_37b8e657-dfad-4069-b4ee-a03890564df4.mp4"
+  ),
+  bunnyReel("DJ Aligator - Madar", "DJ Aligator - Madar.mp4"),
+  bunnyReel("DJ Aligator - Madar Promo", "DJ Aligator - Madar Promo.mp4"),
+  bunnyReel("DAC Clinic - Academy Ad", "DAC Clinic - Academy Ad.mp4"),
+  bunnyReel("Danlee Pharma - Device Ad", "Danlee Pharma - Device Ad.mp4"),
+  bunnyReel("Florial - Beauty Brand A", "Florial - Beauty Brand A.mp4"),
+  bunnyReel("Florial - Beauty Brand B", "Florial - Beauty Brand B.mp4"),
+  bunnyReel("Florial - Beauty Brand C", "Florial - Beauty Brand C.mp4"),
+  bunnyReel("Florial - Beauty Brand D", "Florial - Beauty Brand D.mp4"),
+  bunnyReel("Florial - Beauty Brand E", "Florial - Beauty Brand E.mp4"),
+  bunnyReel("Hair Transplant - Interview", "Hair Transplant - Interview.mp4"),
+  bunnyReel("Instagram Video for Iran", "Instagram Video for Iran.mp4"),
+  bunnyReel("Instagram Video for Iran B", "Instagram Video for Iran B.mp4"),
+  bunnyReel("UGC with AI - DAC Clinic", "UGC with AI - DAC Clinic.mp4"),
+  bunnyReel(
+    "UGC with AI - JB Design London",
+    "UGC with AI - JB Design London.mp4"
+  ),
+  bunnyReel("YouTube AI Video Project", "YouTube AI Video Project.mp4"),
+  bunnyReel("YouTube AI Video", "YouTube AI Video.mp4"),
 ];
 
-/** Square AI image work (1080×1080 via Cloudinary) */
+/** Square AI image work */
 export const portfolioSquareImages: PortfolioSquareImage[] = [
-  aiByMiladSquare(
+  bunnySquare(
     "ai-by-milad-01",
-    "https://res.cloudinary.com/dbwrh0pfu/image/upload/v1780310547/bwownies.com_5_mcfwxm.png"
+    "https://mxai-portfolio.b-cdn.net/Poster/bwownies.com%207%20Large.jpeg"
   ),
-  aiByMiladSquare(
+  bunnySquare(
     "ai-by-milad-02",
-    "https://res.cloudinary.com/dbwrh0pfu/image/upload/v1780310454/hf_20260405_195019_4b63a5cb-82a9-4224-80bc-76ef368684dc_rfrokn.png"
+    "https://mxai-portfolio.b-cdn.net/Poster/Florial%20Posts%20(1).jpg"
   ),
-  aiByMiladSquare(
+  bunnySquare(
     "ai-by-milad-03",
-    "https://res.cloudinary.com/dbwrh0pfu/image/upload/v1780310566/hf_20260429_153239_f8d0339b-dfee-4c97-a6b0-14a18a271344_ncuqtq.png"
+    "https://mxai-portfolio.b-cdn.net/Poster/Florial%20Posts%20(2).jpg"
   ),
-  aiByMiladSquare(
+  bunnySquare(
     "ai-by-milad-04",
-    "https://res.cloudinary.com/dbwrh0pfu/image/upload/v1780310448/hf_20260405_183801_95382120-3470-4d3f-bbd9-c7ed1d831c25_ihahkb.jpg"
+    "https://mxai-portfolio.b-cdn.net/Poster/Florial%20Posts%20(3).jpg"
   ),
-  aiByMiladSquare(
+  bunnySquare(
     "ai-by-milad-05",
-    "https://res.cloudinary.com/dbwrh0pfu/image/upload/v1780310535/bwownies.com_7_nmxegb.jpg"
+    "https://mxai-portfolio.b-cdn.net/Poster/Florial%20Posts%20(4).jpg"
   ),
-  aiByMiladSquare(
+  bunnySquare(
     "ai-by-milad-06",
-    "https://res.cloudinary.com/dbwrh0pfu/image/upload/v1780310583/hf_20260430_190401_bf0f3a53-55de-4416-aec0-603ebbce9f66_jqykas.jpg"
+    "https://mxai-portfolio.b-cdn.net/Poster/Florial%20Posts%20(5).jpg"
   ),
-  aiByMiladSquare(
+  bunnySquare(
     "ai-by-milad-07",
-    "https://res.cloudinary.com/dbwrh0pfu/image/upload/v1780310570/hf_20260429_153247_644d9239-0468-4803-9274-e8380db79ae3_egfp4a.png"
+    "https://mxai-portfolio.b-cdn.net/Poster/Florial%20Posts%20(6).jpg"
   ),
-  aiByMiladSquare(
+  bunnySquare(
     "ai-by-milad-08",
-    "https://res.cloudinary.com/dbwrh0pfu/image/upload/v1780310599/Welcome_to_11_brw1cg.png"
+    "https://mxai-portfolio.b-cdn.net/Poster/Florial%20Posts%20(7).jpg"
   ),
-  aiByMiladSquare(
+  bunnySquare(
     "ai-by-milad-09",
-    "https://res.cloudinary.com/dbwrh0pfu/image/upload/v1780310629/4afb81ad-e420-499e-94f4-4df87973d224_ano7ge.png"
+    "https://mxai-portfolio.b-cdn.net/Poster/Florial%20Posts.jpg"
   ),
-  aiByMiladSquare(
+  bunnySquare(
     "ai-by-milad-10",
-    "https://res.cloudinary.com/dbwrh0pfu/image/upload/v1780310635/4e5d8ae5-98bc-48b4-b3c2-db3bc66ba4b5_ygeuuf.png"
+    "https://mxai-portfolio.b-cdn.net/Poster/hf_20260405_183801_95382120-3470-4d3f-bbd9-c7ed1d831c25%20Large.jpeg"
   ),
-  aiByMiladSquare(
+  bunnySquare(
     "ai-by-milad-11",
-    "https://res.cloudinary.com/dbwrh0pfu/image/upload/v1780310672/23123123_oevzyw.png"
+    "https://mxai-portfolio.b-cdn.net/Poster/hf_20260409_130436_c5e25c13-8df9-4131-8d6f-f658b573fb05%20Large.jpeg"
   ),
-  aiByMiladSquare(
+  bunnySquare(
     "ai-by-milad-12",
-    "https://res.cloudinary.com/dbwrh0pfu/image/upload/v1780310679/b07c409c-080f-4ecc-a86e-017a1ba8372c_usum0d.png"
+    "https://mxai-portfolio.b-cdn.net/Poster/hf_20260430_190213_2d0106c5-b0a5-4dfd-825c-06c26a354924%20Large.jpeg"
   ),
-  aiByMiladSquare(
+  bunnySquare(
     "ai-by-milad-13",
-    "https://res.cloudinary.com/dbwrh0pfu/image/upload/v1780310700/envato-labs-image-edit_-_2025-11-29T093955.788_hnpn1s.png"
+    "https://mxai-portfolio.b-cdn.net/Poster/UK%20Regulatory%20Support%20for%20Aesthetic%20Devices%20%7C%20Crown%20Bridge%20Large.jpeg"
   ),
 ];
 

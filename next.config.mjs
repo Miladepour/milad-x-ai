@@ -16,6 +16,11 @@ const nextConfig = {
       },
       {
         protocol: "https",
+        hostname: "mxai-portfolio.b-cdn.net",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
         hostname: "i.ytimg.com",
         pathname: "/vi/**",
       },
@@ -56,7 +61,7 @@ const nextConfig = {
                 ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com"
                 : "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://res.cloudinary.com https://i.ytimg.com https://*.supabase.co https://images.unsplash.com https://challenges.cloudflare.com https://sayclick.co.uk",
+              "img-src 'self' data: blob: https://res.cloudinary.com https://*.b-cdn.net https://i.ytimg.com https://*.supabase.co https://images.unsplash.com https://challenges.cloudflare.com https://sayclick.co.uk",
               "font-src 'self' data:",
               isDev
                 ? `connect-src 'self' data: blob: https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://api.linkedin.com https://www.linkedin.com https://*.linkedin.com ${sentryConnectSrc} ws://localhost:* ws://127.0.0.1:*`
