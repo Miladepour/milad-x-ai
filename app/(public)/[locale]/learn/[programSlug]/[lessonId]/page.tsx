@@ -155,6 +155,9 @@ export default async function LearnLessonPage({
   };
   const certificatesHref = learnCertificatesPath(locale);
   const programCertificateHref = learnProgramCertificatePath(params.programSlug, locale);
+  const nextHref = next
+    ? learnLessonPath(params.programSlug, next.id, locale)
+    : null;
 
   return (
     <div className="flex flex-col gap-5 pb-10 sm:gap-6">
@@ -179,6 +182,7 @@ export default async function LearnLessonPage({
             lessonTitle={title}
             initialPosition={data.progress?.lastPositionSeconds ?? 0}
             completed={isCompleted}
+            nextHref={nextHref}
             certificateEnabled={data.program.certificateEnabled}
             certificatesHref={certificatesHref}
             programCertificateHref={programCertificateHref}
@@ -199,6 +203,7 @@ export default async function LearnLessonPage({
           <LessonMarkComplete
             lessonId={data.lesson.id}
             completed={isCompleted}
+            nextHref={nextHref}
             certificateEnabled={data.program.certificateEnabled}
             certificatesHref={certificatesHref}
             programCertificateHref={programCertificateHref}
@@ -222,26 +227,16 @@ export default async function LearnLessonPage({
         </StudentGlassCard>
       )}
 
-      <StudentGlassCard className="flex flex-wrap items-center justify-between gap-3">
-        {prev ? (
+      {prev ? (
+        <StudentGlassCard className="flex flex-wrap items-center justify-between gap-3">
           <StudentPortalButton
             href={learnLessonPath(params.programSlug, prev.id, locale)}
             variant="secondary"
           >
             {t.memberPortal.previous}
           </StudentPortalButton>
-        ) : (
-          <span />
-        )}
-        {next && isCompleted ? (
-          <StudentPortalButton
-            href={learnLessonPath(params.programSlug, next.id, locale)}
-            variant="primary"
-          >
-            {t.memberPortal.next}
-          </StudentPortalButton>
-        ) : null}
-      </StudentGlassCard>
+        </StudentGlassCard>
+      ) : null}
     </div>
   );
 }
