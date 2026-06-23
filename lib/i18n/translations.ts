@@ -446,6 +446,10 @@ export const translations = {
       certificateSignatoryRole: "Director",
       certificateDownloadPng: "Download PNG",
       certificateDownloadPdf: "Download PDF",
+      certificateDownloadStory: "Instagram Story",
+      certificateDownloadPost: "Instagram Post",
+      certificateDownloadSocialHeading: "Social media sizes",
+      certificateDownloadSocialMention: "Please mention us with @mxaiacademy",
       certificateDownloading: "Preparing…",
       certificateVerifyApprovedLabel: "Verified",
       certificateVerifyApprovedBody:
@@ -1033,6 +1037,10 @@ export const translations = {
       certificateSignatoryRole: "مدیر",
       certificateDownloadPng: "دانلود PNG",
       certificateDownloadPdf: "دانلود PDF",
+      certificateDownloadStory: "استوری اینستاگرام",
+      certificateDownloadPost: "پست اینستاگرام",
+      certificateDownloadSocialHeading: "سایزهای شبکه‌های اجتماعی",
+      certificateDownloadSocialMention: "لطفاً ما را با @mxaiacademy منشن کنید",
       certificateDownloading: "در حال آماده‌سازی…",
       certificateVerifyApprovedLabel: "تأیید شد",
       certificateVerifyApprovedBody:

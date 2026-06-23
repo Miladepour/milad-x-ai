@@ -101,9 +101,13 @@ export default async function LearnProgramCertificatePage({
             <CertificateDownloadButtons
               certificateNumber={certificate.certificateNumber}
               labels={{
-                downloadPng: mp.certificateDownloadPng,
-                downloadPdf: mp.certificateDownloadPdf,
-                downloading: mp.certificateDownloading,
+                downloadPng: t.memberPortal.certificateDownloadPng,
+                downloadPdf: t.memberPortal.certificateDownloadPdf,
+                downloadStory: t.memberPortal.certificateDownloadStory,
+                downloadPost: t.memberPortal.certificateDownloadPost,
+                downloadSocialHeading: t.memberPortal.certificateDownloadSocialHeading,
+                downloadSocialMention: t.memberPortal.certificateDownloadSocialMention,
+                downloading: t.memberPortal.certificateDownloading,
               }}
             />
             <div className="flex flex-wrap items-center justify-center gap-3">

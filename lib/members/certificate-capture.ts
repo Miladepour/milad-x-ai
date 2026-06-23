@@ -1,4 +1,9 @@
 import { toPng } from "html-to-image";
+import {
+  type CertificateFormat,
+  getCertificateDimensions,
+  getCertificateElementId,
+} from "@/lib/members/certificate-layout";
 
 async function preloadImages(root: HTMLElement): Promise<void> {
   const images = Array.from(root.querySelectorAll("img"));
@@ -54,22 +59,23 @@ function dataUrlToBlob(dataUrl: string): Blob {
   return new Blob([bytes], { type: mime });
 }
 
-export async function captureCertificatePng(): Promise<string> {
-  const element = document.getElementById("program-certificate");
+export async function captureCertificatePng(
+  format: CertificateFormat = "document"
+): Promise<string> {
+  const element = document.getElementById(getCertificateElementId(format));
   if (!element) {
-    throw new Error("Certificate not found");
+    throw new Error(`Certificate not found (${format})`);
   }
+
+  const { width, height } = getCertificateDimensions(format);
 
   await preloadImages(element);
   const restore = prepareCertificateForExport(element);
 
   try {
-    const width = element.offsetWidth;
-    const height = element.offsetHeight;
-
     return await toPng(element, {
       cacheBust: true,
-      pixelRatio: 2,
+      pixelRatio: 1,
       width,
       height,
       backgroundColor: "#0D0D0D",
@@ -83,8 +89,10 @@ export async function captureCertificatePng(): Promise<string> {
   }
 }
 
-export async function captureCertificatePngBlob(): Promise<Blob> {
-  const dataUrl = await captureCertificatePng();
+export async function captureCertificatePngBlob(
+  format: CertificateFormat = "document"
+): Promise<Blob> {
+  const dataUrl = await captureCertificatePng(format);
   return dataUrlToBlob(dataUrl);
 }
 
