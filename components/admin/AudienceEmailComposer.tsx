@@ -558,7 +558,9 @@ export default function AudienceEmailComposer({
                     Write your message
                   </h2>
                   <p className="mt-2 font-dm text-sm text-cream/55">
-                    Each recipient gets a personalized greeting in their profile language.
+                    Each recipient gets a personalized greeting in their profile language. Use{" "}
+                    <span className="text-orange">Link</span> for inline links or{" "}
+                    <span className="text-orange">Button</span> for a call-to-action.
                   </p>
                 </div>
 
@@ -569,6 +571,8 @@ export default function AudienceEmailComposer({
                     onImageUpload={uploadImage}
                     placeholder="Write your email…"
                     minHeightClassName="min-h-[220px]"
+                    enableLink
+                    enableEmailButton
                   />
                 </div>
 

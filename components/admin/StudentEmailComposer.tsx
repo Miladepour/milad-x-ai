@@ -348,6 +348,8 @@ export default function StudentEmailComposer({
                 onChange={setBodyHtml}
                 placeholder="Write your message…"
                 minHeightClassName="min-h-[220px]"
+                enableLink
+                enableEmailButton
               />
             </div>
             <p className="font-dm text-xs text-cream/50">

@@ -13,7 +13,7 @@ export function sanitizeEmailHtml(html: string): string {
     ],
     allowedAttributes: {
       ...sanitizeHtml.defaults.allowedAttributes,
-      a: ["href", "name", "target", "rel"],
+      a: ["href", "name", "target", "rel", "data-email-button"],
       img: ["src", "alt", "width", "height"],
       "*": ["style"],
     },
