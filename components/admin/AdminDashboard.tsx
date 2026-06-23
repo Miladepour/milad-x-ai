@@ -29,6 +29,12 @@ const StudentManager = dynamic(() => import("@/components/admin/StudentManager")
   ),
 });
 
+const AudienceManager = dynamic(() => import("@/components/admin/AudienceManager"), {
+  loading: () => (
+    <p className="font-dm text-sm text-cream/70">Loading audience…</p>
+  ),
+});
+
 const BlogEditorTab = dynamic(() => import("@/components/admin/BlogEditorTab"), {
   loading: () => (
     <p className="font-dm text-sm text-cream/70">Loading blog editor…</p>
@@ -69,6 +75,7 @@ interface AdminDashboardProps {
   onRefresh: () => Promise<void>;
   adminRequest: (action: string, payload?: Record<string, unknown>) => Promise<unknown>;
   membersRequest: (action: string, payload?: Record<string, unknown>) => Promise<unknown>;
+  audienceRequest: (action: string, payload?: Record<string, unknown>) => Promise<unknown>;
   onEnsureSummaryLoaded: () => Promise<void>;
   onEnsureBlogLoaded: () => Promise<void>;
   onReloadBlogPosts: () => Promise<void>;
@@ -88,6 +95,7 @@ export default function AdminDashboard({
   onRefresh,
   adminRequest,
   membersRequest,
+  audienceRequest,
   onEnsureSummaryLoaded,
   onEnsureBlogLoaded,
   onReloadBlogPosts,
@@ -108,7 +116,7 @@ export default function AdminDashboard({
   }, [tab]);
 
   useEffect(() => {
-    if (tab === "contact" || tab === "waitlist") {
+    if (tab === "contact") {
       void onEnsureSummaryLoaded();
     }
     if (tab === "blog") {
@@ -138,34 +146,13 @@ export default function AdminDashboard({
     [summary.contactSubmissions]
   );
 
-  const waitlistItems = useMemo(
-    () =>
-      summary.waitlistSubmissions.map((item) => ({
-        id: item.id,
-        title: item.fullName,
-        subtitle: `${item.courseSlug} · ${item.country}`,
-        date: item.submittedAt,
-        isUnopened: !item.openedAt,
-        fields: [
-          { label: "Full name", value: item.fullName },
-          { label: "Email", value: item.email },
-          { label: "Mobile", value: item.mobile },
-          { label: "Country", value: item.country },
-          { label: "Course", value: item.courseSlug },
-          { label: "Language", value: item.locale },
-          { label: "Submitted at", value: new Date(item.submittedAt).toLocaleString() },
-        ],
-      })),
-    [summary.waitlistSubmissions]
-  );
-
   function handleNotificationClick(notification: AppNotification) {
     if (notification.kind === "contact") {
       setTab("contact");
       return;
     }
     if (notification.kind === "waitlist") {
-      setTab("waitlist");
+      setTab("audience");
     }
   }
 
@@ -180,7 +167,7 @@ export default function AdminDashboard({
       onNotificationClick={handleNotificationClick}
       navBadges={{
         contact: insights?.counts.unopenedContact ?? 0,
-        waitlist: insights?.counts.unopenedWaitlist ?? 0,
+        audience: insights?.counts.unopenedWaitlist ?? 0,
         students: insights?.counts.students,
         blog: insights?.counts.blogPosts ?? blogPosts.length,
       }}
@@ -255,20 +242,11 @@ export default function AdminDashboard({
         </div>
       )}
 
-      {visitedTabs.has("waitlist") && (
-        <div className={tab === "waitlist" ? "block" : "hidden"}>
-          {summaryLoading && !summaryLoaded ? (
-            <p className="student-glass font-dm text-sm text-cream/70">Loading waitlist inbox…</p>
-          ) : (
-            <SubmissionList
-              empty="No waitlist forms yet."
-              onOpenItem={async (id) => {
-                await adminRequest("mark-waitlist-opened", { id });
-                await onRefresh();
-              }}
-              items={waitlistItems}
-            />
-          )}
+      {visitedTabs.has("audience") && (
+        <div className={tab === "audience" ? "block" : "hidden"}>
+          <div className="student-glass">
+            <AudienceManager audienceRequest={audienceRequest} onStatus={notify} />
+          </div>
         </div>
       )}
     </AdminShell>

@@ -4,13 +4,13 @@ import Image from "next/image";
 import { useState } from "react";
 import {
   BookOpen,
-  ClipboardList,
   Globe,
   GraduationCap,
   LayoutDashboard,
   Mail,
   Menu,
   PenLine,
+  Users,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -23,7 +23,7 @@ export type AdminTab =
   | "overview"
   | "blog"
   | "contact"
-  | "waitlist"
+  | "audience"
   | "courses"
   | "programs"
   | "students";
@@ -71,7 +71,7 @@ export default function AdminShell({
     { id: "courses", label: "Public courses", icon: Globe },
     { id: "blog", label: "Blog", icon: PenLine, badge: navBadges.blog },
     { id: "contact", label: "Contact inbox", icon: Mail, badge: navBadges.contact },
-    { id: "waitlist", label: "Waitlists", icon: ClipboardList, badge: navBadges.waitlist },
+    { id: "audience", label: "Audience", icon: Users, badge: navBadges.audience },
   ];
 
   function NavButton({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {

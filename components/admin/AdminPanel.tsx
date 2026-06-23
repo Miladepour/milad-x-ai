@@ -70,6 +70,18 @@ export default function AdminPanel() {
     return data;
   }, []);
 
+  const audienceRequest = useCallback(async (action: string, payload = {}) => {
+    const res = await fetch("/api/admin-audience", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ action, ...payload }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Audience request failed");
+    return data;
+  }, []);
+
   const loadSummary = useCallback(async () => {
     setSummaryLoading(true);
     try {
@@ -179,6 +191,7 @@ export default function AdminPanel() {
         onRefresh={refreshDashboard}
         adminRequest={adminRequest}
         membersRequest={membersRequest}
+        audienceRequest={audienceRequest}
         onEnsureSummaryLoaded={ensureSummaryLoaded}
         onEnsureBlogLoaded={ensureBlogLoaded}
         onReloadBlogPosts={reloadBlogPosts}

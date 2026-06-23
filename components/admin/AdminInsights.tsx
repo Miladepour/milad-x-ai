@@ -75,15 +75,15 @@ export default function AdminInsightsPanel({ insights, onNavigate }: AdminInsigh
           onClick={() => onNavigate("contact")}
         />
         <StatCard
-          label="Waitlist inbox"
-          value={counts.unopenedWaitlist}
+          label="Audience"
+          value={counts.waitlistTotal}
           hint={
             counts.unopenedWaitlist > 0
-              ? `${counts.waitlistTotal} total · unopened`
-              : `${counts.waitlistTotal} total · all read`
+              ? `${counts.unopenedWaitlist} unopened waitlist`
+              : `${counts.waitlistTotal} waitlist signups`
           }
           accent={counts.unopenedWaitlist > 0}
-          onClick={() => onNavigate("waitlist")}
+          onClick={() => onNavigate("audience")}
         />
         <StatCard
           label="Blog posts"
@@ -134,7 +134,7 @@ export default function AdminInsightsPanel({ insights, onNavigate }: AdminInsigh
             <h2 className="student-section-title">Unopened waitlist</h2>
             <button
               type="button"
-              onClick={() => onNavigate("waitlist")}
+              onClick={() => onNavigate("audience")}
               className="font-mono text-[10px] uppercase tracking-widest text-orange hover:text-cream"
             >
               Inbox →
