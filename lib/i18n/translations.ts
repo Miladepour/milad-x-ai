@@ -585,6 +585,14 @@ export const translations = {
       privacyPolicy: "Privacy Policy",
       termsAndConditions: "Terms and Conditions",
       legalTitle: "Legal",
+      newsletterTitle: "Join our newsletter",
+      newsletterDescription:
+        "Get the latest tutorials, tools, and practical AI tips delivered straight to your inbox.",
+      newsletterEmailPlaceholder: "Your email",
+      newsletterSubmit: "Subscribe",
+      newsletterSubmitting: "Subscribing…",
+      newsletterSuccess: "You're subscribed. Thank you!",
+      newsletterError: "Could not subscribe. Please try again.",
     },
   },
   FA: {
@@ -1176,6 +1184,14 @@ export const translations = {
       privacyPolicy: "سیاست حریم خصوصی",
       termsAndConditions: "شرایط و ضوابط",
       legalTitle: "قوانین",
+      newsletterTitle: "عضویت در خبرنامه ما",
+      newsletterDescription:
+        "جدیدترین آموزش‌ها، ابزارها و نکات کاربردی هوش مصنوعی را مستقیم در ایمیل خود دریافت کنید.",
+      newsletterEmailPlaceholder: "ایمیل شما",
+      newsletterSubmit: "عضویت",
+      newsletterSubmitting: "در حال ثبت…",
+      newsletterSuccess: "عضویت شما ثبت شد. ممنون!",
+      newsletterError: "ثبت نشد. لطفاً دوباره تلاش کنید.",
     },
   },
 } as const;

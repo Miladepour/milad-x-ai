@@ -18,6 +18,22 @@ import {
   listWaitlistAdmin,
   listWaitlistCourseSlugsAdmin,
 } from "@/lib/audience/store";
+import type { AudienceEmailAudience, AudienceEmailListType } from "@/lib/audience/email-types";
+import {
+  createAudienceEmailCampaignAdmin,
+  deleteAudienceEmailTemplateAdmin,
+  listAudienceEmailHistoryAdmin,
+  listAudienceEmailTemplatesAdmin,
+  saveAudienceEmailTemplateAdmin,
+  sendAudienceEmailBatchAdmin,
+} from "@/lib/audience/email-store";
+import {
+  buildAudienceEmailLabel,
+  resolveAudienceEmailRecipients,
+} from "@/lib/audience/recipients";
+import { previewAudienceBroadcastEmail } from "@/lib/email/audience-broadcast";
+import { parseEmailBannerId } from "@/lib/email/banners";
+import { sanitizeEmailHtml } from "@/lib/email/sanitize-html";
 import type { SubscriberStatus, StudentAudienceFilter } from "@/lib/audience/types";
 import { createAdminDbClient } from "@/lib/supabase/admin-client";
 import { markNotificationsReadByReference } from "@/lib/notifications/store";
@@ -34,6 +50,29 @@ function parseStudentFilter(value: unknown): StudentAudienceFilter {
   const filter = String(value ?? "all");
   if (filter === "students" || filter === "non-students") return filter;
   return "all";
+}
+
+function parseAudienceListType(value: unknown): AudienceEmailListType | null {
+  const listType = String(value ?? "");
+  if (listType === "subscribers" || listType === "leads" || listType === "waitlist") {
+    return listType;
+  }
+  return null;
+}
+
+function parseAudienceEmailAudience(body: Record<string, unknown>): AudienceEmailAudience | null {
+  const listType = parseAudienceListType(body.listType);
+  if (!listType) return null;
+  return {
+    listType,
+    source: String(body.source ?? "").trim() || undefined,
+    courseSlug: String(body.courseSlug ?? "").trim() || undefined,
+    studentFilter: parseStudentFilter(body.studentFilter ?? "non-students"),
+  };
+}
+
+function parsePreviewLocale(value: unknown): "EN" | "FA" {
+  return value === "FA" ? "FA" : "EN";
 }
 
 export async function POST(request: Request) {
@@ -154,6 +193,122 @@ export async function POST(request: Request) {
       if (error) throw new Error(error.message);
       await markNotificationsReadByReference(admin.id, "waitlist", id);
       return NextResponse.json({ ok: true });
+    }
+
+    if (action === "preview-audience-email") {
+      const subject = String(body.subject ?? "").trim();
+      const bodyHtml = sanitizeEmailHtml(String(body.bodyHtml ?? ""));
+      const audience = parseAudienceEmailAudience(body);
+
+      if (!subject) {
+        return NextResponse.json({ error: "subject is required" }, { status: 400 });
+      }
+      if (!bodyHtml || bodyHtml === "<p></p>") {
+        return NextResponse.json({ error: "email body is required" }, { status: 400 });
+      }
+      if (!audience) {
+        return NextResponse.json({ error: "audience is required" }, { status: 400 });
+      }
+
+      const recipients = await resolveAudienceEmailRecipients(audience);
+      if (recipients.length === 0) {
+        return NextResponse.json({ error: "No recipients match this audience" }, { status: 400 });
+      }
+
+      const previewLocale = parsePreviewLocale(body.previewLocale);
+      const sample =
+        recipients.find((recipient) => recipient.locale === previewLocale) ?? recipients[0];
+      const bannerId = parseEmailBannerId(body.bannerId);
+
+      const html = previewAudienceBroadcastEmail({
+        bodyHtml,
+        recipient: sample,
+        bannerId,
+      });
+
+      return NextResponse.json({
+        ok: true,
+        html,
+        subject,
+        audienceLabel: buildAudienceEmailLabel(audience),
+        recipientCount: recipients.length,
+        sampleRecipient: sample,
+        recipients,
+      });
+    }
+
+    if (action === "list-audience-email-templates") {
+      const templates = await listAudienceEmailTemplatesAdmin();
+      return NextResponse.json({ ok: true, templates });
+    }
+
+    if (action === "save-audience-email-template") {
+      const template = await saveAudienceEmailTemplateAdmin({
+        id: body.id ? String(body.id) : null,
+        name: String(body.name ?? ""),
+        subject: String(body.subject ?? ""),
+        bodyHtml: String(body.bodyHtml ?? ""),
+      });
+      return NextResponse.json({ ok: true, template });
+    }
+
+    if (action === "delete-audience-email-template") {
+      const id = String(body.id ?? "");
+      if (!id) {
+        return NextResponse.json({ error: "id required" }, { status: 400 });
+      }
+      await deleteAudienceEmailTemplateAdmin(id);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (action === "start-audience-email-campaign") {
+      const subject = String(body.subject ?? "").trim();
+      const bodyHtml = sanitizeEmailHtml(String(body.bodyHtml ?? ""));
+      const audience = parseAudienceEmailAudience(body);
+
+      if (!subject) {
+        return NextResponse.json({ error: "subject is required" }, { status: 400 });
+      }
+      if (!bodyHtml || bodyHtml === "<p></p>") {
+        return NextResponse.json({ error: "email body is required" }, { status: 400 });
+      }
+      if (!audience) {
+        return NextResponse.json({ error: "audience is required" }, { status: 400 });
+      }
+
+      const recipients = await resolveAudienceEmailRecipients(audience);
+      if (recipients.length === 0) {
+        return NextResponse.json({ error: "No recipients match this audience" }, { status: 400 });
+      }
+
+      const campaignId = await createAudienceEmailCampaignAdmin({
+        subject,
+        bodyHtml,
+        audience,
+        recipients,
+        sentBy: admin.id,
+      });
+
+      return NextResponse.json({
+        ok: true,
+        campaignId,
+        recipientCount: recipients.length,
+        audienceLabel: buildAudienceEmailLabel(audience),
+      });
+    }
+
+    if (action === "send-audience-email-batch") {
+      const campaignId = String(body.campaignId ?? "");
+      if (!campaignId) {
+        return NextResponse.json({ error: "campaignId is required" }, { status: 400 });
+      }
+      const result = await sendAudienceEmailBatchAdmin(campaignId);
+      return NextResponse.json({ ok: true, ...result });
+    }
+
+    if (action === "list-audience-email-history") {
+      const campaigns = await listAudienceEmailHistoryAdmin();
+      return NextResponse.json({ ok: true, campaigns });
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });

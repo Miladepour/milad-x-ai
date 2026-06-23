@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Download, Plus, Upload } from "lucide-react";
 import {
@@ -21,13 +22,23 @@ interface AudienceManagerProps {
   onStatus: (message: string, tone?: "success" | "error") => void;
 }
 
-type AudienceSubTab = "subscribers" | "leads" | "waitlist";
+type AudienceSubTab = "subscribers" | "leads" | "waitlist" | "email";
 
 const SUB_TABS: { id: AudienceSubTab; label: string }[] = [
   { id: "subscribers", label: "Subscribers" },
   { id: "leads", label: "Leads" },
   { id: "waitlist", label: "Waitlist" },
+  { id: "email", label: "Send email" },
 ];
+
+const AudienceEmailComposer = dynamic(
+  () => import("@/components/admin/AudienceEmailComposer"),
+  {
+    loading: () => (
+      <p className="font-dm text-sm text-cream/70">Loading email composer…</p>
+    ),
+  }
+);
 
 function downloadTextFile(filename: string, content: string) {
   const blob = new Blob([content], { type: "text/csv;charset=utf-8" });
@@ -168,8 +179,9 @@ export default function AudienceManager({ audienceRequest, onStatus }: AudienceM
   }, [subTab, debouncedSearch, sourceFilter, statusFilter, courseFilter, studentFilter]);
 
   useEffect(() => {
+    if (subTab === "email") return;
     void loadList();
-  }, [loadList]);
+  }, [loadList, subTab]);
 
   const activeList = useMemo(() => {
     if (subTab === "subscribers") return subscriberData;
@@ -292,7 +304,7 @@ export default function AudienceManager({ audienceRequest, onStatus }: AudienceM
         <div>
           <h1 className="student-section-title">Audience</h1>
           <p className="mt-1 font-dm text-sm text-cream/60">
-            Newsletter subscribers, leads, and course waitlists. Email sending comes in a later step.
+            Newsletter subscribers, leads, course waitlists, and audience email.
           </p>
         </div>
         {counts && (
@@ -327,7 +339,7 @@ export default function AudienceManager({ audienceRequest, onStatus }: AudienceM
             }`}
           >
             {tab.label}
-            {counts && (
+            {counts && tab.id !== "email" && (
               <span className="ms-2 font-mono text-[10px] text-cream/45">
                 {tab.id === "subscribers"
                   ? counts.subscribers
@@ -340,6 +352,16 @@ export default function AudienceManager({ audienceRequest, onStatus }: AudienceM
         ))}
       </div>
 
+      {subTab === "email" ? (
+        <AudienceEmailComposer
+          audienceRequest={audienceRequest}
+          onStatus={onStatus}
+          subscriberSources={subscriberSources}
+          leadSources={leadSources}
+          waitlistCourses={waitlistCourses}
+        />
+      ) : (
+        <>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:flex-wrap">
           <label className="min-w-[220px] flex-1">
@@ -659,6 +681,8 @@ export default function AudienceManager({ audienceRequest, onStatus }: AudienceM
           <span className="text-cream/70">website</span> so you can filter before sending email later.
           Use <span className="text-cream/70">Non-students only</span> when targeting marketing sends.
         </p>
+      )}
+        </>
       )}
     </div>
   );

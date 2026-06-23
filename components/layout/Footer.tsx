@@ -8,6 +8,7 @@ import { TUTORIALS_BASE_PATH } from "@/lib/tutorials/constants";
 import { toLocaleDigits } from "@/lib/i18n/digits";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import FooterNewsletterSignup from "@/components/layout/FooterNewsletterSignup";
 
 const WORKSHOP_SLUG = "prompt-to-content";
 
@@ -91,6 +92,8 @@ export default function Footer() {
   return (
     <footer className="border-t border-surface bg-background mt-auto" role="contentinfo">
       <div className="max-w-7xl mx-auto px-8 md:px-12 lg:px-16 py-12 md:py-14">
+        <FooterNewsletterSignup />
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
           <div className="sm:col-span-2 lg:col-span-1 lg:max-w-sm">
             <Link href={href("/")} className="inline-block group">

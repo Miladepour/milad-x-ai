@@ -16,7 +16,7 @@ import type {
 } from "@/lib/audience/types";
 import { waitlistRowToSubmission } from "@/lib/supabase/mappers";
 import type { WaitlistSubmissionRow } from "@/lib/supabase/database.types";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 export const AUDIENCE_PAGE_SIZE = 20;
 
@@ -500,4 +500,31 @@ export async function importLeadsCsvAdmin(
   }
 
   return { inserted, updated, skipped, errors };
+}
+
+export async function subscribeNewsletterPublic(payload: {
+  email: string;
+  locale: AudienceLocale;
+}): Promise<void> {
+  const email = normalizeEmail(payload.email);
+  if (!isValidEmail(email)) {
+    throw new Error("Invalid email address");
+  }
+
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("newsletter_subscribers").upsert(
+    {
+      email,
+      full_name: "",
+      locale: payload.locale,
+      source: "website",
+      source_detail: null,
+      notes: null,
+      status: "active",
+      unsubscribed_at: null,
+    },
+    { onConflict: "email" }
+  );
+
+  if (error) throw new Error(error.message);
 }
