@@ -19,7 +19,7 @@ export default function ProgramCertificateView({
   actions,
 }: ProgramCertificateViewProps) {
   return (
-    <div className="mx-auto w-full max-w-5xl">
+    <div className="mx-auto w-full max-w-5xl relative">
       <CertificatePreviewFrame>
         <CertificateDocument
           certificate={certificate}
@@ -31,7 +31,7 @@ export default function ProgramCertificateView({
 
       <div
         aria-hidden
-        className="pointer-events-none fixed left-[-10000px] top-0 z-[-1]"
+        className="pointer-events-none absolute left-[-9999px] top-0 overflow-visible"
       >
         <CertificateDocument
           certificate={certificate}

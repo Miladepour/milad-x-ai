@@ -259,7 +259,7 @@ function CertificateFooter({
 }: {
   signatory: string;
   organization: string;
-  signatureUrl: string | null;
+  signatureUrl: string;
   issueDate: string;
   certificateNumber: string;
   labels: CertificateDocumentLabels;
@@ -277,7 +277,8 @@ function CertificateFooter({
           <img
             src={signatureUrl}
             alt=""
-            className="mb-1 w-auto object-contain object-left rtl:object-right"
+            crossOrigin="anonymous"
+            className="certificate-signature-image mb-1 w-auto object-contain object-left rtl:object-right"
             style={{
               height: tokens.signatureHeight,
               maxWidth: tokens.signatureMaxWidth,

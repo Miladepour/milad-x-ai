@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
+import { getCertificateSignatureSourceUrl } from "@/lib/members/certificate-config";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const url = process.env.CERTIFICATE_SIGNATURE_IMAGE_URL?.trim();
-  if (!url) {
-    return NextResponse.json({ error: "Not configured" }, { status: 404 });
-  }
+  const url = getCertificateSignatureSourceUrl();
 
   try {
     const response = await fetch(url, { next: { revalidate: 86400 } });
@@ -21,6 +19,7 @@ export async function GET() {
       headers: {
         "Content-Type": contentType,
         "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+        "Access-Control-Allow-Origin": "*",
       },
     });
   } catch (error) {

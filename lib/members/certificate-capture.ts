@@ -5,12 +5,24 @@ import {
   getCertificateElementId,
 } from "@/lib/members/certificate-layout";
 
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Could not read image"));
+    reader.readAsDataURL(blob);
+  });
+}
+
 async function preloadImages(root: HTMLElement): Promise<void> {
   const images = Array.from(root.querySelectorAll("img"));
   await Promise.all(
     images.map(
       (img) =>
         new Promise<void>((resolve) => {
+          if (!img.getAttribute("crossorigin")) {
+            img.crossOrigin = "anonymous";
+          }
           if (img.complete && img.naturalWidth > 0) {
             resolve();
             return;
@@ -20,6 +32,35 @@ async function preloadImages(root: HTMLElement): Promise<void> {
         })
     )
   );
+}
+
+async function inlineImagesForExport(root: HTMLElement): Promise<() => void> {
+  const images = Array.from(root.querySelectorAll("img"));
+  const restores: Array<() => void> = [];
+
+  await Promise.all(
+    images.map(async (img) => {
+      const src = img.currentSrc || img.src;
+      if (!src || src.startsWith("data:")) return;
+
+      try {
+        const response = await fetch(src, { credentials: "same-origin" });
+        if (!response.ok) return;
+        const dataUrl = await blobToDataUrl(await response.blob());
+        const previous = img.src;
+        img.src = dataUrl;
+        restores.push(() => {
+          img.src = previous;
+        });
+      } catch {
+        // Keep original src if inlining fails.
+      }
+    })
+  );
+
+  return () => {
+    restores.forEach((restore) => restore());
+  };
 }
 
 function prepareCertificateForExport(element: HTMLElement) {
@@ -70,7 +111,8 @@ export async function captureCertificatePng(
   const { width, height } = getCertificateDimensions(format);
 
   await preloadImages(element);
-  const restore = prepareCertificateForExport(element);
+  const restoreStyles = prepareCertificateForExport(element);
+  const restoreImages = await inlineImagesForExport(element);
 
   try {
     return await toPng(element, {
@@ -85,7 +127,8 @@ export async function captureCertificatePng(
       },
     });
   } finally {
-    restore();
+    restoreImages();
+    restoreStyles();
   }
 }
 

@@ -28,10 +28,19 @@ export function getCertificateLinkedInOrganizationId(): string | null {
   return /^\d+$/.test(raw) ? raw : null;
 }
 
-export function getCertificateSignatureImageUrl(): string | null {
-  const url = process.env.CERTIFICATE_SIGNATURE_IMAGE_URL?.trim();
-  if (!url) return null;
+/** Default signature asset (override with CERTIFICATE_SIGNATURE_IMAGE_URL in env). */
+export const DEFAULT_CERTIFICATE_SIGNATURE_IMAGE_URL =
+  "https://sayclick.co.uk/wp-content/uploads/2026/06/milad-sign-for-certificate.png";
+
+export function getCertificateSignatureSourceUrl(): string {
+  return (
+    process.env.CERTIFICATE_SIGNATURE_IMAGE_URL?.trim() ||
+    DEFAULT_CERTIFICATE_SIGNATURE_IMAGE_URL
+  );
+}
+
+export function getCertificateSignatureImageUrl(): string {
   // Same-origin proxy — external hosts often omit CORS headers, which breaks
-  // crossOrigin img loads and html2canvas exports.
+  // crossOrigin img loads and html-to-image exports.
   return "/api/certificate-signature";
 }
