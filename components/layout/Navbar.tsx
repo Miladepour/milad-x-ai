@@ -195,10 +195,12 @@ export default function Navbar() {
 
       <div
         className={`md:hidden overflow-hidden transition-all duration-300 ${
-          menuOpen ? "max-h-80 border-b border-surface" : "max-h-0"
+          menuOpen
+            ? "max-h-[calc(100dvh-5rem)] border-b border-surface"
+            : "max-h-0"
         } bg-background/95 backdrop-blur-md`}
       >
-        <div className="flex flex-col px-8 py-4 gap-5">
+        <div className="flex max-h-[calc(100dvh-5rem)] flex-col gap-5 overflow-y-auto overscroll-contain px-8 py-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <StudentNavButton
             urlLocale={urlLocale}
             active={isStudentAreaActive(pathname, urlLocale)}

@@ -239,8 +239,8 @@ function StudentDashboardShellInner({
   }
 
   const sidebar = (
-    <div className="flex h-full flex-col">
-      <div className="border-b border-white/[0.08] px-4 py-5">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="shrink-0 border-b border-white/[0.08] px-4 py-5">
         <div className="flex items-start justify-between gap-3">
           <Link
             href={profileHref}
@@ -273,7 +273,7 @@ function StudentDashboardShellInner({
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+      <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-3 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         {continueWatching && (
           <Link
             href={continueWatching.href}
@@ -401,11 +401,11 @@ function StudentDashboardShellInner({
 
       <div className="mx-auto flex w-full max-w-[1440px] gap-4 px-4 py-6 sm:gap-6 sm:px-6 lg:py-8">
         <aside
-          className={`student-glass fixed bottom-0 left-0 top-20 z-50 w-[min(100vw-2rem,18rem)] !rounded-none !p-0 shadow-2xl transition-transform duration-300 sm:left-4 sm:top-24 sm:!rounded-2xl lg:static lg:z-auto lg:w-60 lg:shrink-0 lg:translate-x-0 lg:!p-0 ${
+          className={`student-glass fixed left-0 top-20 z-50 flex h-[calc(100dvh-5rem)] max-h-[calc(100dvh-5rem)] w-[min(100vw-2rem,18rem)] flex-col overflow-hidden !rounded-none !p-0 shadow-2xl transition-transform duration-300 sm:left-4 sm:top-24 sm:h-[calc(100dvh-6rem)] sm:max-h-[calc(100dvh-6rem)] sm:!rounded-2xl lg:static lg:z-auto lg:h-auto lg:max-h-none lg:w-60 lg:shrink-0 lg:translate-x-0 lg:!p-0 ${
             menuOpen ? "translate-x-0" : "-translate-x-[110%] lg:translate-x-0"
           }`}
         >
-          <div className="flex items-center justify-between border-b border-white/[0.08] px-4 py-3 lg:hidden">
+          <div className="flex shrink-0 items-center justify-between border-b border-white/[0.08] px-4 py-3 lg:hidden">
             <span className="font-dm text-sm font-medium text-cream">{labels.menu}</span>
             <button
               type="button"
@@ -416,7 +416,7 @@ function StudentDashboardShellInner({
               <X className="h-5 w-5" strokeWidth={1.75} />
             </button>
           </div>
-          {sidebar}
+          <div className="min-h-0 flex-1 overflow-hidden">{sidebar}</div>
         </aside>
 
         <main className="min-w-0 flex-1">{children}</main>
