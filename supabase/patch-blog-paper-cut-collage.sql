@@ -18,7 +18,7 @@ values (
   'راهنمای ساخت تصویر Paper Cut Collage با ChatGPT و Higgsfield',
   'MX AI Academy',
   '/images/Paper Cut Collage.jpeg',
-  'راهنمای گام‌به‌گام ساخت تصویر Paper Cut Collage با ChatGPT و Higgsfield — از پیدا کردن تصویر مرجع در Pinterest تا ساخت ویدیو با Seedance.',
+  'راهنمای گام‌به‌گام ساخت تصویر Paper Cut Collage با ChatGPT و Higgsfield، از پیدا کردن تصویر مرجع در Pinterest تا ساخت ویدیو با Seedance.',
   $html$
 <h2>مرحله ۱. پیدا کردن تصویر مرجع</h2>
 
