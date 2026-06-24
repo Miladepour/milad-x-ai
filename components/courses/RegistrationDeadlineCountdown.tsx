@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { splitCountdown } from "@/lib/courses/session-datetime";
 import { toLocaleDigits } from "@/lib/i18n/digits";
 import type { Locale } from "@/lib/i18n/translations";
@@ -27,11 +27,13 @@ function CountdownRing({
   max,
   display,
   label,
+  gradientId,
 }: {
   value: number;
   max: number;
   display: string;
   label: string;
+  gradientId: string;
 }) {
   const radius = 30;
   const circumference = 2 * Math.PI * radius;
@@ -59,7 +61,7 @@ function CountdownRing({
             cy="36"
             r={radius}
             fill="none"
-            stroke="url(#registrationCountdownGradient)"
+            stroke={`url(#${gradientId})`}
             strokeWidth="4"
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -83,19 +85,21 @@ export default function RegistrationDeadlineCountdown({
   lang,
   labels,
 }: RegistrationDeadlineCountdownProps) {
-  const [nowMs, setNowMs] = useState(() => Date.now());
+  const gradientId = useId();
+  const [nowMs, setNowMs] = useState<number | null>(null);
 
   useEffect(() => {
+    setNowMs(Date.now());
     const id = window.setInterval(() => setNowMs(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, []);
 
-  const remainingMs = deadlineMs - nowMs;
-  const closed = remainingMs <= 0;
+  const remainingMs = nowMs == null ? deadlineMs : deadlineMs - nowMs;
+  const closed = nowMs != null && remainingMs <= 0;
 
   const parts = useMemo(
-    () => (closed ? null : splitCountdown(remainingMs)),
-    [closed, remainingMs]
+    () => (closed || nowMs == null ? null : splitCountdown(remainingMs)),
+    [closed, nowMs, remainingMs]
   );
 
   const daysMax = useMemo(() => {
@@ -103,12 +107,32 @@ export default function RegistrationDeadlineCountdown({
     return Math.max(parts.days + 1, 30);
   }, [parts]);
 
+  if (nowMs == null) {
+    return (
+      <div className="rounded-sm border border-surface/80 bg-[#141414] px-3 py-4">
+        <p className="mb-4 text-center font-mono text-[11px] uppercase tracking-widest text-orange rtl:tracking-normal">
+          {labels.title}
+        </p>
+        <div className="flex items-start justify-between gap-1" aria-hidden>
+          {[labels.days, labels.hours, labels.minutes, labels.seconds].map((label) => (
+            <div key={label} className="flex min-w-0 flex-1 flex-col items-center gap-2">
+              <div className="h-[72px] w-[72px] shrink-0 rounded-full border border-white/10" />
+              <span className="text-center font-mono text-[10px] uppercase leading-tight tracking-widest text-cream/65 rtl:tracking-normal">
+                {label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-sm border border-surface/80 bg-[#141414] px-3 py-4">
       <svg width="0" height="0" className="absolute" aria-hidden>
         <defs>
           <linearGradient
-            id="registrationCountdownGradient"
+            id={gradientId}
             x1="0%"
             y1="0%"
             x2="100%"
@@ -121,12 +145,12 @@ export default function RegistrationDeadlineCountdown({
         </defs>
       </svg>
 
-      <p className="font-mono text-[11px] text-orange uppercase tracking-widest rtl:tracking-normal text-center mb-4">
+      <p className="mb-4 text-center font-mono text-[11px] uppercase tracking-widest text-orange rtl:tracking-normal">
         {labels.title}
       </p>
 
       {closed ? (
-        <p className="font-dm text-cream/90 text-sm text-center">{labels.closed}</p>
+        <p className="text-center font-dm text-sm text-cream/90">{labels.closed}</p>
       ) : (
         parts && (
           <div className="flex items-start justify-between gap-1">
@@ -135,24 +159,28 @@ export default function RegistrationDeadlineCountdown({
               max={daysMax}
               display={padCount(parts.days, lang)}
               label={labels.days}
+              gradientId={gradientId}
             />
             <CountdownRing
               value={parts.hours}
               max={24}
               display={padCount(parts.hours, lang)}
               label={labels.hours}
+              gradientId={gradientId}
             />
             <CountdownRing
               value={parts.minutes}
               max={60}
               display={padCount(parts.minutes, lang)}
               label={labels.minutes}
+              gradientId={gradientId}
             />
             <CountdownRing
               value={parts.seconds}
               max={60}
               display={padCount(parts.seconds, lang)}
               label={labels.seconds}
+              gradientId={gradientId}
             />
           </div>
         )

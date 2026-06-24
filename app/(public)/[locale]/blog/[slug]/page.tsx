@@ -1,14 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import BlogCoursePromo from "@/components/blog/BlogCoursePromo";
-import { BLOG_COURSE_CARDS_MARKER } from "@/lib/blog/constants";
+import BlogPostContent from "@/components/blog/BlogPostContent";
 import { getAllBlogSlugs, getBlogPostBySlug } from "@/lib/blog/store";
 import { locales, urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { localizedPath } from "@/lib/i18n/paths";
 import { pageAlternates } from "@/lib/i18n/metadata";
 import type { Metadata } from "next";
-import sanitizeHtml from "sanitize-html";
 
 export const dynamic = "force-dynamic";
 
@@ -45,49 +43,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   if (!post) notFound();
 
   const backLabel = internal === "FA" ? "بازگشت به وبلاگ" : "← Back to blog";
-  const sanitizeOptions: sanitizeHtml.IOptions = {
-    allowedTags: [
-      "p",
-      "br",
-      "strong",
-      "em",
-      "u",
-      "h2",
-      "h3",
-      "ul",
-      "ol",
-      "li",
-      "blockquote",
-      "a",
-      "img",
-      "pre",
-      "code",
-    ],
-    allowedAttributes: {
-      a: ["href", "target", "rel"],
-      img: ["src", "alt", "title"],
-      "*": ["class"],
-    },
-    allowedSchemes: ["http", "https"],
-    transformTags: {
-      a: sanitizeHtml.simpleTransform("a", { rel: "noreferrer noopener" }),
-    },
-  };
-
-  function renderContentHtml(html: string) {
-    const safeHtml = sanitizeHtml(html, sanitizeOptions);
-    return (
-      <div
-        className="flex flex-col gap-5 [&_a]:text-orange [&_a]:underline [&_a]:underline-offset-4 [&_blockquote]:border-l-2 [&_blockquote]:border-orange [&_blockquote]:pl-4 [&_code]:rounded [&_code]:bg-surface [&_code]:px-2 [&_code]:py-1 [&_code]:font-mono [&_code]:text-sm [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-orange [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-orange [&_img]:rounded-sm [&_img]:border [&_img]:border-surface [&_ol]:list-decimal [&_ol]:pl-6 [&_pre]:overflow-x-auto [&_pre]:rounded-sm [&_pre]:border [&_pre]:border-surface [&_pre]:bg-surface/60 [&_pre]:p-4 [&_ul]:list-disc [&_ul]:pl-6"
-        dangerouslySetInnerHTML={{ __html: safeHtml }}
-      />
-    );
-  }
-
-  const contentParts = post.content.includes(BLOG_COURSE_CARDS_MARKER)
-    ? post.content.split(BLOG_COURSE_CARDS_MARKER)
-    : [post.content];
-  const isHtml = /<\/?[a-z][\s\S]*>/i.test(post.content);
 
   return (
     <div className="flex-1 w-full bg-background text-cream">
@@ -104,7 +59,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             {internal === "FA" ? "نویسنده:" : "Author:"} {post.author}
           </span>
         </div>
-        <h1 className="type-course-page-title font-dm font-bold text-orange mb-6">
+        <h1 className="font-dm text-2xl md:text-[1.65rem] font-bold leading-snug text-orange mb-6">
           {post.title}
         </h1>
         {post.coverImage ? (
@@ -124,24 +79,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           {post.excerpt}
         </p>
         <div className="mt-10 font-dm text-lg leading-relaxed text-cream/85">
-          {isHtml ? (
-            <>
-              {contentParts.map((part, index) => (
-                <div key={index}>
-                  {part.trim() ? renderContentHtml(part) : null}
-                  {index < contentParts.length - 1 ? (
-                    <BlogCoursePromo locale={locale} />
-                  ) : null}
-                </div>
-              ))}
-            </>
-          ) : (
-            <div className="flex flex-col gap-5">
-              {post.content.split(/\n{2,}/).map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
-              ))}
-            </div>
-          )}
+          <BlogPostContent content={post.content} locale={locale} slug={post.slug} />
         </div>
       </article>
     </div>

@@ -1,9 +1,9 @@
 import type { BlogPost, BlogPostListItem } from "./types";
 import {
-  createAnonClient,
   createClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
+import { createBlogClient } from "@/lib/supabase/blog-client";
 import { blogPostToRow, blogRowToPost } from "@/lib/supabase/mappers";
 
 function normalizeSlug(value: string): string {
@@ -17,7 +17,7 @@ function normalizeSlug(value: string): string {
 
 export async function getBlogPosts(locale: "EN" | "FA"): Promise<BlogPost[]> {
   if (!isSupabaseConfigured()) return [];
-  const supabase = createAnonClient();
+  const supabase = createBlogClient();
   const { data, error } = await supabase
     .from("blog_posts")
     .select("*")
@@ -37,7 +37,7 @@ export async function getBlogPostBySlug(
 
 export async function getAllBlogSlugs(): Promise<string[]> {
   if (!isSupabaseConfigured()) return [];
-  const supabase = createAnonClient();
+  const supabase = createBlogClient();
   const { data, error } = await supabase.from("blog_posts").select("slug");
 
   if (error) throw new Error(error.message);

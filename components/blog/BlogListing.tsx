@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import type { BlogPost } from "@/lib/blog/types";
 import { useLanguage } from "@/lib/i18n/context";
@@ -51,20 +52,33 @@ export default function BlogListing({ initialPosts }: BlogListingProps) {
               <li key={post.slug}>
                 <Link
                   href={href(`/blog/${post.slug}`)}
-                  className="group block border border-surface rounded-sm bg-surface/30 p-6 hover:border-orange/40 transition-colors"
+                  className="group block overflow-hidden border border-surface rounded-sm bg-surface/30 hover:border-orange/40 transition-colors"
                 >
-                  <time className="font-mono text-xs text-orange">
-                    {toLocaleDigits(post.date, lang)}
-                  </time>
-                  <h2 className="type-course-card-title font-dm font-semibold text-cream mt-2 mb-2 group-hover:text-orange transition-colors">
-                    {post.title}
-                  </h2>
-                  <p className="type-card-body font-dm text-cream/80 line-clamp-3 leading-relaxed">
-                    {post.excerpt}
-                  </p>
-                  <span className="inline-block mt-4 font-mono text-xs text-orange">
-                    {p.readMore}
-                  </span>
+                  {post.coverImage ? (
+                    <div className="relative aspect-[16/10] w-full overflow-hidden bg-background">
+                      <Image
+                        src={post.coverImage}
+                        alt=""
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                        sizes="(max-width: 768px) 100vw, 480px"
+                      />
+                    </div>
+                  ) : null}
+                  <div className="p-6">
+                    <time className="font-mono text-xs text-orange">
+                      {toLocaleDigits(post.date, lang)}
+                    </time>
+                    <h2 className="type-course-card-title font-dm font-semibold text-cream mt-2 mb-2 group-hover:text-orange transition-colors">
+                      {post.title}
+                    </h2>
+                    <p className="type-card-body font-dm text-cream/80 line-clamp-3 leading-relaxed">
+                      {post.excerpt}
+                    </p>
+                    <span className="inline-block mt-4 font-mono text-xs text-orange">
+                      {p.readMore}
+                    </span>
+                  </div>
                 </Link>
               </li>
             ))}
