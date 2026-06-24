@@ -4,6 +4,7 @@ import {
   listSubscribersAdmin,
   listWaitlistAdmin,
 } from "@/lib/audience/store";
+import { formatAudienceCountryLabel } from "@/lib/audience/country-label";
 
 function dedupeRecipients(recipients: AudienceEmailRecipient[]): AudienceEmailRecipient[] {
   const seen = new Set<string>();
@@ -40,6 +41,7 @@ export async function resolveAudienceEmailRecipients(
 ): Promise<AudienceEmailRecipient[]> {
   const studentFilter = audience.studentFilter ?? "non-students";
   const source = audience.source?.trim() ?? "";
+  const country = audience.country?.trim() ?? "";
   const courseSlug = audience.courseSlug?.trim() ?? "";
 
   if (audience.listType === "subscribers") {
@@ -66,6 +68,7 @@ export async function resolveAudienceEmailRecipients(
         listLeadsAdmin({
           page,
           source,
+          country,
           studentFilter,
         }),
       (item) => ({
@@ -100,6 +103,9 @@ export function buildAudienceEmailLabel(audience: AudienceEmailAudience): string
   if (audience.listType === "waitlist") parts.push("Waitlist");
 
   if (audience.source?.trim()) parts.push(`source: ${audience.source.trim()}`);
+  if (audience.country?.trim()) {
+    parts.push(`country: ${formatAudienceCountryLabel(audience.country)}`);
+  }
   if (audience.courseSlug?.trim()) parts.push(`course: ${audience.courseSlug.trim()}`);
 
   const studentFilter = audience.studentFilter ?? "non-students";

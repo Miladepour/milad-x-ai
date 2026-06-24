@@ -10,12 +10,14 @@ import {
   type AudienceEmailTemplate,
 } from "@/lib/audience/email-types";
 import type { StudentAudienceFilter } from "@/lib/audience/types";
+import { formatAudienceCountryLabel } from "@/lib/audience/country-label";
 
 interface AudienceEmailComposerProps {
   audienceRequest: (action: string, payload?: Record<string, unknown>) => Promise<unknown>;
   onStatus: (message: string, tone?: "success" | "error") => void;
   subscriberSources: string[];
   leadSources: string[];
+  leadCountries: string[];
   waitlistCourses: string[];
 }
 
@@ -78,6 +80,7 @@ export default function AudienceEmailComposer({
   onStatus,
   subscriberSources,
   leadSources,
+  leadCountries,
   waitlistCourses,
 }: AudienceEmailComposerProps) {
   const [mode, setMode] = useState<ComposerMode>("compose");
@@ -85,6 +88,7 @@ export default function AudienceEmailComposer({
 
   const [listType, setListType] = useState<AudienceEmailListType>("subscribers");
   const [sourceFilter, setSourceFilter] = useState("");
+  const [countryFilter, setCountryFilter] = useState("");
   const [courseFilter, setCourseFilter] = useState("");
   const [studentFilter, setStudentFilter] = useState<StudentAudienceFilter>("all");
   const [previewLocale, setPreviewLocale] = useState<"EN" | "FA">("EN");
@@ -111,10 +115,11 @@ export default function AudienceEmailComposer({
     () => ({
       listType,
       source: sourceFilter,
+      country: countryFilter,
       courseSlug: courseFilter,
       studentFilter,
     }),
-    [courseFilter, listType, sourceFilter, studentFilter]
+    [countryFilter, courseFilter, listType, sourceFilter, studentFilter]
   );
 
   const sourceOptions =
@@ -410,7 +415,8 @@ export default function AudienceEmailComposer({
                     Who should receive this email?
                   </h2>
                   <p className="mt-2 font-dm text-sm text-cream/55">
-                    Choose a list and optional filters. Only active subscribers are included.
+                    Choose a list and optional filters. For leads, filter by country to target a
+                    specific region.
                   </p>
                 </div>
 
@@ -426,6 +432,7 @@ export default function AudienceEmailComposer({
                         onClick={() => {
                           setListType(option.value);
                           setSourceFilter("");
+                          setCountryFilter("");
                           setCourseFilter("");
                         }}
                         className={`rounded-xl border px-4 py-4 text-left transition-colors ${
@@ -483,6 +490,43 @@ export default function AudienceEmailComposer({
                       ))}
                     </select>
                   </label>
+                ) : listType === "leads" ? (
+                  <>
+                    <label className="flex flex-col gap-2">
+                      <span className="font-mono text-[10px] uppercase tracking-widest text-cream/45">
+                        Country (optional)
+                      </span>
+                      <select
+                        value={countryFilter}
+                        onChange={(e) => setCountryFilter(e.target.value)}
+                        className="form-field"
+                      >
+                        <option value="">All countries</option>
+                        {leadCountries.map((country) => (
+                          <option key={country} value={country}>
+                            {formatAudienceCountryLabel(country)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="flex flex-col gap-2">
+                      <span className="font-mono text-[10px] uppercase tracking-widest text-cream/45">
+                        Source (optional)
+                      </span>
+                      <select
+                        value={sourceFilter}
+                        onChange={(e) => setSourceFilter(e.target.value)}
+                        className="form-field"
+                      >
+                        <option value="">All sources</option>
+                        {sourceOptions.map((source) => (
+                          <option key={source} value={source}>
+                            {source}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </>
                 ) : (
                   <label className="flex flex-col gap-2">
                     <span className="font-mono text-[10px] uppercase tracking-widest text-cream/45">

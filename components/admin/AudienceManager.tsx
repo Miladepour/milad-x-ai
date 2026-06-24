@@ -16,6 +16,7 @@ import type {
   StudentAudienceFilter,
   WaitlistAudienceItem,
 } from "@/lib/audience/types";
+import { formatAudienceCountryLabel } from "@/lib/audience/country-label";
 
 interface AudienceManagerProps {
   audienceRequest: (action: string, payload?: Record<string, unknown>) => Promise<unknown>;
@@ -59,12 +60,14 @@ export default function AudienceManager({ audienceRequest, onStatus }: AudienceM
   const [counts, setCounts] = useState<AudienceCounts | null>(null);
   const [subscriberSources, setSubscriberSources] = useState<string[]>([]);
   const [leadSources, setLeadSources] = useState<string[]>([]);
+  const [leadCountries, setLeadCountries] = useState<string[]>([]);
   const [waitlistCourses, setWaitlistCourses] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState("");
+  const [countryFilter, setCountryFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "unsubscribed">("all");
   const [studentFilter, setStudentFilter] = useState<StudentAudienceFilter>("all");
   const [courseFilter, setCourseFilter] = useState("");
@@ -109,11 +112,13 @@ export default function AudienceManager({ audienceRequest, onStatus }: AudienceM
       counts: AudienceCounts;
       subscriberSources: string[];
       leadSources: string[];
+      leadCountries: string[];
       waitlistCourses: string[];
     };
     setCounts(data.counts);
     setSubscriberSources(data.subscriberSources ?? []);
     setLeadSources(data.leadSources ?? []);
+    setLeadCountries(data.leadCountries ?? []);
     setWaitlistCourses(data.waitlistCourses ?? []);
   }, [audienceRequest]);
 
@@ -134,6 +139,7 @@ export default function AudienceManager({ audienceRequest, onStatus }: AudienceM
           page,
           search: debouncedSearch,
           source: sourceFilter,
+          country: countryFilter,
           studentFilter,
         })) as AudienceListResult<Lead>;
         setLeadData(data);
@@ -154,6 +160,7 @@ export default function AudienceManager({ audienceRequest, onStatus }: AudienceM
   }, [
     audienceRequest,
     courseFilter,
+    countryFilter,
     debouncedSearch,
     onStatus,
     page,
@@ -176,7 +183,7 @@ export default function AudienceManager({ audienceRequest, onStatus }: AudienceM
 
   useEffect(() => {
     setPage(1);
-  }, [subTab, debouncedSearch, sourceFilter, statusFilter, courseFilter, studentFilter]);
+  }, [subTab, debouncedSearch, sourceFilter, countryFilter, statusFilter, courseFilter, studentFilter]);
 
   useEffect(() => {
     if (subTab === "email") return;
@@ -327,6 +334,7 @@ export default function AudienceManager({ audienceRequest, onStatus }: AudienceM
               setShowImport(false);
               setSelectedWaitlistId(null);
               setSourceFilter("");
+              setCountryFilter("");
               setStatusFilter("all");
               setStudentFilter("all");
               setCourseFilter("");
@@ -358,6 +366,7 @@ export default function AudienceManager({ audienceRequest, onStatus }: AudienceM
           onStatus={onStatus}
           subscriberSources={subscriberSources}
           leadSources={leadSources}
+          leadCountries={leadCountries}
           waitlistCourses={waitlistCourses}
         />
       ) : (
@@ -394,6 +403,43 @@ export default function AudienceManager({ audienceRequest, onStatus }: AudienceM
                 ))}
               </select>
             </label>
+          ) : subTab === "leads" ? (
+            <>
+              <label className="min-w-[180px]">
+                <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-cream/45">
+                  Country
+                </span>
+                <select
+                  value={countryFilter}
+                  onChange={(e) => setCountryFilter(e.target.value)}
+                  className="form-field"
+                >
+                  <option value="">All countries</option>
+                  {leadCountries.map((country) => (
+                    <option key={country} value={country}>
+                      {formatAudienceCountryLabel(country)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="min-w-[180px]">
+                <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-cream/45">
+                  Source
+                </span>
+                <select
+                  value={sourceFilter}
+                  onChange={(e) => setSourceFilter(e.target.value)}
+                  className="form-field"
+                >
+                  <option value="">All sources</option>
+                  {sourceOptions.map((source) => (
+                    <option key={source} value={source}>
+                      {source}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </>
           ) : (
             <label className="min-w-[180px]">
               <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-cream/45">
@@ -823,7 +869,9 @@ function LeadTable({ items }: { items: Lead[] }) {
                 <EmailCell email={item.email} isStudent={item.isStudent} />
               </td>
               <td className="px-4 py-3">{item.phone || "—"}</td>
-              <td className="px-4 py-3">{item.country || "—"}</td>
+              <td className="px-4 py-3">
+                {item.country ? formatAudienceCountryLabel(item.country) : "—"}
+              </td>
               <td className="px-4 py-3">
                 <span>{item.source}</span>
                 {item.sourceDetail && (

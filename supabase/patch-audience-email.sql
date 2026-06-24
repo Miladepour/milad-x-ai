@@ -17,6 +17,7 @@ create table if not exists public.audience_email_campaigns (
   list_type text not null check (list_type in ('subscribers', 'leads', 'waitlist')),
   audience_label text not null default '',
   source_filter text,
+  country_filter text,
   course_slug text,
   student_filter text not null default 'all'
     check (student_filter in ('all', 'students', 'non-students')),

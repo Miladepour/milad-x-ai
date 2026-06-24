@@ -60,6 +60,7 @@ export interface LeadListFilters {
   page?: number;
   search?: string;
   source?: string;
+  country?: string;
   studentFilter?: StudentAudienceFilter;
 }
 

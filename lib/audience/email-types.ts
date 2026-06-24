@@ -15,6 +15,7 @@ export interface AudienceEmailRecipient {
 export interface AudienceEmailAudience {
   listType: AudienceEmailListType;
   source?: string;
+  country?: string;
   courseSlug?: string;
   studentFilter?: StudentAudienceFilter;
 }
@@ -48,6 +49,7 @@ export interface AudienceEmailCampaign {
   listType: AudienceEmailListType;
   audienceLabel: string;
   sourceFilter: string | null;
+  countryFilter: string | null;
   courseSlug: string | null;
   studentFilter: StudentAudienceFilter;
   status: AudienceEmailCampaignStatus;

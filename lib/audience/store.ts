@@ -191,6 +191,19 @@ export async function listLeadSourcesAdmin(): Promise<string[]> {
   return Array.from(new Set((data ?? []).map((row) => row.source).filter(Boolean))).sort();
 }
 
+export async function listLeadCountriesAdmin(): Promise<string[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("leads").select("country");
+  if (error) throw new Error(error.message);
+  return Array.from(
+    new Set(
+      (data ?? [])
+        .map((row) => row.country?.trim() ?? "")
+        .filter(Boolean)
+    )
+  ).sort((a, b) => a.localeCompare(b));
+}
+
 export async function listWaitlistCourseSlugsAdmin(): Promise<string[]> {
   const supabase = createClient();
   const { data, error } = await supabase.from("waitlist_submissions").select("course_slug");
@@ -256,6 +269,7 @@ export async function listLeadsAdmin(
   const to = from + pageSize - 1;
   const search = filters.search?.trim() ?? "";
   const source = filters.source?.trim() ?? "";
+  const country = filters.country?.trim() ?? "";
   const studentFilter = filters.studentFilter ?? "all";
 
   const supabase = createClient();
@@ -272,6 +286,9 @@ export async function listLeadsAdmin(
 
   if (source) {
     query = query.eq("source", source);
+  }
+  if (country) {
+    query = query.eq("country", country);
   }
   if (search) {
     query = query.or(

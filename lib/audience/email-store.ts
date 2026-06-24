@@ -33,6 +33,7 @@ interface CampaignRow {
   list_type: AudienceEmailCampaign["listType"];
   audience_label: string;
   source_filter: string | null;
+  country_filter: string | null;
   course_slug: string | null;
   student_filter: AudienceEmailCampaign["studentFilter"];
   status: AudienceEmailCampaignStatus;
@@ -105,6 +106,7 @@ function campaignRowToCampaign(
     listType: row.list_type,
     audienceLabel: row.audience_label,
     sourceFilter: row.source_filter,
+    countryFilter: row.country_filter,
     courseSlug: row.course_slug,
     studentFilter: row.student_filter,
     status: row.status,
@@ -201,6 +203,7 @@ export async function createAudienceEmailCampaignAdmin(options: {
       list_type: options.audience.listType,
       audience_label: audienceLabel,
       source_filter: options.audience.source?.trim() || null,
+      country_filter: options.audience.country?.trim() || null,
       course_slug: options.audience.courseSlug?.trim() || null,
       student_filter: options.audience.studentFilter ?? "non-students",
       status: "sending",

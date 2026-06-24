@@ -12,6 +12,7 @@ import {
   importLeadsCsvAdmin,
   importSubscribersCsvAdmin,
   listLeadSourcesAdmin,
+  listLeadCountriesAdmin,
   listLeadsAdmin,
   listSubscriberSourcesAdmin,
   listSubscribersAdmin,
@@ -66,6 +67,7 @@ function parseAudienceEmailAudience(body: Record<string, unknown>): AudienceEmai
   return {
     listType,
     source: String(body.source ?? "").trim() || undefined,
+    country: String(body.country ?? "").trim() || undefined,
     courseSlug: String(body.courseSlug ?? "").trim() || undefined,
     studentFilter: parseStudentFilter(body.studentFilter ?? "non-students"),
   };
@@ -87,9 +89,10 @@ export async function POST(request: Request) {
 
     if (action === "counts") {
       const counts = await getAudienceCountsAdmin();
-      const [subscriberSources, leadSources, waitlistCourses] = await Promise.all([
+      const [subscriberSources, leadSources, leadCountries, waitlistCourses] = await Promise.all([
         listSubscriberSourcesAdmin(),
         listLeadSourcesAdmin(),
+        listLeadCountriesAdmin(),
         listWaitlistCourseSlugsAdmin(),
       ]);
       return NextResponse.json({
@@ -97,6 +100,7 @@ export async function POST(request: Request) {
         counts,
         subscriberSources,
         leadSources,
+        leadCountries,
         waitlistCourses,
       });
     }
@@ -117,6 +121,7 @@ export async function POST(request: Request) {
         page: Number(body.page) || 1,
         search: String(body.search ?? ""),
         source: String(body.source ?? ""),
+        country: String(body.country ?? ""),
         studentFilter: parseStudentFilter(body.studentFilter),
       });
       return NextResponse.json({ ok: true, ...result });
