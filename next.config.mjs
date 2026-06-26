@@ -58,14 +58,14 @@ const nextConfig = {
             value: [
               "default-src 'self'",
               isDev
-                ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com"
-                : "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
+                ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://www.googletagmanager.com"
+                : "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://www.googletagmanager.com",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://res.cloudinary.com https://*.b-cdn.net https://i.ytimg.com https://*.supabase.co https://images.unsplash.com https://challenges.cloudflare.com https://sayclick.co.uk",
+              "img-src 'self' data: blob: https://res.cloudinary.com https://*.b-cdn.net https://i.ytimg.com https://*.supabase.co https://images.unsplash.com https://challenges.cloudflare.com https://sayclick.co.uk https://www.google-analytics.com https://www.googletagmanager.com",
               "font-src 'self' data:",
               isDev
-                ? `connect-src 'self' data: blob: https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://api.linkedin.com https://www.linkedin.com https://*.linkedin.com ${sentryConnectSrc} ws://localhost:* ws://127.0.0.1:*`
-                : `connect-src 'self' data: blob: https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://api.linkedin.com https://www.linkedin.com https://*.linkedin.com ${sentryConnectSrc}`,
+                ? `connect-src 'self' data: blob: https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://api.linkedin.com https://www.linkedin.com https://*.linkedin.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com ${sentryConnectSrc} ws://localhost:* ws://127.0.0.1:*`
+                : `connect-src 'self' data: blob: https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://api.linkedin.com https://www.linkedin.com https://*.linkedin.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com ${sentryConnectSrc}`,
               "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://iframe.mediadelivery.net https://challenges.cloudflare.com",
               "media-src 'self' https://res.cloudinary.com https://*.b-cdn.net blob:",
               "object-src 'none'",
