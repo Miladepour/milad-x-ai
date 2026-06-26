@@ -8,7 +8,7 @@ import { localizedPath } from "@/lib/i18n/paths";
 import { pageAlternates } from "@/lib/i18n/metadata";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 interface BlogPostPageProps {
   params: { locale: string; slug: string };

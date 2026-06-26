@@ -8,7 +8,7 @@ interface BlogPageProps {
   params: { locale: string };
 }
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export async function generateMetadata({ params }: BlogPageProps): Promise<Metadata> {
   const locale = params.locale as UrlLocale;

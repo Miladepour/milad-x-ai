@@ -11,7 +11,7 @@ import { pageAlternates } from "@/lib/i18n/metadata";
 import type { Metadata } from "next";
 import sanitizeHtml from "sanitize-html";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 86400;
 
 interface TutorialPageProps {
   params: { locale: string; slug: string };

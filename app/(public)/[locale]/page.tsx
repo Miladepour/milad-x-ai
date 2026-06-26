@@ -10,7 +10,7 @@ interface PageProps {
   params: { locale: string };
 }
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export default async function Home({ params }: PageProps) {
   const locale = urlLocaleToInternal(params.locale as UrlLocale);

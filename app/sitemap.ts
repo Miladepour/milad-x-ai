@@ -11,7 +11,7 @@ import {
   shouldIncludeLogicalPathInSitemap,
 } from "@/lib/seo/private-paths";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 86400;
 
 function alternatesFor(logicalPath: string) {
   return Object.fromEntries(

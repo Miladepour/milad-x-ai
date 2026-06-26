@@ -32,7 +32,18 @@ export async function getBlogPostBySlug(
   slug: string,
   locale: "EN" | "FA"
 ): Promise<BlogPost | undefined> {
-  return (await getBlogPosts(locale)).find((post) => post.slug === slug);
+  if (!isSupabaseConfigured()) return undefined;
+  const supabase = createBlogClient();
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .eq("slug", slug)
+    .eq("locale", locale)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!data) return undefined;
+  return blogRowToPost(data as import("@/lib/supabase/database.types").BlogPostRow);
 }
 
 export async function getAllBlogSlugs(): Promise<string[]> {

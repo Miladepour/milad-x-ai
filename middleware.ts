@@ -3,6 +3,22 @@ import type { NextRequest } from "next/server";
 import { defaultLocale, localePrefix } from "@/lib/i18n/config";
 import { updateSession } from "@/lib/supabase/middleware";
 
+/** Public marketing pages — skip Supabase session refresh to save server CPU. */
+function isPublicMarketingPath(pathname: string): boolean {
+  let path = pathname;
+  if (path === "/fa" || path.startsWith("/fa/")) {
+    path = path === "/fa" ? "/" : path.slice(3);
+  }
+
+  return (
+    path === "/" ||
+    path.startsWith("/blog") ||
+    path.startsWith("/courses") ||
+    path.startsWith("/free-ai-tutorials") ||
+    path.startsWith("/certificates/verify")
+  );
+}
+
 function handleRequest(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
 
@@ -50,6 +66,9 @@ function handleRequest(request: NextRequest): NextResponse {
 
 export async function middleware(request: NextRequest) {
   const routingResponse = handleRequest(request);
+  if (isPublicMarketingPath(request.nextUrl.pathname)) {
+    return routingResponse;
+  }
   return updateSession(request, routingResponse);
 }
 
