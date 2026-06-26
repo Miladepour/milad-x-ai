@@ -48,6 +48,7 @@ If empty or wrong, add:
 
 ```env
 NEXT_PUBLIC_SITE_URL=https://www.mxaiacademy.com
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 ```
 
 Redeploy after saving.

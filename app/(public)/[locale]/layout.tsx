@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import SiteJsonLd from "@/components/layout/SiteJsonLd";
@@ -49,6 +50,7 @@ export default function LocaleLayout({ children, params }: LocaleLayoutProps) {
 
   return (
     <LanguageProvider urlLocale={locale}>
+      <GoogleAnalytics />
       <HtmlDirSync />
       <SiteJsonLd />
       <Navbar />
