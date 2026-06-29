@@ -98,6 +98,7 @@ export default function StudentAnnouncementCard({
             <time
               dateTime={item.publishedAt}
               className="font-mono text-[10px] uppercase tracking-wider text-cream/40"
+              suppressHydrationWarning
             >
               {new Date(item.publishedAt).toLocaleDateString(dateLocale, {
                 day: "numeric",

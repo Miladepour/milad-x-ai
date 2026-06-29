@@ -9,6 +9,7 @@ import {
   dateInputToStartIso,
   startOfTodayIso,
 } from "@/lib/members/dates";
+import { clearStudentDevicesAdmin } from "@/lib/members/device-store";
 import {
   addEnrollmentAdmin,
   deleteAnnouncementAdmin,
@@ -401,6 +402,15 @@ export async function POST(request: Request) {
       });
 
       return NextResponse.json({ ok: true, student, enrollment });
+    }
+
+    if (action === "clear-student-devices") {
+      const studentId = String(body.studentId ?? "").trim();
+      if (!studentId) {
+        return NextResponse.json({ error: "studentId required" }, { status: 400 });
+      }
+      await clearStudentDevicesAdmin(studentId);
+      return NextResponse.json({ ok: true });
     }
 
     if (action === "delete-student") {

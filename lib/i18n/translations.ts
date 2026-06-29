@@ -352,6 +352,7 @@ export const translations = {
       closeMenu: "Close menu",
       statPrograms: "Enrolled programs",
       statLessonsDone: "Lessons completed",
+      statDevices: "Devices",
       statProgress: "Overall progress",
       noAnnouncements: "No announcements right now.",
       learnMore: "Learn more",
@@ -563,6 +564,22 @@ export const translations = {
       profileStatusExpired: "Expired",
       profileStatusSuspended: "Suspended",
       profileStatusInvited: "Invited",
+      profileDevicesSection: "My devices",
+      profileDevicesSubtitle:
+        "Browsers and devices that have accessed your student account. Remove any you do not recognize.",
+      profileDevicesSoftModeNote:
+        "Preview mode: all devices are allowed for now. A two-device limit will apply later.",
+      profileDevicesLastSeen: "Last seen",
+      profileDevicesCurrent: "This device",
+      profileDevicesRemove: "Remove",
+      profileDevicesRemoving: "Removing…",
+      profileDevicesRemoveFailed: "Could not remove device.",
+      profileDevicesEmpty: "No devices registered yet. Open the student panel to register this browser.",
+      profileDevicesLoading: "Loading devices…",
+      deviceBlockedTitle: "Device limit reached",
+      deviceBlockedBody:
+        "This account is already in use on {cap} devices. Open Profile on one of those devices, remove an old device, then sign in here again.",
+      deviceBlockedRetry: "Try again",
     },
     footer: {
       brandName: "MX AI Academy",
@@ -952,6 +969,7 @@ export const translations = {
       closeMenu: "بستن منو",
       statPrograms: "برنامه‌های ثبت‌نام‌شده",
       statLessonsDone: "درس‌های تکمیل‌شده",
+      statDevices: "دستگاه‌ها",
       statProgress: "پیشرفت کلی",
       noAnnouncements: "فعلاً اعلانی وجود ندارد.",
       learnMore: "بیشتر بدانید",
@@ -1162,6 +1180,23 @@ export const translations = {
       profileStatusExpired: "منقضی‌شده",
       profileStatusSuspended: "معلق",
       profileStatusInvited: "دعوت‌شده",
+      profileDevicesSection: "دستگاه‌های من",
+      profileDevicesSubtitle:
+        "مرورگرها و دستگاه‌هایی که به حساب دانشجویی شما دسترسی داشته‌اند. موارد ناشناس را حذف کنید.",
+      profileDevicesSoftModeNote:
+        "حالت آزمایشی: فعلاً همه دستگاه‌ها مجازند. بعداً محدودیت دو دستگاه اعمال می‌شود.",
+      profileDevicesLastSeen: "آخرین بازدید",
+      profileDevicesCurrent: "این دستگاه",
+      profileDevicesRemove: "حذف",
+      profileDevicesRemoving: "در حال حذف…",
+      profileDevicesRemoveFailed: "حذف دستگاه انجام نشد.",
+      profileDevicesEmpty:
+        "هنوز دستگاهی ثبت نشده. برای ثبت این مرورگر وارد پنل دانشجو شوید.",
+      profileDevicesLoading: "در حال بارگذاری دستگاه‌ها…",
+      deviceBlockedTitle: "حد مجاز دستگاه پر شده است",
+      deviceBlockedBody:
+        "این حساب در حال حاضر روی {cap} دستگاه فعال است. لطفاً با مرورگر یا موبایلی که قبلاً با آن وارد شده‌اید، وارد پنل دانشجویی خود شوید. سپس از بخش پروفایل، یکی از دستگاه‌های قدیمی را حذف کنید و دوباره با همین مرورگر امتحان کنید.",
+      deviceBlockedRetry: "تلاش دوباره",
     },
     footer: {
       brandName: "MX AI Academy",

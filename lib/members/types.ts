@@ -296,10 +296,19 @@ export interface AddEnrollmentPayload {
   status?: EnrollmentStatus;
 }
 
+export interface StudentDevice {
+  id: string;
+  label: string;
+  lastSeenAt: string;
+  createdAt: string;
+  isCurrent: boolean;
+}
+
 export interface StudentWithEnrollments {
   profile: StudentProfile;
   enrollments: EnrollmentWithDetails[];
   certificatesByProgramId: Record<string, ProgramCertificate>;
+  devices: StudentDevice[];
 }
 
 export type AnnouncementLocale = "EN" | "FA" | "ALL";

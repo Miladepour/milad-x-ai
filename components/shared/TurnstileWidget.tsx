@@ -1,24 +1,11 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import type { TurnstileInstance } from "@marsidev/react-turnstile";
 import {
   getTurnstileSiteKey,
   localTurnstileHostnameHint,
 } from "@/lib/security/turnstile-client";
-
-const Turnstile = dynamic(
-  () => import("@marsidev/react-turnstile").then((mod) => mod.Turnstile),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex min-h-[65px] items-center">
-        <p className="font-mono text-xs text-cream/50">Loading security check…</p>
-      </div>
-    ),
-  }
-);
 
 export interface TurnstileWidgetHandle {
   reset: () => void;
@@ -34,6 +21,7 @@ const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidgetProps>(
   function TurnstileWidget({ onToken, onExpire, className = "" }, ref) {
     const turnstileRef = useRef<TurnstileInstance>(null);
     const siteKey = getTurnstileSiteKey();
+    const [mounted, setMounted] = useState(false);
     const [error, setError] = useState("");
     const [hostnameHint, setHostnameHint] = useState<string | null>(null);
 
@@ -45,14 +33,18 @@ const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidgetProps>(
     }));
 
     useEffect(() => {
-      if (typeof window === "undefined") return;
+      setMounted(true);
       setHostnameHint(localTurnstileHostnameHint(window.location.hostname));
     }, []);
+
+    if (!mounted) {
+      return <div className={`min-h-[65px] ${className}`} aria-hidden />;
+    }
 
     if (!siteKey) {
       if (process.env.NODE_ENV === "development") {
         return (
-          <p className="font-mono text-xs leading-relaxed text-orange">
+          <p className={`font-mono text-xs leading-relaxed text-orange ${className}`}>
             Turnstile not loaded. Add NEXT_PUBLIC_TURNSTILE_SITE_KEY to .env.local, save the
             file, then restart the dev server (Ctrl+C → npm run dev).
           </p>

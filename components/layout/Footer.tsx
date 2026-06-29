@@ -173,7 +173,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-surface flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="font-dm text-xs text-muted text-center sm:text-start">
+          <p className="font-dm text-xs text-muted text-center sm:text-start" suppressHydrationWarning>
             © {year} {f.copyrightName}. {f.rights}
           </p>
           <nav

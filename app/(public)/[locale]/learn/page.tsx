@@ -10,6 +10,8 @@ import {
   getStudentExpiredPrograms,
   listAnnouncementsForStudent,
 } from "@/lib/members/store";
+import { getStudentDeviceCapMax } from "@/lib/members/device";
+import { listStudentDevices } from "@/lib/members/device-store";
 import { collectUsefulLinks } from "@/lib/members/learn-content";
 import { getCourses } from "@/lib/courses/store";
 import StudentUpcomingCourseCard from "@/components/members/StudentUpcomingCourseCard";
@@ -46,13 +48,14 @@ export default async function LearnDashboardPage({
   const student = await getStudentUser();
   if (!student) redirect(accountLoginPath(locale));
 
-  const [programs, expiredPrograms, announcements, courses, enrollmentCount] =
+  const [programs, expiredPrograms, announcements, courses, enrollmentCount, devices] =
     await Promise.all([
     getStudentDashboard(student.user.id),
     getStudentExpiredPrograms(student.user.id),
     listAnnouncementsForStudent(student.user.id, student.profile.locale),
     getCourses(internal),
     getStudentEnrollmentCount(student.user.id),
+    listStudentDevices(student.user.id).catch(() => []),
   ]);
 
   const upcomingCourses = courses.filter((c) => c.status !== "Closed").slice(0, 2);
@@ -64,6 +67,7 @@ export default async function LearnDashboardPage({
   const completedLessons = programs.reduce((sum, p) => sum + p.completedLessons, 0);
   const overallProgress =
     totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+  const deviceCap = getStudentDeviceCapMax();
 
   const displayName =
     student.profile.fullName?.trim() || student.profile.email.split("@")[0];
@@ -93,6 +97,11 @@ export default async function LearnDashboardPage({
             label: t.memberPortal.statLessonsDone,
             value: completedLessons,
             hint: `/ ${totalLessons}`,
+          },
+          {
+            label: t.memberPortal.statDevices,
+            value: devices.length,
+            hint: `/ ${deviceCap}`,
           },
         ]}
         progressPercent={overallProgress}

@@ -1,15 +1,26 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Lottie from "lottie-react";
 import customerAssistantAnimation from "@/public/lottie/customer-assistant.json";
 
-/** Animated consultation assistant for CTA banners. */
+const shellClass =
+  "relative w-full max-w-[240px] sm:max-w-[280px] md:max-w-[300px] mx-auto md:mx-0 min-h-[200px] sm:min-h-[220px]";
+
+/** Animated consultation assistant for CTA banners (client-only to avoid hydration mismatch). */
 export default function ConsultationBannerIllustration() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div className={shellClass} aria-hidden />;
+  }
+
   return (
-    <div
-      className="relative w-full max-w-[240px] sm:max-w-[280px] md:max-w-[300px] mx-auto md:mx-0"
-      aria-hidden
-    >
+    <div className={shellClass} aria-hidden>
       <div
         className="absolute inset-6 rounded-full bg-background/25 blur-2xl"
         aria-hidden

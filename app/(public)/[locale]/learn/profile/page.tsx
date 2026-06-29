@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import StudentProfilePage from "@/components/members/StudentProfilePage";
 import { accountLoginPath } from "@/lib/members/paths";
+import { isStudentDeviceCapEnforced } from "@/lib/members/device";
+import { getStudentDeviceTokenHash } from "@/lib/members/device-session";
+import { listStudentDevices } from "@/lib/members/device-store";
 import { getStudentProfileAccount } from "@/lib/members/store";
 import { urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { getStudentUser } from "@/lib/supabase/require-student";
@@ -24,11 +27,37 @@ export default async function LearnProfilePage({
   const account = await getStudentProfileAccount(student.user.id);
   if (!account) redirect(accountLoginPath(locale));
 
+  const currentHash = getStudentDeviceTokenHash();
+  let devices = await listStudentDevices(student.user.id, currentHash).catch(
+    (error) => {
+      console.error("[learn/profile] list devices failed:", error);
+      return [];
+    }
+  );
+  const softMode = !isStudentDeviceCapEnforced();
+
+  const deviceLabels = {
+    sectionTitle: t.memberPortal.profileDevicesSection,
+    sectionSubtitle: t.memberPortal.profileDevicesSubtitle,
+    softModeNote: t.memberPortal.profileDevicesSoftModeNote,
+    lastSeen: t.memberPortal.profileDevicesLastSeen,
+    currentDevice: t.memberPortal.profileDevicesCurrent,
+    remove: t.memberPortal.profileDevicesRemove,
+    removing: t.memberPortal.profileDevicesRemoving,
+    removeFailed: t.memberPortal.profileDevicesRemoveFailed,
+    noDevices: t.memberPortal.profileDevicesEmpty,
+    loading: t.memberPortal.profileDevicesLoading,
+  };
+
   return (
     <StudentProfilePage
       initialProfile={account.profile}
       initialEnrollments={account.enrollments}
+      initialDevices={devices}
+      softMode={softMode}
+      deviceLabels={deviceLabels}
       dateLocale={dateLocale}
+      urlLocale={locale}
       labels={{
         pageTitle: t.memberPortal.profilePageTitle,
         pageSubtitle: t.memberPortal.profilePageSubtitle,

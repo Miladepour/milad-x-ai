@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import StudentDashboardShell from "@/components/members/StudentDashboardShell";
+import StudentDeviceBlocked from "@/components/members/StudentDeviceBlocked";
+import StudentDeviceRegistrar from "@/components/members/StudentDeviceRegistrar";
 import { resolveLessonTitle } from "@/lib/members/lesson-localized";
 import { resolveProgramTitle } from "@/lib/members/program-localized";
 import { accountLoginPath, learnLessonPath } from "@/lib/members/paths";
@@ -15,6 +17,14 @@ import { getMembershipTierInfo } from "@/lib/members/membership-tier";
 import { isValidLocale, urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { getStudentUser } from "@/lib/supabase/require-student";
 import { translations } from "@/lib/i18n/translations";
+import {
+  getStudentDeviceCapMax,
+  isStudentDeviceCapEnforced,
+} from "@/lib/members/device";
+import {
+  deviceBootstrapUrl,
+  verifyStudentDeviceAccess,
+} from "@/lib/members/device-session";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -41,6 +51,51 @@ export default async function LearnLayout({
     redirect(accountLoginPath(locale));
   }
 
+  try {
+    const deviceAccess = await verifyStudentDeviceAccess(student.user.id);
+
+    if (deviceAccess.needsBootstrap && isStudentDeviceCapEnforced()) {
+      redirect(deviceBootstrapUrl(locale));
+    }
+
+    if (!deviceAccess.allowed) {
+      return (
+        <div className="pt-20">
+          <StudentDeviceBlocked
+            locale={locale}
+            cap={deviceAccess.cap}
+            labels={{
+              title: t.memberPortal.deviceBlockedTitle,
+              body: t.memberPortal.deviceBlockedBody,
+              contactSupport: t.memberPortal.contactSupport,
+              tryAgain: t.memberPortal.deviceBlockedRetry,
+              signOut: t.memberPortal.signOut,
+            }}
+          />
+        </div>
+      );
+    }
+  } catch (error) {
+    console.error("[learn/layout] device check failed:", error);
+    if (isStudentDeviceCapEnforced()) {
+      return (
+        <div className="pt-20">
+          <StudentDeviceBlocked
+            locale={locale}
+            cap={getStudentDeviceCapMax()}
+            labels={{
+              title: t.memberPortal.deviceBlockedTitle,
+              body: t.memberPortal.deviceBlockedBody,
+              contactSupport: t.memberPortal.contactSupport,
+              tryAgain: t.memberPortal.deviceBlockedRetry,
+              signOut: t.memberPortal.signOut,
+            }}
+          />
+        </div>
+      );
+    }
+  }
+
   await syncExpiredEnrollments();
 
   const [programs, announcements, enrollmentCount] = await Promise.all([
@@ -57,6 +112,7 @@ export default async function LearnLayout({
 
   return (
     <div className="pt-20">
+      <StudentDeviceRegistrar />
       <StudentDashboardShell
         locale={locale}
         studentName={displayName}

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { LayoutDashboard, Lock } from "lucide-react";
 import { accountLoginPath, learnPath } from "@/lib/members/paths";
 import { useStudentNavAuth } from "@/lib/members/use-student-nav-auth";
@@ -30,11 +31,18 @@ export default function StudentNavButton({
   className = "",
   onNavigate,
 }: StudentNavButtonProps) {
+  const [mounted, setMounted] = useState(false);
   const isStudent = useStudentNavAuth();
-  const href = isStudent ? learnPath(urlLocale) : accountLoginPath(urlLocale);
-  const label = isStudent ? dashboardLabel : loginLabel;
-  const ariaLabel = isStudent ? dashboardAria : loginAria;
-  const Icon = isStudent ? LayoutDashboard : Lock;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const showDashboard = mounted && isStudent === true;
+  const href = showDashboard ? learnPath(urlLocale) : accountLoginPath(urlLocale);
+  const label = showDashboard ? dashboardLabel : loginLabel;
+  const ariaLabel = showDashboard ? dashboardAria : loginAria;
+  const Icon = showDashboard ? LayoutDashboard : Lock;
 
   return (
     <Link

@@ -210,6 +210,24 @@ export default function StudentProfilePanel({
     }
   }
 
+  async function handleClearDevices() {
+    if (
+      !confirm(
+        "Clear all registered devices for this student?\n\nThey will need to sign in again on each browser. Use this if they are locked out by the device cap."
+      )
+    ) {
+      return;
+    }
+    onStatus("Clearing devices…");
+    try {
+      await membersRequest("clear-student-devices", { studentId });
+      await load();
+      onStatus("All devices cleared.");
+    } catch (err) {
+      onStatus(err instanceof Error ? err.message : "Could not clear devices");
+    }
+  }
+
   async function handleRevokeCertificate(certificateId: string) {
     if (!confirm("Revoke this certificate? The student will no longer see it.")) return;
     onStatus("Revoking certificate…");
@@ -353,6 +371,39 @@ export default function StudentProfilePanel({
           Resend invite sends a fresh password link. Delete removes the auth account and all
           student data permanently.
         </p>
+      </div>
+
+      <div className="border border-white/[0.08] p-4">
+        <p className="font-mono text-xs uppercase tracking-widest text-cream/50">
+          Registered devices ({data.devices.length})
+        </p>
+        <p className="mt-1 font-dm text-xs text-cream/45">
+          When device cap is enabled in env, students over the limit are blocked at login.
+        </p>
+        {data.devices.length === 0 ? (
+          <p className="mt-3 font-dm text-sm text-cream/55">No devices yet.</p>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {data.devices.map((device) => (
+              <li
+                key={device.id}
+                className="flex flex-wrap items-center justify-between gap-2 border border-white/[0.06] px-3 py-2"
+              >
+                <span className="font-dm text-sm text-cream">{device.label}</span>
+                <span className="font-mono text-[10px] uppercase tracking-wider text-cream/45">
+                  Last seen {formatDateOnly(device.lastSeenAt, "en-GB")}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <button
+          type="button"
+          onClick={() => void handleClearDevices()}
+          className="mt-3 border border-orange/50 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-orange hover:bg-orange hover:text-background"
+        >
+          Clear all devices
+        </button>
       </div>
 
       <form onSubmit={handleSaveProfile} className="grid gap-4 md:grid-cols-2">

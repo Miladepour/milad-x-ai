@@ -54,7 +54,13 @@ export default function LocaleLayout({ children, params }: LocaleLayoutProps) {
       <HtmlDirSync />
       <SiteJsonLd />
       <Navbar />
-      <main className="flex-1 flex flex-col min-h-0">{children}</main>
+      <main
+        dir={locale === "fa" ? "rtl" : "ltr"}
+        lang={locale}
+        className="flex-1 flex flex-col min-h-0"
+      >
+        {children}
+      </main>
       <Footer />
     </LanguageProvider>
   );

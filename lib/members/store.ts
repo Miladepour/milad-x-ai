@@ -29,6 +29,7 @@ import {
 import { buildLessonUnlockMap } from "./lesson-gating";
 import { internalToUrlLocale } from "@/lib/i18n/config";
 import { resolveContinueLesson } from "./continue-watching";
+import { listStudentDevices } from "@/lib/members/device-store";
 import { accountSetPasswordPath, learnPath } from "@/lib/members/paths";
 import { startOfTodayIso } from "./dates";
 import type {
@@ -547,11 +548,13 @@ export async function getStudentAdmin(
   );
 
   const certificatesByProgramId = await certificatesByProgramIdForStudent(studentId);
+  const devices = await listStudentDevices(studentId);
 
   return {
     profile: studentProfileRowToProfile(profileData as StudentProfileRow),
     enrollments,
     certificatesByProgramId,
+    devices,
   };
 }
 

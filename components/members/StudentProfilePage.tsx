@@ -4,11 +4,15 @@ import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, User } from "lucide-react";
 import StudentGlassCard from "@/components/members/StudentGlassCard";
+import StudentDevicesSection, {
+  type StudentDevicesLabels,
+} from "@/components/members/StudentDevicesSection";
 import { formatPayment } from "@/lib/members/currency";
 import { formatDateOnly } from "@/lib/members/dates";
 import { validatePasswordChange } from "@/lib/members/profile-validation";
 import type {
   EnrollmentStatus,
+  StudentDevice,
   StudentProfile,
   StudentProfileEnrollmentSummary,
 } from "@/lib/members/types";
@@ -65,7 +69,11 @@ export interface StudentProfileLabels {
 interface StudentProfilePageProps {
   initialProfile: StudentProfile;
   initialEnrollments: StudentProfileEnrollmentSummary[];
+  initialDevices: StudentDevice[];
+  softMode: boolean;
+  deviceLabels: StudentDevicesLabels;
   dateLocale: "en-GB" | "fa-IR";
+  urlLocale: "en" | "fa";
   labels: StudentProfileLabels;
 }
 
@@ -100,7 +108,11 @@ function statusClass(status: EnrollmentStatus): string {
 export default function StudentProfilePage({
   initialProfile,
   initialEnrollments,
+  initialDevices,
+  softMode,
+  deviceLabels,
   dateLocale,
+  urlLocale,
   labels,
 }: StudentProfilePageProps) {
   const router = useRouter();
@@ -373,6 +385,14 @@ export default function StudentProfilePage({
           </div>
         )}
       </StudentGlassCard>
+
+      <StudentDevicesSection
+        initialDevices={initialDevices}
+        dateLocale={dateLocale}
+        urlLocale={urlLocale}
+        softMode={softMode}
+        labels={deviceLabels}
+      />
 
       <StudentGlassCard>
         <div className="mb-5 inline-flex h-11 w-11 items-center justify-center border border-orange/40 bg-orange/10">

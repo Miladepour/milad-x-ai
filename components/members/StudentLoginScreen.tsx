@@ -88,7 +88,12 @@ export default function StudentLoginScreen({ redirectTo }: StudentLoginScreenPro
       return;
     }
 
-    window.location.href = redirectTo;
+    const bootstrapLocale = redirectTo.startsWith("/fa/") ? "fa" : "en";
+    const bootstrapParams = new URLSearchParams({
+      locale: bootstrapLocale,
+      next: redirectTo,
+    });
+    window.location.href = `/api/members/device/bootstrap?${bootstrapParams.toString()}`;
   }
 
   return (

@@ -72,7 +72,7 @@ export default function StudentDashboardHero({
           </div>
         </div>
 
-        <ul className="mt-6 grid grid-cols-3 gap-3">
+        <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {stats.map((stat) => (
             <li key={stat.label} className={statCardClass}>
               <p className={statLabelClass}>{stat.label}</p>

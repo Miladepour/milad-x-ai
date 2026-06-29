@@ -160,6 +160,17 @@ body {
   animation: float 7s ease-in-out infinite;
 }
 
+.hero-image-mask {
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 30%);
+  mask-image: linear-gradient(to right, transparent 0%, black 30%);
+}
+
+.hero-image-fade {
+  background:
+    linear-gradient(to right, #0D0D0D 0%, transparent 30%),
+    linear-gradient(to top, #0D0D0D 0%, transparent 25%);
+}
+
 @keyframes learn-topics-bar {
   0% {
     background-position: 200% 0;
