@@ -48,6 +48,29 @@ export interface WaitlistSubmissionRow {
   opened_at?: string | null;
 }
 
+export type ProgramReviewStatus = "pending" | "approved" | "rejected" | "published";
+export type ProgramReviewSource = "shared_link" | "email_invite";
+
+export interface ProgramReviewRow {
+  id: string;
+  program_id: string;
+  reviewer_name: string;
+  rating: number;
+  rating_overall: number | null;
+  rating_clarity: number | null;
+  rating_usefulness: number | null;
+  rating_teaching: number | null;
+  rating_recommend: number | null;
+  public_review: string;
+  private_review: string | null;
+  locale: LocaleCode;
+  source: ProgramReviewSource;
+  status: ProgramReviewStatus;
+  consent_public_display: boolean;
+  submitted_at: string;
+  updated_at: string;
+}
+
 export interface CourseRow {
   id: string;
   slug: string;
@@ -139,6 +162,29 @@ export interface Database {
         CourseLocaleRow,
         Omit<CourseLocaleRow, "id"> & { id?: string },
         Partial<Omit<CourseLocaleRow, "id">>
+      >;
+      program_reviews: TableDef<
+        ProgramReviewRow,
+        {
+          program_id: string;
+          reviewer_name: string;
+          rating: number;
+          rating_overall?: number | null;
+          rating_clarity?: number | null;
+          rating_usefulness?: number | null;
+          rating_teaching?: number | null;
+          rating_recommend?: number | null;
+          public_review: string;
+          private_review?: string | null;
+          locale?: LocaleCode;
+          source?: ProgramReviewSource;
+          status?: ProgramReviewStatus;
+          consent_public_display?: boolean;
+          id?: string;
+          submitted_at?: string;
+          updated_at?: string;
+        },
+        Partial<Omit<ProgramReviewRow, "id">>
       >;
     };
     Views: {

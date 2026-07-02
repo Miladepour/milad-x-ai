@@ -82,6 +82,18 @@ export default function AdminPanel() {
     return data;
   }, []);
 
+  const reviewsRequest = useCallback(async (action: string, payload = {}) => {
+    const res = await fetch("/api/admin-reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ action, ...payload }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Reviews request failed");
+    return data;
+  }, []);
+
   const loadSummary = useCallback(async () => {
     setSummaryLoading(true);
     try {
@@ -192,6 +204,7 @@ export default function AdminPanel() {
         adminRequest={adminRequest}
         membersRequest={membersRequest}
         audienceRequest={audienceRequest}
+        reviewsRequest={reviewsRequest}
         onEnsureSummaryLoaded={ensureSummaryLoaded}
         onEnsureBlogLoaded={ensureBlogLoaded}
         onReloadBlogPosts={reloadBlogPosts}

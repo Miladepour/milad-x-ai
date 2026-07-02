@@ -15,7 +15,8 @@ function isPublicMarketingPath(pathname: string): boolean {
     path.startsWith("/blog") ||
     path.startsWith("/courses") ||
     path.startsWith("/free-ai-tutorials") ||
-    path.startsWith("/certificates/verify")
+    path.startsWith("/certificates/verify") ||
+    path.startsWith("/review")
   );
 }
 

@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Mail,
   Menu,
+  MessageSquare,
   PenLine,
   Users,
   X,
@@ -27,7 +28,8 @@ export type AdminTab =
   | "courses"
   | "programs"
   | "bonus-programs"
-  | "students";
+  | "students"
+  | "reviews";
 
 interface NavItem {
   id: AdminTab;
@@ -68,6 +70,7 @@ export default function AdminShell({
   const navItems: NavItem[] = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "students", label: "Students", icon: GraduationCap, badge: navBadges.students },
+    { id: "reviews", label: "Reviews", icon: MessageSquare },
     { id: "programs", label: "Member programs", icon: BookOpen },
     { id: "bonus-programs", label: "Bonus programs", icon: BookOpen },
     { id: "courses", label: "Public courses", icon: Globe },
