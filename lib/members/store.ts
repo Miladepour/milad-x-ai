@@ -26,12 +26,16 @@ import {
   type ProgramLessonRow,
   type StudentProfileRow,
 } from "./mappers";
-import { buildLessonUnlockMap } from "./lesson-gating";
+import { resolveStudentAccountActivation } from "./student-activation";
 import { internalToUrlLocale } from "@/lib/i18n/config";
 import { resolveContinueLesson } from "./continue-watching";
 import { listStudentDevices } from "@/lib/members/device-store";
 import { accountSetPasswordPath, learnPath } from "@/lib/members/paths";
-import { startOfTodayIso } from "./dates";
+import { startOfTodayIso, dateInputToEndIso } from "./dates";
+import {
+  computeExtendedEndDate,
+  type ExtendAccessMode,
+} from "./extend-access";
 import type {
   AddEnrollmentPayload,
   AnnouncementLocale,
@@ -549,9 +553,12 @@ export async function getStudentAdmin(
 
   const certificatesByProgramId = await certificatesByProgramIdForStudent(studentId);
   const devices = await listStudentDevices(studentId);
+  const profile = await enrichStudentProfileWithActivation(
+    studentProfileRowToProfile(profileData as StudentProfileRow)
+  );
 
   return {
-    profile: studentProfileRowToProfile(profileData as StudentProfileRow),
+    profile,
     enrollments,
     certificatesByProgramId,
     devices,
@@ -634,6 +641,51 @@ export async function updateEnrollmentAdmin(
 
   if (error) throw new Error(error.message);
   return enrollmentRowToEnrollment(data as ProgramEnrollmentRow);
+}
+
+export async function bulkExtendProgramEnrollmentsAdmin(
+  programId: string,
+  options: {
+    mode: ExtendAccessMode;
+    days?: number;
+    endDate?: string;
+    enrollmentIds?: string[];
+  }
+): Promise<{ updated: number }> {
+  const supabase = createAdminDbClient();
+  let query = supabase.from("program_enrollments").select("*").eq("program_id", programId);
+
+  if (options.enrollmentIds?.length) {
+    query = query.in("id", options.enrollmentIds);
+  }
+
+  const { data, error } = await query;
+
+  if (error) throw new Error(error.message);
+  if (!data?.length) return { updated: 0 };
+
+  let updated = 0;
+  for (const row of data) {
+    const enrollment = enrollmentRowToEnrollment(row as ProgramEnrollmentRow);
+    const newEndInput = computeExtendedEndDate({
+      mode: options.mode,
+      accessEndsAt: enrollment.accessEndsAt,
+      days: options.days,
+      endDate: options.endDate,
+    });
+    if (!newEndInput) continue;
+
+    const nextStatus =
+      enrollment.status === "suspended" ? "suspended" : "active";
+
+    await updateEnrollmentAdmin(enrollment.id, {
+      status: nextStatus,
+      accessEndsAt: dateInputToEndIso(newEndInput),
+    });
+    updated++;
+  }
+
+  return { updated };
 }
 
 // ---------------------------------------------------------------------------
@@ -1334,6 +1386,22 @@ async function studentsFromProgramEnrollments(
     .filter((profile): profile is StudentProfile => profile !== null);
 
   return dedupeStudentsByEmail(students);
+}
+
+async function enrichStudentProfileWithActivation(
+  profile: StudentProfile
+): Promise<StudentProfile> {
+  const service = createServiceClient();
+  const { data, error } = await service.auth.admin.getUserById(profile.id);
+  if (error || !data.user) {
+    return { ...profile, accountActivated: false, accountActivatedAt: null };
+  }
+  return { ...profile, ...resolveStudentAccountActivation(data.user) };
+}
+
+export async function listStudentsAdmin(): Promise<StudentProfile[]> {
+  const students = await resolveStudentEmailRecipients({ type: "all" });
+  return Promise.all(students.map((profile) => enrichStudentProfileWithActivation(profile)));
 }
 
 export async function resolveStudentEmailRecipients(

@@ -152,6 +152,9 @@ export interface StudentProfile {
   phone: string | null;
   notes: string | null;
   createdAt: string;
+  /** True after the student sets a password and signs in. */
+  accountActivated?: boolean;
+  accountActivatedAt?: string | null;
 }
 
 export interface ProgramEnrollment {

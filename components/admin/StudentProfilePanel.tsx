@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import ExtendAccessModal from "@/components/admin/ExtendAccessModal";
+import { AccountActivationBadge } from "@/components/admin/AccountActivationBadge";
 import type {
   EnrollmentWithDetails,
   MemberProgram,
@@ -14,6 +16,8 @@ import {
   isoToDateInputValue,
   todayDateInputValue,
 } from "@/lib/members/dates";
+import type { ExtendAccessMode } from "@/lib/members/extend-access";
+import { computeExtendedEndDate } from "@/lib/members/extend-access";
 
 interface StudentProfilePanelProps {
   studentId: string;
@@ -61,6 +65,10 @@ export default function StudentProfilePanel({
     currency: "USD" as PaymentCurrency,
     status: "active" as EnrollmentWithDetails["status"],
   });
+  const [extendEnrollment, setExtendEnrollment] = useState<EnrollmentWithDetails | null>(
+    null
+  );
+  const [extendConfirming, setExtendConfirming] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -152,6 +160,43 @@ export default function StudentProfilePanel({
       currency: item.currency ?? "USD",
       status: item.status,
     });
+  }
+
+  async function confirmExtendAccess(payload: {
+    mode: ExtendAccessMode;
+    days: number;
+    endDate: string;
+  }) {
+    if (!extendEnrollment) return;
+    setExtendConfirming(true);
+    onStatus("Extending access…");
+    try {
+      const nextStatus =
+        extendEnrollment.status === "suspended" ? "suspended" : "active";
+      const accessEndsAt = computeExtendedEndDate({
+        mode: payload.mode,
+        accessEndsAt: extendEnrollment.accessEndsAt,
+        days: payload.days,
+        endDate: payload.endDate,
+      });
+      if (!accessEndsAt) {
+        throw new Error("Could not compute the new end date.");
+      }
+
+      await membersRequest("update-enrollment", {
+        enrollmentId: extendEnrollment.id,
+        status: nextStatus,
+        accessEndsAt,
+      });
+      setExtendEnrollment(null);
+      await load();
+      await onUpdated();
+      onStatus("Access extended.");
+    } catch (err) {
+      onStatus(err instanceof Error ? err.message : "Extend failed");
+    } finally {
+      setExtendConfirming(false);
+    }
   }
 
   async function saveEnrollmentEdit(enrollmentId: string) {
@@ -312,7 +357,10 @@ export default function StudentProfilePanel({
           <h3 className="mt-1 font-dm text-2xl font-semibold text-cream">
             {data.profile.fullName || data.profile.email}
           </h3>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-orange/80">
+          <div className="mt-2">
+            <AccountActivationBadge profile={data.profile} />
+          </div>
+          <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-orange/80">
             {data.profile.studentNumber || "No student ID"}
           </p>
           <p className="font-mono text-[10px] uppercase tracking-widest text-cream/50">
@@ -563,8 +611,10 @@ export default function StudentProfilePanel({
                       {item.status} · {formatPayment(item.amountPaid, item.currency)}
                     </p>
                     <p className="font-dm text-xs text-cream/60">
-                      {formatDateOnly(item.accessStartsAt)} →{" "}
-                      {item.accessEndsAt ? formatDateOnly(item.accessEndsAt) : "No end date"}
+                      Access: {formatDateOnly(item.accessStartsAt)} →{" "}
+                      {item.accessEndsAt
+                        ? `expires ${formatDateOnly(item.accessEndsAt)}`
+                        : "no expiry"}
                     </p>
                     <p className="font-dm text-xs text-cream/50">
                       Progress: {item.completedLessons ?? 0}/{item.totalLessons ?? 0} (
@@ -613,6 +663,13 @@ export default function StudentProfilePanel({
                     )}
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setExtendEnrollment(item)}
+                      className="border border-orange/50 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-orange hover:bg-orange hover:text-background"
+                    >
+                      Extend access
+                    </button>
                     <button
                       type="button"
                       onClick={() => startEditEnrollment(item)}
@@ -712,6 +769,19 @@ export default function StudentProfilePanel({
           Add program to student
         </button>
       </form>
+
+      <ExtendAccessModal
+        open={extendEnrollment !== null}
+        title="Extend student access"
+        programTitle={extendEnrollment?.program?.title ?? "Program"}
+        studentLabel={data.profile.fullName || data.profile.email}
+        currentEndsAt={extendEnrollment?.accessEndsAt ?? null}
+        confirming={extendConfirming}
+        onClose={() => {
+          if (!extendConfirming) setExtendEnrollment(null);
+        }}
+        onConfirm={confirmExtendAccess}
+      />
     </div>
   );
 }

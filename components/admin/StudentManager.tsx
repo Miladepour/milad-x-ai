@@ -3,8 +3,12 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import StudentAnnouncements from "@/components/admin/StudentAnnouncements";
 import StudentEmailComposer from "@/components/admin/StudentEmailComposer";
+import ExtendAccessModal from "@/components/admin/ExtendAccessModal";
+import { AccountActivationBadge } from "@/components/admin/AccountActivationBadge";
 import StudentProfilePanel from "@/components/admin/StudentProfilePanel";
 import { getEnrollmentAccessBlockReason } from "@/lib/members/access";
+import type { ExtendAccessMode } from "@/lib/members/extend-access";
+import { computeExtendedEndDate } from "@/lib/members/extend-access";
 import { PAYMENT_CURRENCIES, formatPayment } from "@/lib/members/currency";
 import { formatDateOnly, todayDateInputValue } from "@/lib/members/dates";
 import type {
@@ -27,6 +31,19 @@ interface StudentGroup {
 
 type StudentSubTab = "announcements" | "invite" | "email" | "list";
 
+type ExtendTarget =
+  | {
+      kind: "single";
+      enrollment: EnrollmentWithDetails;
+      studentName: string;
+    }
+  | {
+      kind: "bulk";
+      programId: string;
+      programTitle: string;
+      enrollments: EnrollmentWithDetails[];
+    };
+
 const SUB_TABS: { id: StudentSubTab; label: string }[] = [
   { id: "announcements", label: "Announcements" },
   { id: "email", label: "Email" },
@@ -34,12 +51,17 @@ const SUB_TABS: { id: StudentSubTab; label: string }[] = [
   { id: "list", label: "Student list" },
 ];
 
+const STUDENTS_PAGE_SIZE = 10;
+
+type ActivationFilter = "" | "activated" | "not_activated";
+
 export default function StudentManager({ membersRequest, onStatus }: StudentManagerProps) {
   const [subTab, setSubTab] = useState<StudentSubTab>("list");
   const [programs, setPrograms] = useState<MemberProgram[]>([]);
   const [enrollments, setEnrollments] = useState<EnrollmentWithDetails[]>([]);
   const [students, setStudents] = useState<StudentProfile[]>([]);
   const [filterProgram, setFilterProgram] = useState("");
+  const [activationFilter, setActivationFilter] = useState<ActivationFilter>("");
   const [search, setSearch] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [invite, setInvite] = useState({
@@ -58,6 +80,9 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
   const [emailCheck, setEmailCheck] = useState<StudentInviteCheck | null>(null);
   const [checkingEmail, setCheckingEmail] = useState(false);
   const [inviteSending, setInviteSending] = useState(false);
+  const [extendTarget, setExtendTarget] = useState<ExtendTarget | null>(null);
+  const [extendConfirming, setExtendConfirming] = useState(false);
+  const [listPage, setListPage] = useState(1);
 
   const load = useCallback(async () => {
     const [programsData, enrollmentsData, studentsData] = await Promise.all([
@@ -109,28 +134,45 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
     setDuplicatePrompt(null);
   }, [invite.email, invite.programId]);
 
-  const studentGroups = useMemo(() => {
-    const map = new Map<string, StudentGroup>();
+  useEffect(() => {
+    setListPage(1);
+  }, [search, filterProgram, activationFilter]);
+
+  const enrollmentsByStudent = useMemo(() => {
+    const map = new Map<string, EnrollmentWithDetails[]>();
     for (const item of enrollments) {
       if (!item.student) continue;
-      if (filterProgram && item.programId !== filterProgram) continue;
-      const existing = map.get(item.student.id);
-      if (existing) {
-        existing.enrollments.push(item);
-      } else {
-        map.set(item.student.id, {
-          profile: item.student,
-          enrollments: [item],
-        });
-      }
+      const existing = map.get(item.student.id) ?? [];
+      existing.push(item);
+      map.set(item.student.id, existing);
     }
-    return Array.from(map.values());
-  }, [enrollments, filterProgram]);
+    return map;
+  }, [enrollments]);
+
+  const studentGroups = useMemo(() => {
+    return students
+      .map((profile) => {
+        const items = enrollmentsByStudent.get(profile.id) ?? [];
+        const visibleEnrollments = filterProgram
+          ? items.filter((item) => item.programId === filterProgram)
+          : items;
+        return { profile, enrollments: visibleEnrollments };
+      })
+      .filter(({ enrollments: items }) => !filterProgram || items.length > 0);
+  }, [students, enrollmentsByStudent, filterProgram]);
 
   const filteredStudents = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return studentGroups;
-    return studentGroups.filter(({ profile }) => {
+    let result = studentGroups;
+
+    if (activationFilter === "activated") {
+      result = result.filter(({ profile }) => profile.accountActivated);
+    } else if (activationFilter === "not_activated") {
+      result = result.filter(({ profile }) => !profile.accountActivated);
+    }
+
+    if (!q) return result;
+    return result.filter(({ profile }) => {
       const haystack = [
         profile.fullName,
         profile.email,
@@ -142,7 +184,30 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
         .toLowerCase();
       return haystack.includes(q);
     });
-  }, [studentGroups, search]);
+  }, [studentGroups, search, activationFilter]);
+
+  const activatedStudentCount = useMemo(
+    () => students.filter((profile) => profile.accountActivated).length,
+    [students]
+  );
+  const notActivatedStudentCount = students.length - activatedStudentCount;
+
+  const totalListPages = Math.max(1, Math.ceil(filteredStudents.length / STUDENTS_PAGE_SIZE));
+
+  const paginatedStudents = useMemo(() => {
+    const start = (listPage - 1) * STUDENTS_PAGE_SIZE;
+    return filteredStudents.slice(start, start + STUDENTS_PAGE_SIZE);
+  }, [filteredStudents, listPage]);
+
+  useEffect(() => {
+    if (listPage > totalListPages) {
+      setListPage(totalListPages);
+    }
+  }, [listPage, totalListPages]);
+
+  const listRangeStart =
+    filteredStudents.length === 0 ? 0 : (listPage - 1) * STUDENTS_PAGE_SIZE + 1;
+  const listRangeEnd = Math.min(listPage * STUDENTS_PAGE_SIZE, filteredStudents.length);
 
   const allStudents = students;
 
@@ -279,25 +344,77 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
     }
   }
 
-  async function extendAccess(enrollmentId: string, days: number) {
-    const item = enrollments.find((e) => e.id === enrollmentId);
-    if (!item) return;
-    const base = item.accessEndsAt ? new Date(item.accessEndsAt) : new Date();
-    base.setDate(base.getDate() + days);
-    const y = base.getFullYear();
-    const m = String(base.getMonth() + 1).padStart(2, "0");
-    const d = String(base.getDate()).padStart(2, "0");
+  async function confirmExtendAccess(payload: {
+    mode: ExtendAccessMode;
+    days: number;
+    endDate: string;
+    enrollmentIds?: string[];
+  }) {
+    if (!extendTarget) return;
+    setExtendConfirming(true);
     try {
-      await membersRequest("update-enrollment", {
-        enrollmentId,
-        status: "active",
-        accessEndsAt: `${y}-${m}-${d}`,
-      });
-      await load();
-      onStatus(`Access extended ${days} days.`);
+      if (extendTarget.kind === "single") {
+        const { enrollment } = extendTarget;
+        const nextStatus = enrollment.status === "suspended" ? "suspended" : "active";
+        const accessEndsAt = computeExtendedEndDate({
+          mode: payload.mode,
+          accessEndsAt: enrollment.accessEndsAt,
+          days: payload.days,
+          endDate: payload.endDate,
+        });
+        if (!accessEndsAt) {
+          throw new Error("Could not compute the new end date.");
+        }
+
+        await membersRequest("update-enrollment", {
+          enrollmentId: enrollment.id,
+          status: nextStatus,
+          accessEndsAt,
+        });
+        await load();
+        onStatus(`Access extended for ${extendTarget.studentName}.`);
+      } else {
+        const result = (await membersRequest("bulk-extend-program", {
+          programId: extendTarget.programId,
+          mode: payload.mode,
+          days: payload.mode === "days" ? payload.days : undefined,
+          endDate: payload.mode === "date" ? payload.endDate : undefined,
+          enrollmentIds: payload.enrollmentIds,
+        })) as { updated: number; programTitle?: string };
+        await load();
+        onStatus(
+          `Extended access for ${result.updated} student${
+            result.updated === 1 ? "" : "s"
+          } in ${result.programTitle ?? extendTarget.programTitle}.`
+        );
+      }
+      setExtendTarget(null);
     } catch (err) {
       onStatus(err instanceof Error ? err.message : "Extend failed");
+    } finally {
+      setExtendConfirming(false);
     }
+  }
+
+  function openBulkExtend() {
+    if (!filterProgram) {
+      onStatus("Select a program first to extend all students in that program.");
+      return;
+    }
+    const program = programs.find((item) => item.id === filterProgram);
+    const programEnrollments = enrollments.filter(
+      (item) => item.programId === filterProgram
+    );
+    if (programEnrollments.length === 0) {
+      onStatus("No enrollments found for this program.");
+      return;
+    }
+    setExtendTarget({
+      kind: "bulk",
+      programId: filterProgram,
+      programTitle: program?.title ?? "Selected program",
+      enrollments: programEnrollments,
+    });
   }
 
   function pickInviteProgramId(items: EnrollmentWithDetails[]): string | null {
@@ -367,8 +484,8 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
             }`}
           >
             {item.label}
-            {item.id === "list" && filteredStudents.length > 0 && (
-              <span className="ms-1.5 opacity-80">({filteredStudents.length})</span>
+            {item.id === "list" && students.length > 0 && (
+              <span className="ms-1.5 opacity-80">({students.length})</span>
             )}
           </button>
         ))}
@@ -625,15 +742,56 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
                   </option>
                 ))}
               </select>
+              <select
+                value={activationFilter}
+                onChange={(e) =>
+                  setActivationFilter(e.target.value as ActivationFilter)
+                }
+                className="form-field max-w-xs"
+              >
+                <option value="">All accounts</option>
+                <option value="activated">Activated only</option>
+                <option value="not_activated">Not activated only</option>
+              </select>
+              <button
+                type="button"
+                onClick={openBulkExtend}
+                disabled={!filterProgram}
+                className="rounded-full border border-orange/50 px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-orange hover:bg-orange hover:text-background disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Extend all in program
+              </button>
             </div>
+
+            <p className="font-dm text-sm text-cream/60">
+              {filterProgram || search.trim() || activationFilter
+                ? `${filteredStudents.length} of ${students.length} students`
+                : `${students.length} students`}
+              {filteredStudents.length > 0 &&
+                ` · showing ${listRangeStart}–${listRangeEnd}`}
+              {!filterProgram && !search.trim() && !activationFilter && (
+                <>
+                  {" "}
+                  ·{" "}
+                  <span className="text-emerald-300/90">
+                    {activatedStudentCount} activated
+                  </span>
+                  {" · "}
+                  <span className="text-red-300/90">
+                    {notActivatedStudentCount} not activated
+                  </span>
+                </>
+              )}
+            </p>
 
             {filteredStudents.length === 0 ? (
               <div className="student-glass-pill p-8 font-dm text-cream/70">
                 No students found.
               </div>
             ) : (
+              <>
               <ul className="flex flex-col gap-3">
-                {filteredStudents.map(({ profile, enrollments: items }) => (
+                {paginatedStudents.map(({ profile, enrollments: items }) => (
                   <li key={profile.id} className="student-glass-pill flex flex-col gap-3 p-4">
                     <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                       <button
@@ -644,7 +802,10 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
                         <p className="font-dm text-lg text-cream hover:text-orange">
                           {profile.fullName || profile.email}
                         </p>
-                        <p className="font-mono text-[10px] uppercase tracking-widest text-cream/50">
+                        <div className="mt-1">
+                          <AccountActivationBadge profile={profile} />
+                        </div>
+                        <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-cream/50">
                           {profile.studentNumber ? `${profile.studentNumber} · ` : ""}
                           {profile.email}
                           {profile.phone ? ` · ${profile.phone}` : ""}
@@ -681,7 +842,12 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
                     </div>
 
                     <ul className="flex flex-col gap-2 border-t border-white/[0.06] pt-3">
-                      {items.map((item) => {
+                      {items.length === 0 ? (
+                        <li className="rounded-xl bg-white/[0.03] p-3 font-dm text-sm text-cream/55">
+                          No program enrollments yet.
+                        </li>
+                      ) : (
+                        items.map((item) => {
                         const accessBlock = getEnrollmentAccessBlockReason(item);
                         return (
                         <li
@@ -696,10 +862,10 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
                               {item.status} · {formatPayment(item.amountPaid, item.currency)}
                             </p>
                             <p className="font-dm text-xs text-cream/60">
-                              {formatDateOnly(item.accessStartsAt)}
+                              Access: {formatDateOnly(item.accessStartsAt)}
                               {item.accessEndsAt
-                                ? ` → ${formatDateOnly(item.accessEndsAt)}`
-                                : " → No end date"}
+                                ? ` → expires ${formatDateOnly(item.accessEndsAt)}`
+                                : " → no expiry"}
                             </p>
                             <p className="font-dm text-xs text-cream/50">
                               Progress: {item.completedLessons ?? 0}/{item.totalLessons ?? 0} (
@@ -733,21 +899,91 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
                             </button>
                             <button
                               type="button"
-                              onClick={() => extendAccess(item.id, 30)}
-                              className="rounded-full border border-white/[0.1] px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-cream hover:border-orange"
+                              onClick={() =>
+                                setExtendTarget({
+                                  kind: "single",
+                                  enrollment: item,
+                                  studentName: profile.fullName || profile.email,
+                                })
+                              }
+                              className="rounded-full border border-orange/40 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-orange hover:bg-orange hover:text-background"
                             >
-                              +30 days
+                              Extend access
                             </button>
                           </div>
                         </li>
-                      );
-                      })}
+                        );
+                        })
+                      )}
                     </ul>
                   </li>
                 ))}
               </ul>
+
+              {totalListPages > 1 && (
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.08] pt-4">
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-cream/50">
+                    Page {listPage} of {totalListPages}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setListPage((page) => Math.max(1, page - 1))}
+                      disabled={listPage <= 1}
+                      className="rounded-full border border-white/[0.12] px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-cream hover:border-orange disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setListPage((page) => Math.min(totalListPages, page + 1))
+                      }
+                      disabled={listPage >= totalListPages}
+                      className="rounded-full border border-white/[0.12] px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-cream hover:border-orange disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+              </>
             )}
           </div>
+
+          <ExtendAccessModal
+            open={extendTarget !== null}
+            title={
+              extendTarget?.kind === "bulk" ? "Extend program access" : "Extend student access"
+            }
+            programTitle={
+              extendTarget?.kind === "bulk"
+                ? extendTarget.programTitle
+                : extendTarget?.enrollment.program?.title ?? "Program"
+            }
+            studentLabel={
+              extendTarget?.kind === "single" ? extendTarget.studentName : undefined
+            }
+            currentEndsAt={
+              extendTarget?.kind === "single"
+                ? extendTarget.enrollment.accessEndsAt
+                : null
+            }
+            previewRows={
+              extendTarget?.kind === "bulk"
+                ? extendTarget.enrollments.map((item) => ({
+                    id: item.id,
+                    label: item.student?.fullName || item.student?.email || "Student",
+                    currentEndsAt: item.accessEndsAt,
+                  }))
+                : undefined
+            }
+            confirming={extendConfirming}
+            onClose={() => {
+              if (!extendConfirming) setExtendTarget(null);
+            }}
+            onConfirm={confirmExtendAccess}
+          />
         </>
       )}
     </div>

@@ -24,12 +24,14 @@ import {
   listAnnouncementsAdmin,
   listEnrollmentsAdmin,
   listProgramsAdmin,
+  listStudentsAdmin,
   reorderLessonsAdmin,
   resendStudentInviteAdmin,
   resolveStudentEmailRecipients,
   syncExpiredEnrollments,
   type StudentEmailAudience,
   updateEnrollmentAdmin,
+  bulkExtendProgramEnrollmentsAdmin,
   updateStudentAdmin,
   upsertAnnouncementAdmin,
   upsertLessonAdmin,
@@ -219,7 +221,7 @@ export async function POST(request: Request) {
     }
 
     if (action === "list-students") {
-      const students = await resolveStudentEmailRecipients({ type: "all" });
+      const students = await listStudentsAdmin();
       return NextResponse.json({ ok: true, students });
     }
 
@@ -310,6 +312,65 @@ export async function POST(request: Request) {
           body.currency !== undefined ? parseCurrency(body.currency) : undefined,
       });
       return NextResponse.json({ ok: true, enrollment });
+    }
+
+    if (action === "bulk-extend-program") {
+      const programId = String(body.programId ?? "").trim();
+      if (!programId) {
+        return NextResponse.json({ error: "programId required" }, { status: 400 });
+      }
+
+      const mode = body.mode === "date" ? "date" : "days";
+      const days =
+        body.days != null && body.days !== "" ? Number(body.days) : undefined;
+      const endDate =
+        body.endDate != null && body.endDate !== ""
+          ? String(body.endDate).trim()
+          : undefined;
+
+      if (mode === "days" && (!days || days <= 0 || !Number.isFinite(days))) {
+        return NextResponse.json(
+          { error: "days must be a positive number" },
+          { status: 400 }
+        );
+      }
+      if (mode === "date" && !endDate) {
+        return NextResponse.json(
+          { error: "endDate is required when mode is date" },
+          { status: 400 }
+        );
+      }
+
+      const enrollmentIds = Array.isArray(body.enrollmentIds)
+        ? body.enrollmentIds
+            .map((id: unknown) => String(id ?? "").trim())
+            .filter(Boolean)
+        : undefined;
+
+      if (enrollmentIds && enrollmentIds.length === 0) {
+        return NextResponse.json(
+          { error: "enrollmentIds must include at least one enrollment" },
+          { status: 400 }
+        );
+      }
+
+      const programData = await getProgramAdmin(programId);
+      if (!programData) {
+        return NextResponse.json({ error: "Program not found" }, { status: 404 });
+      }
+
+      const result = await bulkExtendProgramEnrollmentsAdmin(programId, {
+        mode,
+        days,
+        endDate,
+        enrollmentIds,
+      });
+
+      return NextResponse.json({
+        ok: true,
+        updated: result.updated,
+        programTitle: programData.program.title,
+      });
     }
 
     if (action === "check-student-invite") {
