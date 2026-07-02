@@ -41,6 +41,12 @@ const ReviewManager = dynamic(() => import("@/components/admin/ReviewManager"), 
   ),
 });
 
+const VipGuestManager = dynamic(() => import("@/components/admin/VipGuestManager"), {
+  loading: () => (
+    <p className="font-dm text-sm text-cream/70">Loading VIP guests…</p>
+  ),
+});
+
 const BlogEditorTab = dynamic(() => import("@/components/admin/BlogEditorTab"), {
   loading: () => (
     <p className="font-dm text-sm text-cream/70">Loading blog editor…</p>
@@ -83,6 +89,7 @@ interface AdminDashboardProps {
   membersRequest: (action: string, payload?: Record<string, unknown>) => Promise<unknown>;
   audienceRequest: (action: string, payload?: Record<string, unknown>) => Promise<unknown>;
   reviewsRequest: (action: string, payload?: Record<string, unknown>) => Promise<unknown>;
+  vipGuestsRequest: (action: string, payload?: Record<string, unknown>) => Promise<unknown>;
   onEnsureSummaryLoaded: () => Promise<void>;
   onEnsureBlogLoaded: () => Promise<void>;
   onReloadBlogPosts: () => Promise<void>;
@@ -104,6 +111,7 @@ export default function AdminDashboard({
   membersRequest,
   audienceRequest,
   reviewsRequest,
+  vipGuestsRequest,
   onEnsureSummaryLoaded,
   onEnsureBlogLoaded,
   onReloadBlogPosts,
@@ -231,6 +239,18 @@ export default function AdminDashboard({
           <div className="student-glass">
             <ReviewManager
               reviewsRequest={reviewsRequest}
+              membersRequest={membersRequest}
+              onStatus={notify}
+            />
+          </div>
+        </div>
+      )}
+
+      {visitedTabs.has("vip-guests") && (
+        <div className={tab === "vip-guests" ? "block" : "hidden"}>
+          <div className="student-glass">
+            <VipGuestManager
+              vipGuestsRequest={vipGuestsRequest}
               membersRequest={membersRequest}
               onStatus={notify}
             />

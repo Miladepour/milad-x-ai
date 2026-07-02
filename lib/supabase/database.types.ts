@@ -71,6 +71,23 @@ export interface ProgramReviewRow {
   updated_at: string;
 }
 
+export interface VipGuestInviteRow {
+  id: string;
+  token: string;
+  full_name: string;
+  email: string | null;
+  guest_title: string;
+  event_date: string;
+  event_title: string;
+  program_id: string | null;
+  locale: LocaleCode;
+  invited_by: string | null;
+  email_sent_at: string | null;
+  opened_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CourseRow {
   id: string;
   slug: string;
@@ -185,6 +202,26 @@ export interface Database {
           updated_at?: string;
         },
         Partial<Omit<ProgramReviewRow, "id">>
+      >;
+      vip_guest_invites: TableDef<
+        VipGuestInviteRow,
+        {
+          token: string;
+          full_name: string;
+          email?: string | null;
+          guest_title?: string;
+          event_date: string;
+          event_title: string;
+          program_id?: string | null;
+          locale?: LocaleCode;
+          invited_by?: string | null;
+          email_sent_at?: string | null;
+          opened_at?: string | null;
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        },
+        Partial<Omit<VipGuestInviteRow, "id">>
       >;
     };
     Views: {
