@@ -79,6 +79,24 @@ export function accountSetPasswordPath(locale: UrlLocale): string {
   return localizedPath("/account/set-password", locale);
 }
 
+export function accountDeviceBlockedPath(locale: UrlLocale): string {
+  return localizedPath("/account/device-blocked", locale);
+}
+
+/** Register this browser before entering the student portal. */
+export function studentDeviceBootstrapUrl(
+  redirectTo: string,
+  locale?: UrlLocale
+): string {
+  const bootstrapLocale =
+    locale ?? (redirectTo.startsWith("/fa/") ? "fa" : "en");
+  const params = new URLSearchParams({
+    locale: bootstrapLocale,
+    next: redirectTo,
+  });
+  return `/api/members/device/bootstrap?${params.toString()}`;
+}
+
 export function isSafeStudentRedirect(path: string): boolean {
   const allowed = [learnPath("en"), learnPath("fa")];
   return (

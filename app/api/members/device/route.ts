@@ -69,18 +69,14 @@ export async function POST() {
     const result = await touchStudentDevice(student.user.id, token, userAgent);
 
     if (result.blocked) {
-      return withDeviceCookie(
-        NextResponse.json(
-          {
-            error: "Device limit reached",
-            cap: result.cap,
-            softMode: false,
-            blocked: true,
-          },
-          { status: 403 }
-        ),
-        token,
-        isNew
+      return NextResponse.json(
+        {
+          error: "Device limit reached",
+          cap: result.cap,
+          softMode: false,
+          blocked: true,
+        },
+        { status: 403 }
       );
     }
 

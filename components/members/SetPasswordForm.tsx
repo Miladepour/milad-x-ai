@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { Lock } from "lucide-react";
 import StudentAuthShell from "@/components/members/StudentAuthShell";
+import { studentDeviceBootstrapUrl } from "@/lib/members/paths";
 import { createClient } from "@/lib/supabase/client";
 import { translations } from "@/lib/i18n/translations";
 
@@ -42,7 +43,7 @@ export default function SetPasswordForm({ redirectTo }: SetPasswordFormProps) {
       return;
     }
 
-    window.location.href = redirectTo;
+    window.location.href = studentDeviceBootstrapUrl(redirectTo);
   }
 
   return (

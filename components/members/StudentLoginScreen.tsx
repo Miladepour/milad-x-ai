@@ -6,6 +6,7 @@ import TurnstileWidget, {
   type TurnstileWidgetHandle,
 } from "@/components/shared/TurnstileWidget";
 import StudentAuthShell from "@/components/members/StudentAuthShell";
+import { studentDeviceBootstrapUrl } from "@/lib/members/paths";
 import { createClient } from "@/lib/supabase/client";
 import { isTurnstileSiteKeyConfigured } from "@/lib/security/turnstile-client";
 import { translations } from "@/lib/i18n/translations";
@@ -88,12 +89,7 @@ export default function StudentLoginScreen({ redirectTo }: StudentLoginScreenPro
       return;
     }
 
-    const bootstrapLocale = redirectTo.startsWith("/fa/") ? "fa" : "en";
-    const bootstrapParams = new URLSearchParams({
-      locale: bootstrapLocale,
-      next: redirectTo,
-    });
-    window.location.href = `/api/members/device/bootstrap?${bootstrapParams.toString()}`;
+    window.location.href = studentDeviceBootstrapUrl(redirectTo);
   }
 
   return (

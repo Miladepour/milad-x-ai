@@ -5,10 +5,8 @@ import {
   studentDeviceCookieOptions,
 } from "@/lib/members/device";
 import { touchStudentDevice } from "@/lib/members/device-store";
-import {
-  readOrCreateStudentDeviceToken,
-} from "@/lib/members/device-session";
-import { learnPath } from "@/lib/members/paths";
+import { readOrCreateStudentDeviceToken } from "@/lib/members/device-session";
+import { accountDeviceBlockedPath, learnPath } from "@/lib/members/paths";
 import { isValidLocale, type UrlLocale } from "@/lib/i18n/config";
 import { getStudentUser } from "@/lib/supabase/require-student";
 
@@ -33,7 +31,20 @@ export async function GET(request: Request) {
 
   const { token, isNew } = readOrCreateStudentDeviceToken();
   const userAgent = headers().get("user-agent");
-  await touchStudentDevice(student.user.id, token, userAgent);
+  const result = await touchStudentDevice(student.user.id, token, userAgent);
+
+  if (result.blocked) {
+    const response = NextResponse.redirect(
+      new URL(accountDeviceBlockedPath(locale), request.url)
+    );
+    if (!isNew) {
+      response.cookies.set(STUDENT_DEVICE_COOKIE, "", {
+        ...studentDeviceCookieOptions(),
+        maxAge: 0,
+      });
+    }
+    return response;
+  }
 
   const response = NextResponse.redirect(new URL(nextPath, request.url));
   if (isNew) {
