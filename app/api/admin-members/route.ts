@@ -37,6 +37,7 @@ import {
   upsertLessonAdmin,
   upsertProgramAdmin,
 } from "@/lib/members/store";
+import { saveBonusLinksAdmin } from "@/lib/members/bonus-store";
 import {
   issueCertificateAdmin,
   revokeCertificateAdmin,
@@ -51,6 +52,7 @@ import type { PaymentCurrency } from "@/lib/members/types";
 import type {
   InviteStudentPayload,
   MemberProgramPayload,
+  ProgramBonusLinkPayload,
   ProgramLessonPayload,
 } from "@/lib/members/types";
 import type { QuizQuestionPayload } from "@/lib/members/types";
@@ -120,7 +122,11 @@ export async function POST(request: Request) {
     const action = String(body.action ?? "");
 
     if (action === "list-programs") {
-      const programs = await listProgramsAdmin();
+      const programType =
+        body.programType === "bonus" || body.programType === "main"
+          ? body.programType
+          : undefined;
+      const programs = await listProgramsAdmin({ programType });
       return NextResponse.json({ ok: true, programs });
     }
 
@@ -147,6 +153,18 @@ export async function POST(request: Request) {
       }
       const program = await upsertProgramAdmin(payload);
       return NextResponse.json({ ok: true, program });
+    }
+
+    if (action === "save-bonus-links") {
+      const bonusProgramId = String(body.bonusProgramId ?? "").trim();
+      const links = Array.isArray(body.links)
+        ? (body.links as ProgramBonusLinkPayload[])
+        : [];
+      if (!bonusProgramId) {
+        return NextResponse.json({ error: "bonusProgramId required" }, { status: 400 });
+      }
+      const savedLinks = await saveBonusLinksAdmin(bonusProgramId, links);
+      return NextResponse.json({ ok: true, bonusLinks: savedLinks });
     }
 
     if (action === "save-lesson") {

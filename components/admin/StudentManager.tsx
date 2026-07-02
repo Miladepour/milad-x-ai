@@ -86,7 +86,7 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
 
   const load = useCallback(async () => {
     const [programsData, enrollmentsData, studentsData] = await Promise.all([
-      membersRequest("list-programs") as Promise<{ programs: MemberProgram[] }>,
+      membersRequest("list-programs", { programType: "main" }) as Promise<{ programs: MemberProgram[] }>,
       membersRequest("list-enrollments") as Promise<{ enrollments: EnrollmentWithDetails[] }>,
       membersRequest("list-students") as Promise<{ students: StudentProfile[] }>,
     ]);

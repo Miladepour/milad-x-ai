@@ -37,6 +37,22 @@ export function learnSupportPath(locale: UrlLocale): string {
   return localizedPath("/learn/support", locale);
 }
 
+export function learnBonusProgramsPath(locale: UrlLocale): string {
+  return localizedPath("/learn/bonus", locale);
+}
+
+export function learnBonusProgramPath(programSlug: string, locale: UrlLocale): string {
+  return localizedPath(`/learn/bonus/${programSlug}`, locale);
+}
+
+export function learnBonusLessonPath(
+  programSlug: string,
+  lessonId: string,
+  locale: UrlLocale
+): string {
+  return localizedPath(`/learn/bonus/${programSlug}/${lessonId}`, locale);
+}
+
 export function learnProgramPath(programSlug: string, locale: UrlLocale): string {
   return localizedPath(`/learn/${programSlug}`, locale);
 }
@@ -103,6 +119,13 @@ export function isSafeStudentRedirect(path: string): boolean {
     allowed.includes(path) ||
     path.startsWith(`${learnPath("en")}/`) ||
     path.startsWith(`${learnPath("fa")}/`)
+  );
+}
+
+export function isSafeBonusStudentRedirect(path: string): boolean {
+  return (
+    path.startsWith(`${learnPath("en")}/bonus`) ||
+    path.startsWith(`${learnPath("fa")}/bonus`)
   );
 }
 

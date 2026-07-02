@@ -26,6 +26,7 @@ export type AdminTab =
   | "audience"
   | "courses"
   | "programs"
+  | "bonus-programs"
   | "students";
 
 interface NavItem {
@@ -68,6 +69,7 @@ export default function AdminShell({
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "students", label: "Students", icon: GraduationCap, badge: navBadges.students },
     { id: "programs", label: "Member programs", icon: BookOpen },
+    { id: "bonus-programs", label: "Bonus programs", icon: BookOpen },
     { id: "courses", label: "Public courses", icon: Globe },
     { id: "blog", label: "Blog", icon: PenLine, badge: navBadges.blog },
     { id: "contact", label: "Contact inbox", icon: Mail, badge: navBadges.contact },

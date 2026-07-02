@@ -2,6 +2,10 @@ import { createAdminDbClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import { certificatesByProgramIdForStudent } from "@/lib/members/certificate-store";
 import {
+  listBonusLinksAdmin,
+  saveBonusLinksAdmin,
+} from "@/lib/members/bonus-store";
+import {
   getAnnouncementStatesForStudent,
   mergeAnnouncementsWithState,
 } from "@/lib/members/announcement-states";
@@ -85,12 +89,15 @@ function normalizeSlug(value: string, fallbackSeed?: string): string {
 // Admin reads (service role via authenticated admin session in API)
 // ---------------------------------------------------------------------------
 
-export async function listProgramsAdmin(): Promise<MemberProgram[]> {
+export async function listProgramsAdmin(options?: {
+  programType?: import("./types").ProgramType;
+}): Promise<MemberProgram[]> {
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from("member_programs")
-    .select("*")
-    .order("sort_order", { ascending: true });
+  let query = supabase.from("member_programs").select("*");
+  if (options?.programType) {
+    query = query.eq("program_type", options.programType);
+  }
+  const { data, error } = await query.order("sort_order", { ascending: true });
 
   if (error) throw new Error(error.message);
   return (data as MemberProgramRow[]).map(memberProgramRowToProgram);
@@ -99,6 +106,7 @@ export async function listProgramsAdmin(): Promise<MemberProgram[]> {
 export async function getProgramAdmin(idOrSlug: string): Promise<{
   program: MemberProgram;
   lessons: ProgramLesson[];
+  bonusLinks: import("./types").ProgramBonusLink[];
 } | null> {
   const supabase = createClient();
   const isUuid = /^[0-9a-f-]{36}$/i.test(idOrSlug);
@@ -121,9 +129,15 @@ export async function getProgramAdmin(idOrSlug: string): Promise<{
 
   if (lessonsError) throw new Error(lessonsError.message);
 
+  const bonusLinks =
+    program.programType === "bonus"
+      ? await listBonusLinksAdmin(program.id)
+      : [];
+
   return {
     program,
     lessons: (lessonsData as ProgramLessonRow[]).map(programLessonRowToLesson),
+    bonusLinks,
   };
 }
 
@@ -140,6 +154,9 @@ export async function upsertProgramAdmin(
     payload.id
   );
 
+  const programType = payload.programType === "bonus" ? "bonus" : "main";
+  const isBonus = programType === "bonus";
+
   const row = {
     slug,
     title_en: titleEn,
@@ -152,14 +169,15 @@ export async function upsertProgramAdmin(
     sort_order: payload.sortOrder,
     status: payload.status,
     useful_links: usefulLinksToJson(payload.usefulLinks),
-    certificate_enabled: Boolean(payload.certificateEnabled),
-    certificate_title_en: payload.certificateTitleEn?.trim() || null,
-    certificate_title_fa: payload.certificateTitleFa?.trim() || null,
+    certificate_enabled: isBonus ? false : Boolean(payload.certificateEnabled),
+    certificate_title_en: isBonus ? null : payload.certificateTitleEn?.trim() || null,
+    certificate_title_fa: isBonus ? null : payload.certificateTitleFa?.trim() || null,
     certificate_hours:
-      payload.certificateHours != null && payload.certificateHours > 0
-        ? payload.certificateHours
-        : null,
-    coming_soon: Boolean(payload.comingSoon),
+      isBonus || payload.certificateHours == null || payload.certificateHours <= 0
+        ? null
+        : payload.certificateHours,
+    coming_soon: isBonus ? false : Boolean(payload.comingSoon),
+    program_type: programType,
   };
 
   if (payload.id) {
@@ -382,14 +400,27 @@ export async function isLessonContentLockedForStudent(
         .maybeSingle(),
       supabase
         .from("member_programs")
-        .select("coming_soon")
+        .select("coming_soon, program_type")
         .eq("id", lessonRow.program_id)
         .maybeSingle(),
     ]);
 
   if (enrollmentError) throw new Error(enrollmentError.message);
   if (programError) throw new Error(programError.message);
-  if (!enrollmentRow || !programRow) return true;
+  if (!programRow) return true;
+
+  if (programRow.program_type === "bonus") {
+    const { data: accessibleProgram, error: accessibleError } = await supabase
+      .from("member_programs")
+      .select("id")
+      .eq("id", lessonRow.program_id)
+      .maybeSingle();
+
+    if (accessibleError) throw new Error(accessibleError.message);
+    return !accessibleProgram;
+  }
+
+  if (!enrollmentRow) return true;
 
   const enrollment = enrollmentRowToEnrollment(enrollmentRow as ProgramEnrollmentRow);
   if (!isEnrollmentActive(enrollment)) return true;
@@ -879,6 +910,7 @@ async function listStudentEnrollmentPrograms(
     if (!programRow) continue;
 
     const program = memberProgramRowToProgram(programRow);
+    if (program.programType === "bonus") continue;
     if (!program.slug.trim()) continue;
 
     results.push(
@@ -964,6 +996,7 @@ export async function getStudentProgram(
   if (!isEnrollmentActive(enrollment)) return null;
 
   const program = memberProgramRowToProgram(programData as MemberProgramRow);
+  if (program.programType === "bonus") return null;
   return loadStudentDashboardProgram(supabase, userId, program, enrollment);
 }
 
@@ -1065,13 +1098,14 @@ export async function upsertLessonProgress(
 
 export async function getStudentEnrollmentCount(userId: string): Promise<number> {
   const supabase = createClient();
-  const { count, error } = await supabase
+  const { data, error } = await supabase
     .from("program_enrollments")
-    .select("*", { count: "exact", head: true })
-    .eq("student_id", userId);
+    .select("program_id, member_programs!inner(program_type)")
+    .eq("student_id", userId)
+    .eq("member_programs.program_type", "main");
 
   if (error) throw new Error(error.message);
-  return count ?? 0;
+  return data?.length ?? 0;
 }
 
 export async function getCompletedLessonIds(

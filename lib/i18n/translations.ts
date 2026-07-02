@@ -349,6 +349,7 @@ export const translations = {
       navUpcomingCourses: "Upcoming courses",
       navResources: "Resources",
       menu: "Menu",
+      studentMenu: "STUDENT MENU",
       closeMenu: "Close menu",
       statPrograms: "Enrolled programs",
       statLessonsDone: "Lessons completed",
@@ -373,6 +374,12 @@ export const translations = {
       viewCourse: "View course",
       viewAllCourses: "View all courses",
       myPrograms: "My programs",
+      bonusPrograms: "Bonus programs",
+      bonusProgramsSubtitle:
+        "Extra videos and files from your courses. Access is separate from your main program and may have its own expiry.",
+      bonusProgramsHint:
+        "Supplemental content only — not part of your main course certificate.",
+      noBonusPrograms: "No bonus programs are available for you yet.",
       programsPageSubtitle: "All programs you are enrolled in. Open any program to continue learning.",
       resourcesPageSubtitle: "Helpful links from your enrolled programs in one place.",
       noResources: "No resource links are available for your programs yet.",
@@ -966,6 +973,7 @@ export const translations = {
       navUpcomingCourses: "دوره‌های پیش‌رو",
       navResources: "منابع",
       menu: "منو",
+      studentMenu: "منوی دانشجو",
       closeMenu: "بستن منو",
       statPrograms: "برنامه‌های ثبت‌نام‌شده",
       statLessonsDone: "درس‌های تکمیل‌شده",
@@ -990,6 +998,12 @@ export const translations = {
       viewCourse: "مشاهده دوره",
       viewAllCourses: "مشاهده همه دوره‌ها",
       myPrograms: "برنامه‌های من",
+      bonusPrograms: "برنامه‌های تکمیلی",
+      bonusProgramsSubtitle:
+        "ویدیوها و فایل‌های اضافی دوره‌های شما. دسترسی جدا از برنامه اصلی است و ممکن است تاریخ انقضای خودش را داشته باشد.",
+      bonusProgramsHint:
+        "محتوای تکمیلی — بخشی از گواهینامه برنامه اصلی نیست.",
+      noBonusPrograms: "هنوز برنامه تکمیلی برای شما فعال نیست.",
       programsPageSubtitle: "همه برنامه‌هایی که در آن‌ها ثبت‌نام کرده‌اید. برای ادامه یادگیری هر برنامه را باز کنید.",
       resourcesPageSubtitle: "لینک‌های مفید از برنامه‌های ثبت‌نام‌شده شما در یکجا.",
       noResources: "هنوز لینک منبعی برای برنامه‌های شما موجود نیست.",

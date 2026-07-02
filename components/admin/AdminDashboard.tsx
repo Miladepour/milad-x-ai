@@ -197,7 +197,15 @@ export default function AdminDashboard({
       {visitedTabs.has("programs") && (
         <div className={tab === "programs" ? "block" : "hidden"}>
           <div className="student-glass">
-            <ProgramEditor membersRequest={membersRequest} onStatus={notify} />
+            <ProgramEditor membersRequest={membersRequest} onStatus={notify} mode="main" />
+          </div>
+        </div>
+      )}
+
+      {visitedTabs.has("bonus-programs") && (
+        <div className={tab === "bonus-programs" ? "block" : "hidden"}>
+          <div className="student-glass">
+            <ProgramEditor membersRequest={membersRequest} onStatus={notify} mode="bonus" />
           </div>
         </div>
       )}

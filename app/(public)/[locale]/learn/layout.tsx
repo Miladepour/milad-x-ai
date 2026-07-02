@@ -140,6 +140,7 @@ export default async function LearnLayout({
         labels={{
           overview: t.memberPortal.navOverview,
           myPrograms: t.memberPortal.myPrograms,
+          bonusPrograms: t.memberPortal.bonusPrograms,
           certificates: t.memberPortal.navCertificates,
           announcements: t.memberPortal.navAnnouncements,
           upcomingCourses: t.memberPortal.navUpcomingCourses,
@@ -152,6 +153,7 @@ export default async function LearnLayout({
           backToSite: t.memberPortal.backToSite,
           signOut: t.memberPortal.signOut,
           menu: t.memberPortal.menu,
+          studentMenu: t.memberPortal.studentMenu,
           closeMenu: t.memberPortal.closeMenu,
           portalTitle: t.memberPortal.dashboardTitle,
         }}

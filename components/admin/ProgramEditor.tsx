@@ -2,7 +2,14 @@
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import AdminLessonEditor from "@/components/admin/AdminLessonEditor";
-import type { LessonType, MemberProgram, ProgramLesson, UsefulLink } from "@/lib/members/types";
+import ProgramMultiSelect from "@/components/admin/ProgramMultiSelect";
+import type {
+  LessonType,
+  MemberProgram,
+  ProgramBonusLink,
+  ProgramLesson,
+  UsefulLink,
+} from "@/lib/members/types";
 import type { QuizQuestionPayload } from "@/lib/members/types";
 
 const LESSON_TYPE_LABELS: Record<LessonType, string> = {
@@ -14,6 +21,7 @@ const LESSON_TYPE_LABELS: Record<LessonType, string> = {
 interface ProgramEditorProps {
   membersRequest: (action: string, payload?: Record<string, unknown>) => Promise<unknown>;
   onStatus: (message: string) => void;
+  mode?: "main" | "bonus";
 }
 
 type View = "list" | "edit";
@@ -45,9 +53,9 @@ function Field({
   );
 }
 
-const emptyProgram = (): Omit<MemberProgram, "id" | "createdAt" | "updatedAt"> & {
-  id?: string;
-} => ({
+const emptyProgram = (
+  mode: "main" | "bonus"
+): Omit<MemberProgram, "id" | "createdAt" | "updatedAt"> & { id?: string } => ({
   slug: "",
   titleEn: "",
   titleFa: "",
@@ -63,7 +71,8 @@ const emptyProgram = (): Omit<MemberProgram, "id" | "createdAt" | "updatedAt"> &
   certificateTitleEn: null,
   certificateTitleFa: null,
   certificateHours: null,
-  comingSoon: true,
+  comingSoon: mode === "main",
+  programType: mode,
 });
 
 const LESSON_TYPE_OPTIONS: Array<{ type: LessonType; label: string; hint: string }> = [
@@ -72,10 +81,17 @@ const LESSON_TYPE_OPTIONS: Array<{ type: LessonType; label: string; hint: string
   { type: "quiz", label: "Quiz lesson", hint: "Questions with 100% pass required" },
 ];
 
-export default function ProgramEditor({ membersRequest, onStatus }: ProgramEditorProps) {
+export default function ProgramEditor({
+  membersRequest,
+  onStatus,
+  mode = "main",
+}: ProgramEditorProps) {
+  const isBonus = mode === "bonus";
   const [programs, setPrograms] = useState<MemberProgram[]>([]);
+  const [mainPrograms, setMainPrograms] = useState<MemberProgram[]>([]);
+  const [bonusLinks, setBonusLinks] = useState<ProgramBonusLink[]>([]);
   const [view, setView] = useState<View>("list");
-  const [program, setProgram] = useState(emptyProgram());
+  const [program, setProgram] = useState(emptyProgram(mode));
   const [lessons, setLessons] = useState<ProgramLesson[]>([]);
   const [loading, setLoading] = useState(false);
   const [showTypePicker, setShowTypePicker] = useState(false);
@@ -103,15 +119,26 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
   }
 
   const loadList = useCallback(async () => {
-    const data = (await membersRequest("list-programs")) as { programs: MemberProgram[] };
+    const data = (await membersRequest("list-programs", { programType: mode })) as {
+      programs: MemberProgram[];
+    };
     setPrograms(data.programs ?? []);
-  }, [membersRequest]);
+  }, [membersRequest, mode]);
+
+  const loadMainPrograms = useCallback(async () => {
+    if (!isBonus) return;
+    const data = (await membersRequest("list-programs", { programType: "main" })) as {
+      programs: MemberProgram[];
+    };
+    setMainPrograms(data.programs ?? []);
+  }, [isBonus, membersRequest]);
 
   useEffect(() => {
     loadList().catch((e) =>
       onStatus(e instanceof Error ? e.message : "Could not load programs")
     );
-  }, [loadList, onStatus]);
+    loadMainPrograms().catch(() => undefined);
+  }, [loadList, loadMainPrograms, onStatus]);
 
   const uploadSlug = program.slug || slugify(program.titleEn || program.titleFa) || "member-lesson";
 
@@ -134,9 +161,11 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
       const data = (await membersRequest("get-program", { id: idOrSlug })) as {
         program: MemberProgram;
         lessons: ProgramLesson[];
+        bonusLinks?: ProgramBonusLink[];
       };
       setProgram(data.program);
       setLessons(data.lessons ?? []);
+      setBonusLinks(data.bonusLinks ?? []);
       resetLessonUi();
       setView("edit");
       onStatus("");
@@ -151,7 +180,8 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
     e.preventDefault();
     onStatus("Saving program…");
     try {
-      await membersRequest("save-program", {
+      const wasNew = !program.id;
+      const saved = (await membersRequest("save-program", {
         program: {
           id: program.id,
           slug: program.slug || slugify(program.titleEn || program.titleFa),
@@ -163,17 +193,30 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
           sortOrder: program.sortOrder,
           status: program.status,
           usefulLinks: program.usefulLinks,
-          certificateEnabled: program.certificateEnabled,
-          certificateTitleEn: program.certificateTitleEn,
-          certificateTitleFa: program.certificateTitleFa,
-          certificateHours: program.certificateHours,
-          comingSoon: program.comingSoon,
+          certificateEnabled: isBonus ? false : program.certificateEnabled,
+          certificateTitleEn: isBonus ? null : program.certificateTitleEn,
+          certificateTitleFa: isBonus ? null : program.certificateTitleFa,
+          certificateHours: isBonus ? null : program.certificateHours,
+          comingSoon: isBonus ? false : program.comingSoon,
+          programType: mode,
         },
-      });
+      })) as { program: MemberProgram };
+
+      if (isBonus && saved.program.id) {
+        await persistBonusLinks(saved.program.id, bonusLinks);
+      }
+
       await loadList();
+      if (isBonus && wasNew) {
+        setProgram(saved.program);
+        setView("edit");
+        onStatus("Bonus program saved. Link it to main programs below.");
+        return;
+      }
       setView("list");
-      setProgram(emptyProgram());
+      setProgram(emptyProgram(mode));
       setLessons([]);
+      setBonusLinks([]);
       resetLessonUi();
       onStatus("Program saved.");
     } catch (err) {
@@ -319,8 +362,9 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
       await membersRequest("delete-program", { programId });
       await loadList();
       if (program.id === programId) {
-        setProgram(emptyProgram());
+        setProgram(emptyProgram(mode));
         setLessons([]);
+        setBonusLinks([]);
         setView("list");
       }
       onStatus("Program deleted.");
@@ -339,29 +383,110 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
     });
   }
 
+  function updateBonusLinkMainPrograms(programIds: string[]) {
+    setBonusLinks((current) => {
+      const next = programIds.map((mainProgramId) => {
+        const existing = current.find((link) => link.mainProgramId === mainProgramId);
+        return (
+          existing ?? {
+            id: `draft-${mainProgramId}`,
+            bonusProgramId: program.id ?? "",
+            mainProgramId,
+            accessEndsAt: null,
+            createdAt: "",
+          }
+        );
+      });
+      return next;
+    });
+  }
+
+  async function persistBonusLinks(
+    bonusProgramId: string,
+    links: ProgramBonusLink[]
+  ): Promise<void> {
+    const saved = (await membersRequest("save-bonus-links", {
+      bonusProgramId,
+      links: links.map((link) => ({
+        mainProgramId: link.mainProgramId,
+        accessEndsAt: link.accessEndsAt,
+      })),
+    })) as { bonusLinks?: ProgramBonusLink[] };
+    setBonusLinks(saved.bonusLinks ?? links);
+  }
+
+  async function handleBonusLinkProgramsChange(programIds: string[]) {
+    updateBonusLinkMainPrograms(programIds);
+    if (!program.id) return;
+
+    const bonusProgramId = program.id;
+    const nextLinks: ProgramBonusLink[] = programIds.map((mainProgramId) => {
+      const existing = bonusLinks.find((link) => link.mainProgramId === mainProgramId);
+      return (
+        existing ?? {
+          id: `draft-${mainProgramId}`,
+          bonusProgramId,
+          mainProgramId,
+          accessEndsAt: null,
+          createdAt: "",
+        }
+      );
+    });
+
+    onStatus("Saving bonus links…");
+    try {
+      await persistBonusLinks(program.id, nextLinks);
+      onStatus("Bonus links saved.");
+    } catch (err) {
+      onStatus(err instanceof Error ? err.message : "Could not save bonus links");
+    }
+  }
+
+  async function handleBonusLinkExpiryChange(
+    mainProgramId: string,
+    accessEndsAt: string | null
+  ) {
+    const nextLinks = bonusLinks.map((link) =>
+      link.mainProgramId === mainProgramId ? { ...link, accessEndsAt } : link
+    );
+    setBonusLinks(nextLinks);
+    if (!program.id) return;
+
+    onStatus("Saving bonus links…");
+    try {
+      await persistBonusLinks(program.id, nextLinks);
+      onStatus("Bonus links saved.");
+    } catch (err) {
+      onStatus(err instanceof Error ? err.message : "Could not save bonus links");
+    }
+  }
+
   if (view === "list") {
     return (
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="font-dm text-sm text-cream/70">
-            Member programs for enrolled students (separate from public marketing courses).
+            {isBonus
+              ? "Bonus programs with supplemental videos and files. Link them to main programs; students get access automatically when enrolled."
+              : "Member programs for enrolled students (separate from public marketing courses)."}
           </p>
           <button
             type="button"
             onClick={() => {
-              setProgram(emptyProgram());
+              setProgram(emptyProgram(mode));
               setLessons([]);
+              setBonusLinks([]);
               resetLessonUi();
               setView("edit");
             }}
             className="border border-orange px-4 py-2 font-mono text-xs uppercase tracking-widest text-orange hover:bg-orange hover:text-background"
           >
-            New program
+            {isBonus ? "New bonus program" : "New program"}
           </button>
         </div>
         {programs.length === 0 ? (
           <div className="border border-surface bg-surface/20 p-8 font-dm text-cream/70">
-            No member programs yet.
+            {isBonus ? "No bonus programs yet." : "No member programs yet."}
           </div>
         ) : (
           <ul className="divide-y divide-surface border border-surface">
@@ -416,7 +541,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
         }}
         className="self-start font-mono text-xs uppercase tracking-widest text-orange hover:text-cream"
       >
-        ← Back to programs
+        ← Back to {isBonus ? "bonus programs" : "programs"}
       </button>
 
       <form
@@ -468,6 +593,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
           </select>
         </Field>
 
+        {!isBonus && (
         <div className="lg:col-span-2 rounded border border-surface/80 bg-surface/10 p-4">
           <label className="flex items-start gap-3 font-dm text-sm text-cream">
             <input
@@ -487,6 +613,67 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
             </span>
           </label>
         </div>
+        )}
+
+        {isBonus && program.id && (
+          <div className="lg:col-span-2 flex flex-col gap-4 rounded border border-surface/80 bg-surface/10 p-4">
+            <div>
+              <p className="font-dm text-sm font-semibold text-cream">Linked main programs</p>
+              <p className="mt-1 font-dm text-xs text-cream/60">
+                Students enrolled in any selected program can access this bonus content.
+                Set an optional expiry per program, or leave blank for unlimited access.
+              </p>
+            </div>
+            <ProgramMultiSelect
+              programs={mainPrograms}
+              value={bonusLinks.map((link) => link.mainProgramId)}
+              onChange={handleBonusLinkProgramsChange}
+            />
+            {bonusLinks.length > 0 && (
+              <ul className="flex flex-col gap-3">
+                {bonusLinks.map((link) => {
+                  const mainProgram = mainPrograms.find((item) => item.id === link.mainProgramId);
+                  const title =
+                    mainProgram?.titleEn || mainProgram?.titleFa || mainProgram?.title || link.mainProgramId;
+                  return (
+                    <li
+                      key={link.mainProgramId}
+                      className="grid gap-2 rounded border border-surface/80 bg-background/20 p-3 md:grid-cols-[1fr_auto]"
+                    >
+                      <span className="font-dm text-sm text-cream">{title}</span>
+                      <label className="flex flex-col gap-1">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-cream/45">
+                          Access ends (optional)
+                        </span>
+                        <input
+                          type="date"
+                          value={
+                            link.accessEndsAt
+                              ? link.accessEndsAt.slice(0, 10)
+                              : ""
+                          }
+                          onChange={(e) =>
+                            void handleBonusLinkExpiryChange(
+                              link.mainProgramId,
+                              e.target.value ? `${e.target.value}T23:59:59.999Z` : null
+                            )
+                          }
+                          className="form-field max-w-xs"
+                        />
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {isBonus && !program.id && (
+          <p className="lg:col-span-2 rounded border border-orange/30 bg-orange/5 p-4 font-dm text-sm text-cream/70">
+            Save the bonus program first, then you can link it to main programs.
+          </p>
+        )}
 
         <Field label="Sort order">
           <input
@@ -534,6 +721,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
           />
         </Field>
 
+        {!isBonus && (
         <div className="lg:col-span-2 flex flex-col gap-4 rounded border border-surface/80 bg-surface/10 p-4">
           <label className="flex items-center gap-3 font-dm text-sm text-cream">
             <input
@@ -594,6 +782,7 @@ export default function ProgramEditor({ membersRequest, onStatus }: ProgramEdito
             </div>
           )}
         </div>
+        )}
 
         <div className="lg:col-span-2 flex flex-col gap-3">
           <span className="font-mono text-[10px] uppercase tracking-widest text-cream/45">

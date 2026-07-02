@@ -419,7 +419,8 @@ export async function completeLessonCertificateFlow(
   );
   const programCompleted =
     lessons.length > 0 && lessons.every((lesson) => completedIds.has(lesson.id));
-  const certificateEnabled = Boolean(program?.certificateEnabled);
+  const certificateEnabled =
+    program?.programType !== "bonus" && Boolean(program?.certificateEnabled);
 
   let certificate: ProgramCertificate | null = null;
   if (programCompleted && certificateEnabled) {

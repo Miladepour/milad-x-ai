@@ -67,7 +67,7 @@ export async function buildAdminInsights(): Promise<AdminInsights> {
       .from("program_enrollments")
       .select("*", { count: "exact", head: true })
       .eq("status", "active"),
-    listProgramsAdmin(),
+    listProgramsAdmin({ programType: "main" }),
     listCoursesAdmin(),
     listBlogPostsAdminMeta(),
     supabase

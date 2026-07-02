@@ -1,6 +1,7 @@
 import type { LocaleCode } from "@/lib/supabase/database.types";
 
 export type ProgramStatus = "draft" | "published";
+export type ProgramType = "main" | "bonus";
 export type EnrollmentStatus = "invited" | "active" | "suspended" | "expired";
 export type PaymentCurrency = "USD" | "GBP" | "IRR";
 export type LessonType = "video" | "text" | "quiz";
@@ -33,8 +34,32 @@ export interface MemberProgram {
   certificateHours: number | null;
   /** When true, enrolled students see the program but lesson content stays locked. */
   comingSoon: boolean;
+  programType: ProgramType;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ProgramBonusLink {
+  id: string;
+  bonusProgramId: string;
+  mainProgramId: string;
+  accessEndsAt: string | null;
+  createdAt: string;
+}
+
+export interface ProgramBonusLinkPayload {
+  mainProgramId: string;
+  accessEndsAt: string | null;
+}
+
+export interface StudentBonusProgramView {
+  program: MemberProgram;
+  lessons: ProgramLesson[];
+  progressPercent: number;
+  completedLessons: number;
+  totalLessons: number;
+  /** null = unlimited bonus access */
+  accessEndsAt: string | null;
 }
 
 export interface ProgramCertificate {
@@ -218,6 +243,7 @@ export interface MemberProgramPayload {
   certificateTitleFa?: string | null;
   certificateHours?: number | null;
   comingSoon?: boolean;
+  programType?: ProgramType;
 }
 
 export interface ProgramLessonPayload {

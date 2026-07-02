@@ -18,6 +18,7 @@ import {
   PlayCircle,
   User,
   X,
+  Gift,
   type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -28,6 +29,7 @@ import { NotificationProvider } from "@/components/notifications/NotificationPro
 import NotificationToasts from "@/components/notifications/NotificationToasts";
 import {
   learnAnnouncementsPath,
+  learnBonusProgramsPath,
   learnCertificatesPath,
   learnClubCardPath,
   learnPath,
@@ -44,6 +46,7 @@ import type { MembershipTier, MembershipTierInfo } from "@/lib/members/membershi
 export interface StudentNavLabels {
   overview: string;
   myPrograms: string;
+  bonusPrograms: string;
   certificates: string;
   announcements: string;
   upcomingCourses: string;
@@ -56,6 +59,7 @@ export interface StudentNavLabels {
   backToSite: string;
   signOut: string;
   menu: string;
+  studentMenu: string;
   closeMenu: string;
   portalTitle: string;
 }
@@ -134,6 +138,7 @@ function StudentDashboardShellInner({
   const dashboardHref = learnPath(locale);
   const announcementsHref = learnAnnouncementsPath(locale);
   const programsHref = learnProgramsPath(locale);
+  const bonusProgramsHref = learnBonusProgramsPath(locale);
   const certificatesHref = learnCertificatesPath(locale);
   const coursesHref = learnUpcomingCoursesPath(locale);
   const resourcesHref = learnResourcesPath(locale);
@@ -149,6 +154,9 @@ function StudentDashboardShellInner({
   const isOnDashboard = pathMatches(dashboardHref);
   const isOnAnnouncements = pathMatches(announcementsHref);
   const isOnPrograms = pathMatches(programsHref);
+  const isOnBonusPrograms =
+    pathMatches(bonusProgramsHref) || pathname.includes("/learn/bonus/");
+  const inBonusProgram = pathname.includes("/learn/bonus/");
   const isOnCertificates = pathMatches(certificatesHref);
   const isOnCourses = pathMatches(coursesHref);
   const isOnResources = pathMatches(resourcesHref);
@@ -158,18 +166,28 @@ function StudentDashboardShellInner({
   const isOnPortalSection =
     isOnAnnouncements ||
     isOnPrograms ||
+    isOnBonusPrograms ||
     isOnCertificates ||
     isOnCourses ||
     isOnResources ||
     isOnProfile ||
     isOnClubCard ||
     isOnSupport;
-  const inProgram =
-    pathname.includes("/learn/") && !isOnDashboard && !isOnPortalSection;
+  const inMainProgram =
+    pathname.includes("/learn/") &&
+    !isOnDashboard &&
+    !isOnPortalSection &&
+    !inBonusProgram;
 
   const navItems: NavItem[] = [
     { id: "overview", label: labels.overview, href: dashboardHref, icon: LayoutDashboard },
     { id: "programs", label: labels.myPrograms, href: programsHref, icon: BookOpen },
+    {
+      id: "bonus",
+      label: labels.bonusPrograms,
+      href: bonusProgramsHref,
+      icon: Gift,
+    },
     {
       id: "certificates",
       label: labels.certificates,
@@ -197,7 +215,8 @@ function StudentDashboardShellInner({
   function isActive(item: NavItem) {
     if (item.id === "overview") return isOnDashboard;
     if (item.id === "announcements") return isOnAnnouncements;
-    if (item.id === "programs") return isOnPrograms || inProgram;
+    if (item.id === "programs") return isOnPrograms || inMainProgram;
+    if (item.id === "bonus") return isOnBonusPrograms || inBonusProgram;
     if (item.id === "certificates") return isOnCertificates;
     if (item.id === "courses") return isOnCourses;
     if (item.id === "resources") return isOnResources;
@@ -351,11 +370,11 @@ function StudentDashboardShellInner({
         <button
           type="button"
           onClick={() => setMenuOpen(true)}
-          className="student-glass-pill flex items-center gap-2 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-cream"
-          aria-label={labels.menu}
+          className="flex items-center gap-2 rounded-full border border-orange/45 bg-orange/15 px-3.5 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-orange shadow-[0_0_0_1px_rgba(255,92,0,0.12)] transition-colors hover:bg-orange hover:text-background"
+          aria-label={labels.studentMenu}
         >
-          <Menu className="h-4 w-4" strokeWidth={1.75} />
-          {labels.menu}
+          <Menu className="h-4 w-4" strokeWidth={2.25} />
+          <span>{labels.studentMenu}</span>
         </button>
         <Link
           href={profileHref}
@@ -405,8 +424,10 @@ function StudentDashboardShellInner({
             menuOpen ? "translate-x-0" : "-translate-x-[110%] lg:translate-x-0"
           }`}
         >
-          <div className="flex shrink-0 items-center justify-between border-b border-white/[0.08] px-4 py-3 lg:hidden">
-            <span className="font-dm text-sm font-medium text-cream">{labels.menu}</span>
+          <div className="flex shrink-0 items-center justify-between border-b border-orange/25 bg-orange/5 px-4 py-3 lg:hidden">
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-orange">
+              {labels.studentMenu}
+            </span>
             <button
               type="button"
               onClick={() => setMenuOpen(false)}

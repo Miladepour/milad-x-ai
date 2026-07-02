@@ -32,6 +32,8 @@ interface LessonQuizPlayerProps {
     selectAnswer: string;
     lockedNext: string;
   };
+  /** Bonus programs: no lesson gating; uses bonus access checks on the API. */
+  skipGating?: boolean;
 }
 
 export default function LessonQuizPlayer({
@@ -44,6 +46,7 @@ export default function LessonQuizPlayer({
   programCertificateHref = "",
   celebrationLabels,
   labels,
+  skipGating = false,
 }: LessonQuizPlayerProps) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [result, setResult] = useState<LessonQuizSubmitResult | null>(null);
@@ -74,6 +77,7 @@ export default function LessonQuizPlayer({
           programSlug,
           lessonId,
           answers,
+          programKind: skipGating ? "bonus" : "main",
         }),
       });
       const data = (await res.json()) as {

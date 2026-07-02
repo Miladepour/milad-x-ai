@@ -16,6 +16,8 @@ import { collectUsefulLinks } from "@/lib/members/learn-content";
 import { getCourses } from "@/lib/courses/store";
 import StudentUpcomingCourseCard from "@/components/members/StudentUpcomingCourseCard";
 import StudentProgramCardList from "@/components/members/StudentProgramCardList";
+import StudentBonusProgramCardList from "@/components/members/StudentBonusProgramCardList";
+import { getStudentBonusPrograms } from "@/lib/members/bonus-store";
 import { urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { localizedPath } from "@/lib/i18n/paths";
 import { getStudentUser } from "@/lib/supabase/require-student";
@@ -48,10 +50,11 @@ export default async function LearnDashboardPage({
   const student = await getStudentUser();
   if (!student) redirect(accountLoginPath(locale));
 
-  const [programs, expiredPrograms, announcements, courses, enrollmentCount, devices] =
+  const [programs, expiredPrograms, bonusPrograms, announcements, courses, enrollmentCount, devices] =
     await Promise.all([
     getStudentDashboard(student.user.id),
     getStudentExpiredPrograms(student.user.id),
+    getStudentBonusPrograms(student.user.id),
     listAnnouncementsForStudent(student.user.id, student.profile.locale),
     getCourses(internal),
     getStudentEnrollmentCount(student.user.id),
@@ -122,6 +125,47 @@ export default async function LearnDashboardPage({
         }}
       />
 
+      <StudentGlassCard id="my-programs" className="scroll-mt-36">
+        <h2 className="student-section-title">{t.memberPortal.myPrograms}</h2>
+        {programs.length === 0 ? (
+          <p className="mt-4 font-dm text-sm text-cream/55">{t.memberPortal.noPrograms}</p>
+        ) : (
+          <div className="mt-5">
+            <StudentProgramCardList
+              programs={programs}
+              locale={locale}
+              dateLocale={dateLocale}
+              labels={programCardLabels}
+            />
+          </div>
+        )}
+      </StudentGlassCard>
+
+      <StudentGlassCard id="bonus-programs" className="scroll-mt-36">
+        <h2 className="student-section-title">{t.memberPortal.bonusPrograms}</h2>
+        <p className="mt-2 font-dm text-sm leading-relaxed text-cream/65">
+          {t.memberPortal.bonusProgramsSubtitle}
+        </p>
+        {bonusPrograms.length === 0 ? (
+          <p className="mt-4 font-dm text-sm text-cream/55">{t.memberPortal.noBonusPrograms}</p>
+        ) : (
+          <div className="mt-5">
+            <StudentBonusProgramCardList
+              programs={bonusPrograms}
+              locale={locale}
+              dateLocale={dateLocale}
+              labels={{
+                progress: t.memberPortal.progress,
+                lessons: t.memberPortal.lessons,
+                accessUntil: t.memberPortal.accessUntil,
+                noExpiry: t.memberPortal.noExpiry,
+                openProgram: t.memberPortal.openProgram,
+              }}
+            />
+          </div>
+        )}
+      </StudentGlassCard>
+
       <StudentGlassCard id="upcoming-courses" className="scroll-mt-36">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="max-w-2xl">
@@ -157,22 +201,6 @@ export default async function LearnDashboardPage({
               </li>
             ))}
           </ul>
-        )}
-      </StudentGlassCard>
-
-      <StudentGlassCard id="my-programs" className="scroll-mt-36">
-        <h2 className="student-section-title">{t.memberPortal.myPrograms}</h2>
-        {programs.length === 0 ? (
-          <p className="mt-4 font-dm text-sm text-cream/55">{t.memberPortal.noPrograms}</p>
-        ) : (
-          <div className="mt-5">
-            <StudentProgramCardList
-              programs={programs}
-              locale={locale}
-              dateLocale={dateLocale}
-              labels={programCardLabels}
-            />
-          </div>
         )}
       </StudentGlassCard>
 

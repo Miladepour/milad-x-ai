@@ -3,9 +3,11 @@ import type {
   LessonProgress,
   MemberProgram,
   PaymentCurrency,
+  ProgramBonusLink,
   ProgramEnrollment,
   ProgramLesson,
   ProgramStatus,
+  ProgramType,
   StudentProfile,
   UsefulLink,
 } from "./types";
@@ -28,8 +30,17 @@ export interface MemberProgramRow {
   certificate_title_fa?: string | null;
   certificate_hours?: number | string | null;
   coming_soon?: boolean | null;
+  program_type?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface ProgramBonusLinkRow {
+  id: string;
+  bonus_program_id: string;
+  main_program_id: string;
+  access_ends_at: string | null;
+  created_at: string;
 }
 
 export interface ProgramLessonRow {
@@ -105,6 +116,20 @@ function parseUsefulLinks(raw: unknown): UsefulLink[] {
     .sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
+function parseProgramType(value: string | null | undefined): ProgramType {
+  return value === "bonus" ? "bonus" : "main";
+}
+
+export function bonusLinkRowToLink(row: ProgramBonusLinkRow): ProgramBonusLink {
+  return {
+    id: row.id,
+    bonusProgramId: row.bonus_program_id,
+    mainProgramId: row.main_program_id,
+    accessEndsAt: row.access_ends_at,
+    createdAt: row.created_at,
+  };
+}
+
 export function memberProgramRowToProgram(row: MemberProgramRow): MemberProgram {
   const hoursRaw = row.certificate_hours;
   const certificateHours =
@@ -140,6 +165,7 @@ export function memberProgramRowToProgram(row: MemberProgramRow): MemberProgram 
         ? certificateHours
         : null,
     comingSoon: Boolean(row.coming_soon),
+    programType: parseProgramType(row.program_type),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
