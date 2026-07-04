@@ -14,6 +14,7 @@ import {
 } from "@/lib/reviews/ratings";
 import type { ReviewProgramOption } from "@/lib/reviews/types";
 import { ReviewRatingRow } from "@/components/reviews/ReviewRatingScale";
+import ReviewSuccessTick from "@/components/reviews/ReviewSuccessTick";
 
 const turnstileRequired = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim());
 
@@ -23,6 +24,7 @@ type PartialRatings = Partial<Record<ReviewRatingKey, number>>;
 
 interface ReviewWizardProps {
   initialProgram?: ReviewProgramOption | null;
+  onStepChange?: (step: WizardStep) => void;
 }
 
 function isRatingsComplete(ratings: PartialRatings): ratings is ProgramReviewRatings {
@@ -32,7 +34,10 @@ function isRatingsComplete(ratings: PartialRatings): ratings is ProgramReviewRat
   });
 }
 
-export default function ReviewWizard({ initialProgram = null }: ReviewWizardProps) {
+export default function ReviewWizard({
+  initialProgram = null,
+  onStepChange,
+}: ReviewWizardProps) {
   const { lang, href } = useLanguage();
   const t = useTranslation();
   const p = t.reviewPage;
@@ -77,6 +82,10 @@ export default function ReviewWizard({ initialProgram = null }: ReviewWizardProp
       cancelled = true;
     };
   }, [initialProgram, p.errorGeneric]);
+
+  useEffect(() => {
+    onStepChange?.(step);
+  }, [onStepChange, step]);
 
   const selectedProgram = useMemo(() => {
     return programs.find((item) => item.id === programId) ?? initialProgram ?? null;
@@ -181,6 +190,7 @@ export default function ReviewWizard({ initialProgram = null }: ReviewWizardProp
   if (step === "done") {
     return (
       <div className="bg-surface border border-orange/30 rounded-sm p-6 sm:p-8 text-center">
+        <ReviewSuccessTick />
         <h2 className="font-dm text-lg font-semibold text-cream mb-3">
           {p.successTitle}
         </h2>
