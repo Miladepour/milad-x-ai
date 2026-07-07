@@ -91,6 +91,8 @@ export default async function LearnBonusLessonPage({
         <StudentGlassCard className="!p-0 overflow-hidden">
           <LessonPlayer
             lessonId={data.lesson.id}
+            programSlug={params.programSlug}
+            programKind="bonus"
             videoUrl={data.lesson.videoUrl}
             lessonTitle={title}
             initialPosition={data.progress?.lastPositionSeconds ?? 0}

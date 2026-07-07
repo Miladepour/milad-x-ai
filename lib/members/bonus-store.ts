@@ -78,6 +78,14 @@ async function resolveStudentBonusAccess(
   return { hasAccess: true, accessEndsAt: new Date(maxEnd).toISOString() };
 }
 
+export async function studentHasBonusProgramAccess(
+  userId: string,
+  bonusProgramId: string
+): Promise<boolean> {
+  const access = await resolveStudentBonusAccess(userId, bonusProgramId);
+  return access.hasAccess;
+}
+
 async function loadStudentBonusProgramView(
   userId: string,
   program: MemberProgram

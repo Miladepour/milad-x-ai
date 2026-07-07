@@ -4,6 +4,7 @@ import { certificatesByProgramIdForStudent } from "@/lib/members/certificate-sto
 import {
   listBonusLinksAdmin,
   saveBonusLinksAdmin,
+  studentHasBonusProgramAccess,
 } from "@/lib/members/bonus-store";
 import {
   getAnnouncementStatesForStudent,
@@ -409,14 +410,11 @@ export async function isLessonContentLockedForStudent(
   if (!programRow) return true;
 
   if (programRow.program_type === "bonus") {
-    const { data: accessibleProgram, error: accessibleError } = await supabase
-      .from("member_programs")
-      .select("id")
-      .eq("id", lessonRow.program_id)
-      .maybeSingle();
-
-    if (accessibleError) throw new Error(accessibleError.message);
-    return !accessibleProgram;
+    const hasAccess = await studentHasBonusProgramAccess(
+      userId,
+      String(lessonRow.program_id)
+    );
+    return !hasAccess;
   }
 
   if (!enrollmentRow) return true;
@@ -1048,12 +1046,54 @@ export async function touchLessonActivity(
   await upsertLessonProgress(userId, lessonId, {});
 }
 
+async function resolveLessonProgramContext(lessonId: string): Promise<{
+  programId: string;
+  programType: "main" | "bonus";
+} | null> {
+  const admin = createAdminDbClient();
+  const { data: lessonRow, error: lessonError } = await admin
+    .from("program_lessons")
+    .select("program_id")
+    .eq("id", lessonId)
+    .maybeSingle();
+
+  if (lessonError) throw new Error(lessonError.message);
+  if (!lessonRow?.program_id) return null;
+
+  const { data: programRow, error: programError } = await admin
+    .from("member_programs")
+    .select("program_type")
+    .eq("id", lessonRow.program_id)
+    .maybeSingle();
+
+  if (programError) throw new Error(programError.message);
+  if (!programRow) return null;
+
+  return {
+    programId: String(lessonRow.program_id),
+    programType: programRow.program_type === "bonus" ? "bonus" : "main",
+  };
+}
+
 export async function upsertLessonProgress(
   userId: string,
   lessonId: string,
   updates: { lastPositionSeconds?: number; completed?: boolean }
 ): Promise<LessonProgress> {
-  const supabase = createClient();
+  const programContext = await resolveLessonProgramContext(lessonId);
+  if (!programContext) throw new Error("Lesson not found");
+
+  let supabase: ReturnType<typeof createClient>;
+  if (programContext.programType === "bonus") {
+    const hasAccess = await studentHasBonusProgramAccess(
+      userId,
+      programContext.programId
+    );
+    if (!hasAccess) throw new Error("Forbidden");
+    supabase = createAdminDbClient();
+  } else {
+    supabase = createClient();
+  }
 
   const { data: existing } = await supabase
     .from("lesson_progress")

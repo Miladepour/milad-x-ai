@@ -11,9 +11,12 @@ import {
 } from "@/lib/members/video";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import LessonVideoPoster from "@/components/members/LessonVideoPoster";
+import type { LessonProgramKind } from "@/lib/members/lesson-video-access";
 
 interface LessonPlayerProps {
   lessonId: string;
+  programSlug: string;
+  programKind?: LessonProgramKind;
   videoUrl: string | null;
   lessonTitle?: string;
   initialPosition?: number;
@@ -26,6 +29,8 @@ interface LessonPlayerProps {
 
 export default function LessonPlayer({
   lessonId,
+  programSlug,
+  programKind = "main",
   videoUrl,
   lessonTitle = "",
   initialPosition = 0,
@@ -97,7 +102,9 @@ export default function LessonPlayer({
     void (async () => {
       try {
         const qs = new URLSearchParams({
-          videoUrl,
+          lessonId,
+          programSlug,
+          programKind,
           autoplay: "true",
           preload: "false",
         });
@@ -119,7 +126,7 @@ export default function LessonPlayer({
     return () => {
       cancelled = true;
     };
-  }, [videoUrl, bunnyStarted]);
+  }, [videoUrl, bunnyStarted, lessonId, programSlug, programKind]);
 
   useEffect(() => {
     const video = videoRef.current;
