@@ -56,7 +56,7 @@ export default function Hero() {
 
       {/* Floating orb */}
       <div
-        className="absolute bottom-28 left-24 w-72 h-72 rounded-full pointer-events-none hero-orb"
+        className="absolute bottom-28 left-8 w-48 h-48 md:left-24 md:w-72 md:h-72 rounded-full pointer-events-none hero-orb"
         style={{
           background: 'radial-gradient(circle, rgba(255,92,0,0.12) 0%, transparent 70%)',
           filter: 'blur(10px)',

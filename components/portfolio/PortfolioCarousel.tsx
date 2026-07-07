@@ -84,7 +84,7 @@ export default function PortfolioCarousel({
     "pointer-events-auto absolute top-1/2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-surface bg-background/95 text-cream shadow-lg backdrop-blur-sm transition-colors duration-200 hover:border-orange hover:text-orange disabled:opacity-30 disabled:cursor-not-allowed";
 
   return (
-    <div className="relative overflow-visible py-1">
+    <div className="relative overflow-hidden py-1">
       <button
         type="button"
         aria-label={prevLabel}

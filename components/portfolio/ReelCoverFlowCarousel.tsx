@@ -166,7 +166,7 @@ export default function ReelCoverFlowCarousel({
   };
 
   return (
-    <div className="relative w-full overflow-visible select-none" aria-label={ariaLabel}>
+    <div className="relative w-full overflow-hidden select-none" aria-label={ariaLabel}>
       <button
         type="button"
         onClick={handlePrev}
@@ -194,7 +194,7 @@ export default function ReelCoverFlowCarousel({
       </button>
 
       <div
-        className="relative mx-auto h-[min(72vh,520px)] max-h-[520px] w-full cursor-grab active:cursor-grabbing touch-pan-x px-12 md:px-14"
+        className="relative mx-auto h-[min(72vh,520px)] max-h-[520px] w-full cursor-grab active:cursor-grabbing touch-pan-x overflow-hidden px-12 md:px-14 [contain:paint]"
         style={{ perspective: "1400px" }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -202,8 +202,7 @@ export default function ReelCoverFlowCarousel({
         onPointerCancel={onPointerUp}
       >
         <div
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ transformStyle: "preserve-3d" }}
+          className="absolute inset-0 flex items-center justify-center [transform-style:preserve-3d]"
         >
           {reels.map((reel, index) => {
             const offset = wrapOffset(index, activeIndex, reels.length);
@@ -219,7 +218,7 @@ export default function ReelCoverFlowCarousel({
                 key={reel.id}
                 role="presentation"
                 onClick={() => onCardClick(index)}
-                className="absolute w-[min(58vw,220px)] aspect-[9/16] rounded-2xl overflow-hidden border border-white/10 shadow-[0_24px_60px_rgba(0,0,0,0.55)] transition-[transform,opacity] duration-500 ease-out will-change-transform cursor-pointer"
+                className="absolute w-[min(calc(100vw-6rem),220px)] aspect-[9/16] rounded-2xl overflow-hidden border border-white/10 shadow-[0_24px_60px_rgba(0,0,0,0.55)] transition-[transform,opacity] duration-500 ease-out will-change-transform cursor-pointer"
                 style={{
                   transform: `translateX(calc(${x}px + ${isDragging ? dragX * 0.15 : 0}px)) scale(${scale}) rotateY(${rotateY}deg)`,
                   zIndex,

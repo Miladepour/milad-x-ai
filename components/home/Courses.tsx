@@ -45,12 +45,12 @@ export default function Courses({ courses: catalog }: CoursesProps) {
         </header>
 
         <div
-          className="flex gap-5 overflow-x-auto pb-2 -mx-1 px-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="flex gap-5 overflow-x-auto overscroll-x-contain pb-2 -mx-1 px-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         >
           {displayItems.map((course) => (
             <article
               key={course.id}
-              className="flex-shrink-0 w-[min(88vw,320px)] md:w-[300px] bg-surface flex flex-col overflow-hidden rounded-sm"
+              className="flex-shrink-0 w-[min(calc(100vw-4rem),300px)] md:w-[300px] bg-surface flex flex-col overflow-hidden rounded-sm"
             >
               <Link href={course.detailHref} className="block relative aspect-[16/10] bg-background">
                 <Image

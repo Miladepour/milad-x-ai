@@ -17,7 +17,7 @@ export default function AIWork() {
       id="work"
       className="w-full bg-background py-28 px-8 md:px-12 lg:px-16"
     >
-      <div className="max-w-6xl mx-auto overflow-visible px-1">
+      <div className="max-w-6xl mx-auto overflow-hidden px-1">
         <div className="mb-14">
           <span className="type-section-label font-mono text-orange uppercase tracking-[0.35em] rtl:tracking-normal">
             {w.label}

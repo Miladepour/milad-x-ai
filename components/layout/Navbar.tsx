@@ -77,23 +77,23 @@ export default function Navbar() {
           : "bg-transparent"
       }`}
     >
-      <nav className="px-8 md:px-12 lg:px-16 h-20 flex items-center justify-between">
+      <nav className="px-4 sm:px-6 md:px-12 lg:px-16 h-20 flex items-center justify-between gap-3">
         <Link
           href={isLearnPortalActive(pathname, urlLocale) ? href("/learn") : href("/")}
-          className="flex items-center"
+          className="flex shrink-0 items-center"
         >
           <Image
             src="/images/miladxailogo9.png"
             alt="Milad X AI"
             width={98}
             height={98}
-            className="h-[97.5px] w-[97.5px] object-contain"
+            className="h-14 w-14 sm:h-16 sm:w-16 lg:h-[97.5px] lg:w-[97.5px] object-contain"
             priority
           />
         </Link>
 
-        <div className="flex items-center gap-6">
-          <div className="hidden md:flex items-center gap-8">
+        <div className="flex shrink-0 items-center gap-4 sm:gap-6">
+          <div className="hidden lg:flex items-center gap-8">
             <Link
               href={href("/")}
               className={navLinkClass(isNavActive(pathname, "/", urlLocale), "desktop")}
@@ -160,7 +160,7 @@ export default function Navbar() {
 
           <button
             onClick={() => setLang(lang === "EN" ? "FA" : "EN")}
-            className="font-mono text-xs text-muted hover:text-cream transition-colors tracking-widest"
+            className="shrink-0 font-mono text-xs text-muted hover:text-cream transition-colors tracking-widest"
             aria-label="Toggle language"
           >
             <span className={lang === "EN" ? "text-orange" : "text-muted"}>EN</span>
@@ -169,7 +169,7 @@ export default function Navbar() {
           </button>
 
           <button
-            className="group md:hidden relative flex h-8 w-8 items-center justify-center"
+            className="group lg:hidden relative flex h-8 w-8 shrink-0 items-center justify-center"
             onClick={() => setMenuOpen((o) => !o)}
             aria-label="Toggle menu"
             aria-expanded={menuOpen}
@@ -194,13 +194,13 @@ export default function Navbar() {
       </nav>
 
       <div
-        className={`md:hidden overflow-hidden transition-all duration-300 ${
+        className={`lg:hidden overflow-hidden transition-all duration-300 ${
           menuOpen
             ? "max-h-[calc(100dvh-5rem)] border-b border-surface"
             : "max-h-0"
         } bg-background/95 backdrop-blur-md`}
       >
-        <div className="flex max-h-[calc(100dvh-5rem)] flex-col gap-5 overflow-y-auto overscroll-contain px-8 py-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div className="flex max-h-[calc(100dvh-5rem)] flex-col gap-5 overflow-y-auto overscroll-contain px-4 py-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-6">
           <StudentNavButton
             urlLocale={urlLocale}
             active={isStudentAreaActive(pathname, urlLocale)}

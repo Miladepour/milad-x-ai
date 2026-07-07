@@ -29,7 +29,7 @@ export default function PortfolioSections({
   return (
     <div className="flex flex-col gap-16 md:gap-20">
       {showReels && (
-        <section aria-labelledby="portfolio-reels-heading" className="overflow-visible -mx-2 px-2">
+        <section aria-labelledby="portfolio-reels-heading" className="overflow-hidden">
           <h2
             id="portfolio-reels-heading"
             className="font-mono text-xs text-orange uppercase tracking-widest rtl:tracking-normal mb-6"
@@ -41,7 +41,7 @@ export default function PortfolioSections({
       )}
 
       {showImages && (
-        <section aria-labelledby="portfolio-images-heading" className="overflow-visible -mx-2 px-2">
+        <section aria-labelledby="portfolio-images-heading" className="overflow-hidden">
           <h2
             id="portfolio-images-heading"
             className="font-mono text-xs text-orange uppercase tracking-widest rtl:tracking-normal mb-6"
@@ -57,7 +57,7 @@ export default function PortfolioSections({
               {portfolioSquareImages.map((item) => (
                 <article
                   key={item.id}
-                  className="group relative flex-shrink-0 w-[min(80vw,320px)] snap-center snap-always overflow-hidden rounded-sm bg-surface aspect-square"
+                  className="group relative flex-shrink-0 w-[min(calc(100vw-5rem),320px)] snap-center snap-always overflow-hidden rounded-sm bg-surface aspect-square"
                 >
                   <Image
                     src={item.src}
