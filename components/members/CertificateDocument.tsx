@@ -5,12 +5,14 @@ import {
 } from "@/lib/members/certificate-config";
 import {
   type CertificateFormat,
+  getCertificateContentWidth,
   getCertificateElementId,
   getCertificateLayoutTokens,
 } from "@/lib/members/certificate-layout";
 import {
   formatCertificateHours,
   formatCertificateIssueDate,
+  resolveCertificateNameTypography,
   resolveCertificateProgramTitle,
 } from "@/lib/members/certificate-utils";
 import type { ProgramCertificate } from "@/lib/members/types";
@@ -34,6 +36,8 @@ interface CertificateDocumentProps {
   labels: CertificateDocumentLabels;
   format: CertificateFormat;
   className?: string;
+  /** Off-screen root used for PNG/PDF export (avoids preview CSS scale). */
+  captureTarget?: boolean;
 }
 
 function CertificateNoiseBackground() {
@@ -367,6 +371,7 @@ function CertificateMainContent({
   labels,
   isFa,
   tokens,
+  format,
   includeQuote = true,
 }: {
   displayName: string;
@@ -376,8 +381,23 @@ function CertificateMainContent({
   labels: CertificateDocumentLabels;
   isFa: boolean;
   tokens: ReturnType<typeof getCertificateLayoutTokens>;
+  format: CertificateFormat;
   includeQuote?: boolean;
 }) {
+  const nameTypography = resolveCertificateNameTypography({
+    displayName,
+    baseFontSize: tokens.nameFontSize,
+    contentWidth: getCertificateContentWidth(format),
+    isFa,
+  });
+  const nameLineCount = nameTypography.lines.length;
+  const programBlockMarginTop =
+    nameLineCount >= 3
+      ? Math.round(tokens.programBlockMarginTop * 0.7)
+      : nameLineCount >= 2
+        ? Math.round(tokens.programBlockMarginTop * 0.85)
+        : tokens.programBlockMarginTop;
+
   return (
     <>
       <div className="flex flex-col items-center text-center">
@@ -392,11 +412,11 @@ function CertificateMainContent({
         </p>
 
         <h1
-          className="max-w-[92%] text-cream"
+          className="w-full max-w-[92%] text-cream"
           style={{
             marginTop: tokens.nameMarginTop,
-            fontSize: tokens.nameFontSize,
-            lineHeight: isFa ? 1.15 : 1.05,
+            fontSize: nameTypography.fontSize,
+            lineHeight: nameTypography.lineHeight,
             fontFamily: isFa
               ? "var(--font-dm), sans-serif"
               : "var(--font-cormorant), serif",
@@ -405,10 +425,14 @@ function CertificateMainContent({
             textTransform: isFa ? "none" : "uppercase",
           }}
         >
-          {displayName}
+          {nameTypography.lines.map((line, index) => (
+            <span key={`${line}-${index}`} className="block">
+              {line}
+            </span>
+          ))}
         </h1>
 
-        <div style={{ marginTop: tokens.programBlockMarginTop, maxWidth: "88%" }}>
+        <div style={{ marginTop: programBlockMarginTop, maxWidth: "88%" }}>
           <p
             className="uppercase tracking-[0.16em] text-cream/75"
             style={{
@@ -448,18 +472,25 @@ function CertificateMainContent({
       </div>
 
       {includeQuote ? (
-        <blockquote
-          className="mx-auto text-center text-cream/75"
-          style={{
-            marginTop: tokens.quoteMarginTop,
-            maxWidth: "88%",
-            fontSize: tokens.quoteFontSize,
-            lineHeight: tokens.quoteLineHeight,
-            fontFamily: "var(--font-dm), sans-serif",
-          }}
-        >
-          {quote}
-        </blockquote>
+        <div className="flex w-full justify-center">
+          <blockquote
+            className="text-cream/75"
+            style={{
+              marginTop: tokens.quoteMarginTop,
+              marginBottom: 0,
+              marginLeft: 0,
+              marginRight: 0,
+              width: "88%",
+              maxWidth: "88%",
+              textAlign: "center",
+              fontSize: tokens.quoteFontSize,
+              lineHeight: tokens.quoteLineHeight,
+              fontFamily: "var(--font-dm), sans-serif",
+            }}
+          >
+            {quote}
+          </blockquote>
+        </div>
       ) : null}
     </>
   );
@@ -473,18 +504,25 @@ function CertificateQuote({
   tokens: ReturnType<typeof getCertificateLayoutTokens>;
 }) {
   return (
-    <blockquote
-      className="mx-auto text-center text-cream/75"
-      style={{
-        marginTop: tokens.quoteMarginTop,
-        maxWidth: "88%",
-        fontSize: tokens.quoteFontSize,
-        lineHeight: tokens.quoteLineHeight,
-        fontFamily: "var(--font-dm), sans-serif",
-      }}
-    >
-      {quote}
-    </blockquote>
+    <div className="flex w-full justify-center">
+      <blockquote
+        className="text-cream/75"
+        style={{
+          marginTop: tokens.quoteMarginTop,
+          marginBottom: 0,
+          marginLeft: 0,
+          marginRight: 0,
+          width: "88%",
+          maxWidth: "88%",
+          textAlign: "center",
+          fontSize: tokens.quoteFontSize,
+          lineHeight: tokens.quoteLineHeight,
+          fontFamily: "var(--font-dm), sans-serif",
+        }}
+      >
+        {quote}
+      </blockquote>
+    </div>
   );
 }
 
@@ -494,6 +532,7 @@ export default function CertificateDocument({
   labels,
   format,
   className = "",
+  captureTarget = false,
 }: CertificateDocumentProps) {
   const tokens = getCertificateLayoutTokens(format);
   const programTitle = resolveCertificateProgramTitle(certificate, locale);
@@ -522,7 +561,7 @@ export default function CertificateDocument({
 
   return (
     <div
-      id={getCertificateElementId(format)}
+      id={captureTarget ? getCertificateElementId(format) : undefined}
       dir={dir}
       className={`certificate-document relative overflow-hidden font-dm text-cream ${className}`}
       style={{
@@ -543,7 +582,7 @@ export default function CertificateDocument({
 
       {isPortrait ? (
         <div
-          className="relative z-10 grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto_auto]"
+          className="relative z-10 grid h-full min-h-0 grid-rows-[auto_minmax(min-content,1fr)_auto_auto]"
           style={contentStyle}
         >
           <div
@@ -560,7 +599,7 @@ export default function CertificateDocument({
             />
           </div>
 
-          <div className="flex min-h-0 flex-col items-center justify-center py-2">
+          <div className="flex min-h-0 flex-col items-center justify-center py-1">
             <CertificateMainContent
               displayName={displayName}
               programTitle={programTitle}
@@ -569,6 +608,7 @@ export default function CertificateDocument({
               labels={labels}
               isFa={isFa}
               tokens={tokens}
+              format={format}
               includeQuote={false}
             />
           </div>
@@ -592,7 +632,7 @@ export default function CertificateDocument({
         </div>
       ) : (
         <div
-          className="relative z-10 grid h-full grid-rows-[auto_minmax(0,1fr)_auto_auto]"
+          className="relative z-10 grid h-full grid-rows-[auto_minmax(min-content,1fr)_auto_auto]"
           style={contentStyle}
         >
           <div className="flex justify-start">
@@ -606,7 +646,7 @@ export default function CertificateDocument({
             />
           </div>
 
-          <div className="flex flex-col items-center justify-center px-4 text-center">
+          <div className="flex flex-col items-center justify-center px-4 py-1 text-center">
             <CertificateMainContent
               displayName={displayName}
               programTitle={programTitle}
@@ -615,6 +655,7 @@ export default function CertificateDocument({
               labels={labels}
               isFa={isFa}
               tokens={tokens}
+              format={format}
               includeQuote={false}
             />
           </div>

@@ -69,6 +69,112 @@ export function buildLinkedInCertificationUrl(
   return `https://www.linkedin.com/profile/add?${params.toString()}`;
 }
 
+export interface CertificateNameTypography {
+  fontSize: number;
+  lineHeight: number;
+  lines: string[];
+}
+
+function splitCertificateNameLines(
+  name: string,
+  maxLines: number,
+  maxCharsPerLine: number
+): string[] {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [name];
+
+  const lines: string[] = [];
+  let current = "";
+
+  for (const word of words) {
+    const next = current ? `${current} ${word}` : word;
+
+    if (next.length > maxCharsPerLine && current) {
+      lines.push(current);
+      current = word;
+      if (lines.length >= maxLines) {
+        const tailStart = words.indexOf(word);
+        lines[maxLines - 1] = words.slice(tailStart).join(" ");
+        return lines.slice(0, maxLines);
+      }
+      continue;
+    }
+
+    if (word.length > maxCharsPerLine) {
+      if (current) {
+        lines.push(current);
+        current = "";
+      }
+      let rest = word;
+      while (rest.length > 0 && lines.length < maxLines) {
+        lines.push(rest.slice(0, maxCharsPerLine));
+        rest = rest.slice(maxCharsPerLine);
+      }
+      if (rest && lines.length > 0) {
+        lines[lines.length - 1] = `${lines[lines.length - 1]}${rest}`;
+      }
+      continue;
+    }
+
+    current = next;
+  }
+
+  if (current) {
+    lines.push(current);
+  }
+
+  return lines.slice(0, maxLines);
+}
+
+export function resolveCertificateNameTypography(opts: {
+  displayName: string;
+  baseFontSize: number;
+  contentWidth: number;
+  isFa: boolean;
+  maxWidthRatio?: number;
+}): CertificateNameTypography {
+  const {
+    displayName,
+    baseFontSize,
+    contentWidth,
+    isFa,
+    maxWidthRatio = 0.92,
+  } = opts;
+  const maxWidth = contentWidth * maxWidthRatio;
+  const maxLines = 3;
+  const minFontSize = Math.round(baseFontSize * 0.45);
+  const charWidthFactor = isFa ? 0.52 : 0.58;
+
+  for (let fontSize = baseFontSize; fontSize >= minFontSize; fontSize -= 1) {
+    const charsPerLine = Math.max(
+      8,
+      Math.floor(maxWidth / (fontSize * charWidthFactor))
+    );
+    const lines = splitCertificateNameLines(displayName, maxLines, charsPerLine);
+    const fitsWidth = lines.every((line) => line.length <= charsPerLine + 2);
+    const fitsLines = lines.length <= maxLines;
+
+    if (fitsWidth && fitsLines) {
+      return {
+        fontSize,
+        lineHeight: lines.length > 1 ? (isFa ? 1.18 : 1.1) : isFa ? 1.15 : 1.05,
+        lines,
+      };
+    }
+  }
+
+  const charsPerLine = Math.max(
+    8,
+    Math.floor(maxWidth / (minFontSize * charWidthFactor))
+  );
+
+  return {
+    fontSize: minFontSize,
+    lineHeight: isFa ? 1.18 : 1.1,
+    lines: splitCertificateNameLines(displayName, maxLines, charsPerLine),
+  };
+}
+
 export function buildLinkedInPostShareText(opts: {
   programTitle: string;
   verifyUrl?: string;

@@ -37,13 +37,22 @@ export default function ProgramCertificateView({
           certificate={certificate}
           locale={locale}
           labels={labels}
+          format="document"
+          captureTarget
+        />
+        <CertificateDocument
+          certificate={certificate}
+          locale={locale}
+          labels={labels}
           format="story"
+          captureTarget
         />
         <CertificateDocument
           certificate={certificate}
           locale={locale}
           labels={labels}
           format="post"
+          captureTarget
         />
       </div>
 

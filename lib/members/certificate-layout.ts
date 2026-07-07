@@ -73,6 +73,20 @@ export function getCertificateDimensions(format: CertificateFormat): Certificate
   return CERTIFICATE_FORMATS[format];
 }
 
+export function getCertificateContentWidth(
+  format: CertificateFormat
+): number {
+  const tokens = getCertificateLayoutTokens(format);
+  return tokens.width - tokens.paddingX * 2 - tokens.contentInsetEnd;
+}
+
+/** ~300 DPI when a document certificate PNG is placed on A4 landscape. */
+export const CERTIFICATE_CAPTURE_PIXEL_RATIO: Record<CertificateFormat, number> = {
+  document: 3,
+  story: 2,
+  post: 2,
+};
+
 export function getCertificateLayoutTokens(format: CertificateFormat): CertificateLayoutTokens {
   switch (format) {
     case "story":

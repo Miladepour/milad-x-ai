@@ -1,5 +1,6 @@
 import { toPng } from "html-to-image";
 import {
+  CERTIFICATE_CAPTURE_PIXEL_RATIO,
   type CertificateFormat,
   getCertificateDimensions,
   getCertificateElementId,
@@ -12,6 +13,15 @@ function blobToDataUrl(blob: Blob): Promise<string> {
     reader.onerror = () => reject(new Error("Could not read image"));
     reader.readAsDataURL(blob);
   });
+}
+
+async function preloadFonts(): Promise<void> {
+  if (typeof document === "undefined" || !document.fonts?.ready) return;
+  try {
+    await document.fonts.ready;
+  } catch {
+    // Continue export even if font loading fails.
+  }
 }
 
 async function preloadImages(root: HTMLElement): Promise<void> {
@@ -110,18 +120,18 @@ export async function captureCertificatePng(
 
   const { width, height } = getCertificateDimensions(format);
 
-  await preloadImages(element);
+  await Promise.all([preloadFonts(), preloadImages(element)]);
   const restoreStyles = prepareCertificateForExport(element);
   const restoreImages = await inlineImagesForExport(element);
 
   try {
     return await toPng(element, {
       cacheBust: true,
-      pixelRatio: 1,
+      pixelRatio: CERTIFICATE_CAPTURE_PIXEL_RATIO[format],
       width,
       height,
       backgroundColor: "#0D0D0D",
-      skipFonts: true,
+      skipFonts: false,
       style: {
         transform: "none",
       },
