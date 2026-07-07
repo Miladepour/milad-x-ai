@@ -31,7 +31,6 @@ import {
   type StudentProfileRow,
 } from "./mappers";
 import { resolveStudentAccountActivation } from "./student-activation";
-import { internalToUrlLocale } from "@/lib/i18n/config";
 import { resolveContinueLesson } from "./continue-watching";
 import { listStudentDevices } from "@/lib/members/device-store";
 import { accountSetPasswordPath, learnPath } from "@/lib/members/paths";
@@ -1148,9 +1147,8 @@ async function generateStudentAuthLink(
     linkOrder: StudentAuthLinkType[];
   }
 ): Promise<{ inviteLink: string; userId: string }> {
-  const urlLocale = internalToUrlLocale(options.locale);
-  const setPasswordPath = accountSetPasswordPath(urlLocale);
-  const learnRedirectPath = learnPath(urlLocale);
+  const setPasswordPath = accountSetPasswordPath("en");
+  const learnRedirectPath = learnPath("en");
   const email = options.email.trim().toLowerCase();
   const fullName = options.fullName.trim();
 

@@ -1,6 +1,7 @@
 import type { EmailBannerId } from "@/lib/email/banners";
 import {
   buildEmailLayout,
+  buildTransactionalEmailLayout,
   emailPrimaryButton,
   emailSecondaryButton,
 } from "@/lib/email/template";
@@ -22,6 +23,7 @@ async function sendEmail(options: {
   to: string;
   subject: string;
   html: string;
+  text?: string;
 }): Promise<{ ok: boolean; messageId?: string; error?: string }> {
   const apiKey = process.env.RESEND_API_KEY?.trim();
   if (!apiKey) {
@@ -43,6 +45,7 @@ async function sendEmail(options: {
       to: [options.to],
       subject: options.subject,
       html: options.html,
+      ...(options.text ? { text: options.text } : {}),
     }),
   });
 
@@ -81,9 +84,9 @@ export async function sendInviteEmail(options: {
     ? `دعوت به ${options.programTitle} — MX AI Academy`
     : `You're invited to ${options.programTitle} — MX AI Academy`;
 
-  const html = buildEmailLayout(
+  const html = buildTransactionalEmailLayout(
     `
-    <h1 style="margin:0 0 16px;font-size:26px;line-height:1.3;color:#1A1A1A;font-weight:700;">
+    <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#1A1A1A;font-weight:700;">
       ${isFa ? `سلام ${name}!` : `Hi ${name}!`}
     </h1>
     <p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#4A4A4A;">
@@ -98,10 +101,14 @@ export async function sendInviteEmail(options: {
     </p>
     ${emailPrimaryButton(options.inviteLink, isFa ? "تنظیم رمز و ورود" : "Set password & sign in")}
   `,
-    { bannerId: "invite", locale: options.locale }
+    { locale: options.locale }
   );
 
-  return sendEmail({ to: options.to, subject, html }).then((r) => r.ok);
+  const text = isFa
+    ? `سلام ${name}!\n\nشما به برنامه ${options.programTitle} دعوت شده‌اید.\nدسترسی تا: ${endDate}\n\nتنظیم رمز و ورود:\n${options.inviteLink}\n\nMX AI Academy`
+    : `Hi ${name}!\n\nYou've been invited to ${options.programTitle}.\nAccess until: ${endDate}\n\nSet password & sign in:\n${options.inviteLink}\n\nMX AI Academy`;
+
+  return sendEmail({ to: options.to, subject, html, text }).then((r) => r.ok);
 }
 
 export async function sendPasswordResetEmail(options: {
@@ -117,9 +124,9 @@ export async function sendPasswordResetEmail(options: {
     ? "بازنشانی رمز عبور — MX AI Academy"
     : "Reset your password — MX AI Academy";
 
-  const html = buildEmailLayout(
+  const html = buildTransactionalEmailLayout(
     `
-    <h1 style="margin:0 0 16px;font-size:26px;line-height:1.3;color:#1A1A1A;font-weight:700;">
+    <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#1A1A1A;font-weight:700;">
       ${isFa ? `سلام ${name}!` : `Hi ${name}!`}
     </h1>
     <p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#4A4A4A;">
@@ -138,10 +145,14 @@ export async function sendPasswordResetEmail(options: {
     </p>
     ${emailPrimaryButton(options.resetLink, isFa ? "تنظیم رمز جدید" : "Reset password")}
   `,
-    { bannerId: "general", locale: options.locale }
+    { locale: options.locale }
   );
 
-  return sendEmail({ to: options.to, subject, html }).then((r) => r.ok);
+  const text = isFa
+    ? `سلام ${name}!\n\nدرخواست بازنشانی رمز عبور برای حساب دانشجویی شما ثبت شد.\n\nتنظیم رمز جدید:\n${options.resetLink}\n\nاگر این درخواست را شما نداده‌اید، این ایمیل را نادیده بگیرید.\n\nMX AI Academy`
+    : `Hi ${name}!\n\nWe received a request to reset your student account password.\n\nReset password:\n${options.resetLink}\n\nIf you did not request this, you can ignore this email.\n\nMX AI Academy`;
+
+  return sendEmail({ to: options.to, subject, html, text }).then((r) => r.ok);
 }
 
 export async function sendWelcomeEmail(options: {
