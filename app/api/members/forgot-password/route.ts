@@ -9,7 +9,12 @@ import {
 import { clientIpKey, isRateLimited } from "@/lib/security/simple-rate-limit";
 
 const SUCCESS_MESSAGE =
-  "If that email is registered as a student, we have sent password reset instructions. Check your inbox and spam folder.";
+  "Password reset instructions have been sent. Check your inbox and spam folder.";
+
+const NOT_STUDENT_MESSAGE =
+  "No student account was found for this email. Check for typos or use the email address from your invite.";
+
+const RATE_LIMIT_MESSAGE = "Too many reset attempts. Please wait a while and try again.";
 
 const MIN_RESPONSE_MS = 600;
 
@@ -43,12 +48,12 @@ export async function POST(request: Request) {
 
     const ip = clientIpKey(request);
     if (isRateLimited(`forgot-password:ip:${ip}`) || isRateLimited(`forgot-password:email:${email}`)) {
-      return NextResponse.json({ ok: true, message: SUCCESS_MESSAGE });
+      return NextResponse.json({ error: RATE_LIMIT_MESSAGE }, { status: 429 });
     }
 
-    await withMinDelay(async () => {
+    const outcome = await withMinDelay(async () => {
       const result = await createStudentPasswordResetLink(email);
-      if (!result) return;
+      if (!result) return "not_student" as const;
 
       const sent = await sendPasswordResetEmail({
         to: result.profile.email,
@@ -59,8 +64,19 @@ export async function POST(request: Request) {
 
       if (!sent) {
         console.error("[forgot-password] failed to send reset email to", email);
+        return "send_failed" as const;
       }
+
+      return "sent" as const;
     });
+
+    if (outcome === "not_student") {
+      return NextResponse.json({ error: NOT_STUDENT_MESSAGE }, { status: 404 });
+    }
+
+    if (outcome === "send_failed") {
+      return NextResponse.json({ error: FORM_ERROR_MESSAGE }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true, message: SUCCESS_MESSAGE });
   } catch (error) {

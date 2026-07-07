@@ -388,7 +388,10 @@ export const translations = {
       forgotPasswordSubmit: "Send reset link",
       forgotPasswordSending: "Sending…",
       forgotPasswordSuccess:
-        "If that email is registered as a student, we have sent password reset instructions. Check your inbox and spam folder.",
+        "Password reset instructions have been sent. Check your inbox and spam folder.",
+      forgotPasswordNotStudent:
+        "No student account was found for this email. Check for typos or use the email address from your invite.",
+      forgotPasswordRateLimit: "Too many reset attempts. Please wait a while and try again.",
       forgotPasswordError: "Could not send reset link. Please try again later.",
       forgotPasswordBackToLogin: "Back to sign in",
       signOut: "Sign out",
@@ -1070,7 +1073,10 @@ export const translations = {
       forgotPasswordSubmit: "ارسال لینک بازنشانی",
       forgotPasswordSending: "در حال ارسال…",
       forgotPasswordSuccess:
-        "اگر این ایمیل به‌عنوان دانشجو ثبت شده باشد، دستورالعمل بازنشانی رمز ارسال شده است. صندوق ورودی و پوشه اسپم را بررسی کنید.",
+        "دستورالعمل بازنشانی رمز ارسال شد. صندوق ورودی و پوشه اسپم را بررسی کنید.",
+      forgotPasswordNotStudent:
+        "حساب دانشجویی با این ایمیل پیدا نشد. املای ایمیل را بررسی کنید یا از همان ایمیلی که در دعوت‌نامه دریافت کردید استفاده کنید.",
+      forgotPasswordRateLimit: "درخواست‌های بازنشانی زیاد بود. کمی صبر کنید و دوباره تلاش کنید.",
       forgotPasswordError: "ارسال لینک بازنشانی ممکن نشد. لطفاً بعداً دوباره تلاش کنید.",
       forgotPasswordBackToLogin: "بازگشت به ورود",
       signOut: "خروج",

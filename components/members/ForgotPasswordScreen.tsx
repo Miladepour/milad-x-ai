@@ -59,7 +59,13 @@ export default function ForgotPasswordScreen() {
       };
 
       if (!res.ok) {
-        setStatus(data.error ?? t.forgotPasswordError);
+        const fallback =
+          res.status === 404
+            ? t.forgotPasswordNotStudent
+            : res.status === 429
+              ? t.forgotPasswordRateLimit
+              : t.forgotPasswordError;
+        setStatus(data.error ?? fallback);
         if (turnstileRequired) {
           resetCaptcha();
           setNeedsCaptchaRetry(true);
