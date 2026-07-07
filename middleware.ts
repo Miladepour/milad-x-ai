@@ -67,10 +67,18 @@ function handleRequest(request: NextRequest): NextResponse {
 }
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
   const routingResponse = handleRequest(request);
-  if (isPublicMarketingPath(request.nextUrl.pathname)) {
+
+  if (isPublicMarketingPath(pathname)) {
     return routingResponse;
   }
+
+  // Route handlers call getStudentUser/getAdminUser themselves.
+  if (pathname.startsWith("/api") || pathname.startsWith("/auth")) {
+    return routingResponse;
+  }
+
   return updateSession(request, routingResponse);
 }
 

@@ -1,13 +1,11 @@
 import type { User } from "@supabase/supabase-js";
+import { getAuthUser } from "./auth-user";
 import { createClient } from "./server";
 
 /** Returns the signed-in user only if they exist in `admin_profiles`. */
 export async function getAdminUser(): Promise<User | null> {
   const supabase = createClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  const { user, error: userError } = await getAuthUser(supabase);
 
   if (userError || !user) return null;
 
