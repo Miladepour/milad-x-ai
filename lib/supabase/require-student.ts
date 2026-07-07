@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "./server";
 import { getStudentProfile } from "@/lib/members/store";
@@ -9,7 +10,7 @@ export interface StudentUser {
 }
 
 /** Returns the signed-in user only if they exist in `student_profiles`. */
-export async function getStudentUser(): Promise<StudentUser | null> {
+export const getStudentUser = cache(async (): Promise<StudentUser | null> => {
   const supabase = createClient();
   const {
     data: { user },
@@ -22,4 +23,4 @@ export async function getStudentUser(): Promise<StudentUser | null> {
   if (!profile) return null;
 
   return { user, profile };
-}
+});

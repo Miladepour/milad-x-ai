@@ -10,7 +10,6 @@ import {
   getStudentDashboard,
   getStudentEnrollmentCount,
   listAnnouncementsForStudent,
-  syncExpiredEnrollments,
 } from "@/lib/members/store";
 import { pickContinueWatchingProgram } from "@/lib/members/continue-watching";
 import { getMembershipTierInfo } from "@/lib/members/membership-tier";
@@ -51,30 +50,9 @@ export default async function LearnLayout({
     redirect(accountLoginPath(locale));
   }
 
+  let deviceAccess: Awaited<ReturnType<typeof verifyStudentDeviceAccess>>;
   try {
-    const deviceAccess = await verifyStudentDeviceAccess(student.user.id);
-
-    if (deviceAccess.needsBootstrap && isStudentDeviceCapEnforced()) {
-      redirect(deviceBootstrapUrl(locale));
-    }
-
-    if (!deviceAccess.allowed) {
-      return (
-        <div className="pt-20">
-          <StudentDeviceBlocked
-            locale={locale}
-            cap={deviceAccess.cap}
-            labels={{
-              title: t.memberPortal.deviceBlockedTitle,
-              body: t.memberPortal.deviceBlockedBody,
-              contactSupport: t.memberPortal.contactSupport,
-              tryAgain: t.memberPortal.deviceBlockedRetry,
-              signOut: t.memberPortal.signOut,
-            }}
-          />
-        </div>
-      );
-    }
+    deviceAccess = await verifyStudentDeviceAccess(student.user.id);
   } catch (error) {
     console.error("[learn/layout] device check failed:", error);
     if (isStudentDeviceCapEnforced()) {
@@ -94,9 +72,35 @@ export default async function LearnLayout({
         </div>
       );
     }
+    deviceAccess = {
+      allowed: true,
+      cap: getStudentDeviceCapMax(),
+      needsBootstrap: false,
+    };
   }
 
-  await syncExpiredEnrollments();
+  // redirect() throws — must stay outside try/catch or bootstrap never runs.
+  if (deviceAccess.needsBootstrap && isStudentDeviceCapEnforced()) {
+    redirect(deviceBootstrapUrl(locale));
+  }
+
+  if (!deviceAccess.allowed) {
+    return (
+      <div className="pt-20">
+        <StudentDeviceBlocked
+          locale={locale}
+          cap={deviceAccess.cap}
+          labels={{
+            title: t.memberPortal.deviceBlockedTitle,
+            body: t.memberPortal.deviceBlockedBody,
+            contactSupport: t.memberPortal.contactSupport,
+            tryAgain: t.memberPortal.deviceBlockedRetry,
+            signOut: t.memberPortal.signOut,
+          }}
+        />
+      </div>
+    );
+  }
 
   const [programs, announcements, enrollmentCount] = await Promise.all([
     getStudentDashboard(student.user.id),

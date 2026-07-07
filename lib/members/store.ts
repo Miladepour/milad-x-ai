@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createAdminDbClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import { certificatesByProgramIdForStudent } from "@/lib/members/certificate-store";
@@ -720,7 +721,7 @@ export async function bulkExtendProgramEnrollmentsAdmin(
 // Student reads (cookie session + RLS)
 // ---------------------------------------------------------------------------
 
-export async function getStudentProfile(
+export const getStudentProfile = cache(async function getStudentProfile(
   userId: string
 ): Promise<StudentProfile | null> {
   const supabase = createClient();
@@ -733,7 +734,7 @@ export async function getStudentProfile(
   if (error) throw new Error(error.message);
   if (!data) return null;
   return studentProfileRowToProfile(data as StudentProfileRow);
-}
+});
 
 export async function getStudentProfileAccount(
   userId: string
@@ -858,11 +859,11 @@ function timestamp(value: string | null | undefined): number {
   return Number.isFinite(ms) ? ms : 0;
 }
 
-export async function getStudentDashboard(
+export const getStudentDashboard = cache(async function getStudentDashboard(
   userId: string
 ): Promise<StudentDashboardProgram[]> {
   return listStudentEnrollmentPrograms(userId, isEnrollmentActive);
-}
+});
 
 export async function getStudentExpiredPrograms(
   userId: string
@@ -1135,7 +1136,9 @@ export async function upsertLessonProgress(
   return progressRowToProgress(data as import("./mappers").LessonProgressRow);
 }
 
-export async function getStudentEnrollmentCount(userId: string): Promise<number> {
+export const getStudentEnrollmentCount = cache(async function getStudentEnrollmentCount(
+  userId: string
+): Promise<number> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("program_enrollments")
@@ -1145,7 +1148,7 @@ export async function getStudentEnrollmentCount(userId: string): Promise<number>
 
   if (error) throw new Error(error.message);
   return data?.length ?? 0;
-}
+});
 
 export async function getCompletedLessonIds(
   userId: string,
@@ -1721,7 +1724,7 @@ export async function deleteAnnouncementAdmin(id: string): Promise<void> {
   }
 }
 
-export async function listAnnouncementsForStudent(
+export const listAnnouncementsForStudent = cache(async function listAnnouncementsForStudent(
   studentId: string,
   studentLocale: "EN" | "FA",
   options?: { includeDismissed?: boolean; limit?: number }
@@ -1767,4 +1770,4 @@ export async function listAnnouncementsForStudent(
     return visible.slice(0, options.limit);
   }
   return visible;
-}
+});
