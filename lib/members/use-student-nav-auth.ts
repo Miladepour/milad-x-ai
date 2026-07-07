@@ -4,45 +4,85 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
-export function useStudentNavAuth(): boolean | null {
-  const [isStudent, setIsStudent] = useState<boolean | null>(null);
+type StudentNavAuthListener = (isStudent: boolean | null) => void;
 
-  useEffect(() => {
-    if (!isSupabaseConfigured()) {
-      setIsStudent(false);
-      return;
-    }
+let sharedResult: boolean | null = null;
+let inflightCheck: Promise<boolean> | null = null;
+let authSubscription: { unsubscribe: () => void } | null = null;
+const listeners = new Set<StudentNavAuthListener>();
 
-    const supabase = createClient();
+function notifyListeners() {
+  listeners.forEach((listener) => {
+    listener(sharedResult);
+  });
+}
 
-    async function check() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+async function resolveStudentNavAuth(): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
 
-      if (!user) {
-        setIsStudent(false);
-        return;
-      }
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-      const { data: profile } = await supabase
-        .from("student_profiles")
-        .select("id")
-        .eq("id", user.id)
-        .maybeSingle();
+  if (!user) return false;
 
-      setIsStudent(Boolean(profile));
-    }
+  const { data: profile } = await supabase
+    .from("student_profiles")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle();
 
-    void check();
+  return Boolean(profile);
+}
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
-      void check();
+async function refreshStudentNavAuth(): Promise<boolean> {
+  if (inflightCheck) return inflightCheck;
+
+  inflightCheck = resolveStudentNavAuth()
+    .then((result) => {
+      sharedResult = result;
+      notifyListeners();
+      return result;
+    })
+    .finally(() => {
+      inflightCheck = null;
     });
 
-    return () => subscription.unsubscribe();
+  return inflightCheck;
+}
+
+function ensureAuthSubscription() {
+  if (authSubscription || !isSupabaseConfigured()) return;
+
+  const supabase = createClient();
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange(() => {
+    sharedResult = null;
+    void refreshStudentNavAuth();
+  });
+
+  authSubscription = subscription;
+}
+
+export function useStudentNavAuth(): boolean | null {
+  const [isStudent, setIsStudent] = useState<boolean | null>(sharedResult);
+
+  useEffect(() => {
+    const listener: StudentNavAuthListener = setIsStudent;
+    listeners.add(listener);
+    ensureAuthSubscription();
+
+    if (sharedResult !== null) {
+      setIsStudent(sharedResult);
+    } else {
+      void refreshStudentNavAuth();
+    }
+
+    return () => {
+      listeners.delete(listener);
+    };
   }, []);
 
   return isStudent;

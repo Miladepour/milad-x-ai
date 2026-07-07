@@ -13,7 +13,7 @@ import {
 import { getStudentDeviceCapMax } from "@/lib/members/device";
 import { listStudentDevices } from "@/lib/members/device-store";
 import { collectUsefulLinks } from "@/lib/members/learn-content";
-import { getCourses } from "@/lib/courses/store";
+import { getUpcomingCoursesPreview } from "@/lib/courses/store";
 import StudentUpcomingCourseCard from "@/components/members/StudentUpcomingCourseCard";
 import StudentProgramCardList from "@/components/members/StudentProgramCardList";
 import StudentBonusProgramCardList from "@/components/members/StudentBonusProgramCardList";
@@ -50,18 +50,16 @@ export default async function LearnDashboardPage({
   const student = await getStudentUser();
   if (!student) redirect(accountLoginPath(locale));
 
-  const [programs, expiredPrograms, bonusPrograms, announcements, courses, enrollmentCount, devices] =
+  const [programs, expiredPrograms, bonusPrograms, announcements, upcomingCourses, enrollmentCount, devices] =
     await Promise.all([
     getStudentDashboard(student.user.id),
     getStudentExpiredPrograms(student.user.id),
     getStudentBonusPrograms(student.user.id),
     listAnnouncementsForStudent(student.user.id, student.profile.locale),
-    getCourses(internal),
+    getUpcomingCoursesPreview(internal, 2),
     getStudentEnrollmentCount(student.user.id),
     listStudentDevices(student.user.id).catch(() => []),
   ]);
-
-  const upcomingCourses = courses.filter((c) => c.status !== "Closed").slice(0, 2);
   const courseStatusLabels = translations[internal].coursesPage.statusLabels;
 
   const usefulLinks = collectUsefulLinks(programs);

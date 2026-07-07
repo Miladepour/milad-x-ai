@@ -7,6 +7,14 @@ import {
 import type { StudentDevice } from "@/lib/members/types";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 
+/** Skip last_seen_at writes when a device was touched recently (layout SSR only). */
+const DEVICE_TOUCH_THROTTLE_MS = 10 * 60 * 1000;
+
+function shouldThrottleDeviceTouch(lastSeenAt: string): boolean {
+  const elapsed = Date.now() - new Date(lastSeenAt).getTime();
+  return elapsed >= 0 && elapsed < DEVICE_TOUCH_THROTTLE_MS;
+}
+
 export interface StudentDeviceRow {
   id: string;
   student_id: string;
@@ -69,6 +77,14 @@ export async function touchStudentDevice(
   if (existingError) throw new Error(existingError.message);
 
   if (existing) {
+    if (shouldThrottleDeviceTouch(existing.last_seen_at)) {
+      return {
+        device: rowToDevice(existing as StudentDeviceRow, tokenHash),
+        blocked: false,
+        cap,
+      };
+    }
+
     const { data: updated, error: updateError } = await supabase
       .from("student_devices")
       .update({

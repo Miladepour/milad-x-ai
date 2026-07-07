@@ -3,7 +3,7 @@ import type {
   CourseListItem,
   CourseLocaleContent,
 } from "./cms-types";
-import type { Course } from "./types";
+import type { Course, CourseStatus } from "./types";
 import type { Locale } from "@/lib/i18n/translations";
 import { joinCourseRow } from "@/lib/supabase/mappers";
 import type { CourseLocaleRow, CourseRow } from "@/lib/supabase/database.types";
@@ -52,6 +52,59 @@ async function fetchPublishedCourses(): Promise<
   return (data ?? []) as Array<CourseRow & { course_locales: CourseLocaleRow[] }>;
 }
 
+type CoursePreviewRow = Pick<CourseRow, "slug" | "cover_image" | "price_usd"> & {
+  course_locales: Array<
+    Pick<
+      CourseLocaleRow,
+      | "locale"
+      | "list_title"
+      | "title"
+      | "subtitle"
+      | "excerpt"
+      | "date"
+      | "status"
+      | "price_toman"
+      | "content"
+    >
+  >;
+};
+
+async function fetchPublishedCoursesPreview(): Promise<CoursePreviewRow[]> {
+  const supabase = createCatalogClient();
+  const { data, error } = await supabase
+    .from("courses")
+    .select(
+      "slug, cover_image, price_usd, course_locales(locale, list_title, title, subtitle, excerpt, date, status, price_toman, content)"
+    )
+    .not("published_at", "is", null)
+    .order("sort_order", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as CoursePreviewRow[];
+}
+
+function joinCoursePreviewRow(row: CoursePreviewRow, localeRow: CourseLocaleRow): Course {
+  const content = localeRow.content as unknown as CourseLocaleContent;
+  return {
+    slug: row.slug,
+    listTitle: localeRow.list_title,
+    title: localeRow.title,
+    subtitle: localeRow.subtitle,
+    excerpt: localeRow.excerpt,
+    status: localeRow.status as CourseStatus,
+    date: localeRow.date,
+    coverImage: row.cover_image,
+    priceUsd: Number(row.price_usd),
+    priceToman:
+      localeRow.price_toman != null ? Number(localeRow.price_toman) : null,
+    meta: content.meta,
+    includes: [],
+    insights: { audience: [], topicsCount: 0, requirements: [] },
+    faq: [],
+    sections: [],
+  };
+}
+
 export async function getCourses(locale: Locale): Promise<Course[]> {
   return withPublicReadFallback(async () => {
     const rows = await fetchPublishedCourses();
@@ -71,6 +124,36 @@ export async function getCourses(locale: Locale): Promise<Course[]> {
 
     return sortCoursesByDate(courses);
   }, () => getStaticCourses(locale));
+}
+
+/** Lightweight catalog read for the learn dashboard widget (same sort/filter rules). */
+export async function getUpcomingCoursesPreview(
+  locale: Locale,
+  limit: number
+): Promise<Course[]> {
+  return withPublicReadFallback(async () => {
+    const rows = await fetchPublishedCoursesPreview();
+    const localeCode = locale;
+
+    const courses = rows
+      .map((row) => {
+        const localeRow = row.course_locales?.find((l) => l.locale === localeCode);
+        if (!localeRow) return null;
+        return mergeWithStaticCatalog(
+          joinCoursePreviewRow(row, localeRow as CourseLocaleRow),
+          localeCode
+        );
+      })
+      .filter((c): c is Course => c !== null);
+
+    return sortCoursesByDate(courses)
+      .filter((course) => course.status !== "Closed")
+      .slice(0, limit);
+  }, () =>
+    getStaticCourses(locale)
+      .filter((course) => course.status !== "Closed")
+      .slice(0, limit)
+  );
 }
 
 export async function getCourseBySlug(

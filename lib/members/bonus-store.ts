@@ -252,14 +252,14 @@ export async function getStudentBonusPrograms(
 
   if (programsError) throw new Error(programsError.message);
 
-  const results: StudentBonusProgramView[] = [];
-  for (const row of programRows ?? []) {
-    const program = memberProgramRowToProgram(row as MemberProgramRow);
-    const view = await loadStudentBonusProgramView(userId, program);
-    if (view) results.push(view);
-  }
+  const views = await Promise.all(
+    (programRows ?? []).map(async (row) => {
+      const program = memberProgramRowToProgram(row as MemberProgramRow);
+      return loadStudentBonusProgramView(userId, program);
+    })
+  );
 
-  return results;
+  return views.filter((view): view is StudentBonusProgramView => view !== null);
 }
 
 export async function getStudentBonusProgram(
