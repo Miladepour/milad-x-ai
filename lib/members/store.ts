@@ -34,6 +34,7 @@ import {
 } from "./mappers";
 import { resolveStudentAccountActivation } from "./student-activation";
 import { resolveContinueLesson } from "./continue-watching";
+import { collectUsefulLinks } from "./learn-content";
 import { listStudentDevices } from "@/lib/members/device-store";
 import { accountSetPasswordPath, learnPath } from "@/lib/members/paths";
 import { startOfTodayIso, dateInputToEndIso } from "./dates";
@@ -65,6 +66,7 @@ import type {
   StudentSelfUpdatePayload,
   StudentWithEnrollments,
   UpdateStudentPayload,
+  UsefulLink,
 } from "./types";
 
 function normalizeSlug(value: string, fallbackSeed?: string): string {
@@ -813,9 +815,6 @@ async function loadStudentDashboardProgram(
 
   const lessonRows = (lessonsData ?? []) as ProgramLessonRow[];
   const lessonIds = lessonRows.map((row) => row.id);
-  const lessons = includeLessons
-    ? lessonRows.map(programLessonRowToLesson)
-    : [];
 
   let progressData: import("./mappers").LessonProgressRow[] = [];
   if (lessonIds.length > 0) {
@@ -826,6 +825,28 @@ async function loadStudentDashboardProgram(
       .in("lesson_id", lessonIds);
     progressData = (data as import("./mappers").LessonProgressRow[] | null) ?? [];
   }
+
+  return buildStudentDashboardProgram(
+    program,
+    enrollment,
+    lessonRows,
+    progressData,
+    options
+  );
+}
+
+function buildStudentDashboardProgram(
+  program: MemberProgram,
+  enrollment: ProgramEnrollment,
+  lessonRows: ProgramLessonRow[],
+  progressData: import("./mappers").LessonProgressRow[],
+  options?: { includeLessons?: boolean }
+): StudentDashboardProgram {
+  const includeLessons = options?.includeLessons ?? true;
+  const lessonIds = lessonRows.map((row) => row.id);
+  const lessons = includeLessons
+    ? lessonRows.map(programLessonRowToLesson)
+    : [];
 
   const progressMap = new Map(
     progressData.map((p) => [p.lesson_id, progressRowToProgress(p)])
@@ -865,6 +886,48 @@ export const getStudentDashboard = cache(async function getStudentDashboard(
   return listStudentEnrollmentPrograms(userId, isEnrollmentActive);
 });
 
+/** Active program useful links only — no lessons/progress queries. */
+export const getStudentUsefulLinks = cache(async function getStudentUsefulLinks(
+  userId: string
+): Promise<UsefulLink[]> {
+  const supabase = createClient();
+  const { data: enrollments, error } = await supabase
+    .from("program_enrollments")
+    .select("*, member_programs(*)")
+    .eq("student_id", userId);
+
+  if (error) throw new Error(error.message);
+
+  const programs: StudentDashboardProgram[] = [];
+
+  for (const row of enrollments ?? []) {
+    const enrollment = enrollmentRowToEnrollment(row as ProgramEnrollmentRow);
+    if (!isEnrollmentActive(enrollment)) continue;
+
+    const programRow = (row as { member_programs: MemberProgramRow | null })
+      .member_programs;
+    if (!programRow) continue;
+
+    const program = memberProgramRowToProgram(programRow);
+    if (program.programType === "bonus") continue;
+    if (!program.slug.trim()) continue;
+
+    programs.push({
+      program,
+      enrollment,
+      lessons: [],
+      progressPercent: 0,
+      completedLessons: 0,
+      totalLessons: 0,
+      continueLesson: null,
+      continueWatchingAt: 0,
+    });
+  }
+
+  programs.sort((a, b) => a.program.sortOrder - b.program.sortOrder);
+  return collectUsefulLinks(programs);
+});
+
 export async function getStudentExpiredPrograms(
   userId: string
 ): Promise<StudentDashboardProgram[]> {
@@ -881,6 +944,7 @@ async function listStudentEnrollmentPrograms(
   options?: { includeLessons?: boolean }
 ): Promise<StudentDashboardProgram[]> {
   const supabase = createClient();
+  const includeLessons = options?.includeLessons ?? true;
 
   const { data: enrollments, error } = await supabase
     .from("program_enrollments")
@@ -889,7 +953,12 @@ async function listStudentEnrollmentPrograms(
 
   if (error) throw new Error(error.message);
 
-  const results: StudentDashboardProgram[] = [];
+  type ProgramEntry = {
+    program: MemberProgram;
+    enrollment: ProgramEnrollment;
+  };
+
+  const entries: ProgramEntry[] = [];
 
   for (const row of enrollments ?? []) {
     const enrollment = enrollmentRowToEnrollment(row as ProgramEnrollmentRow);
@@ -911,16 +980,62 @@ async function listStudentEnrollmentPrograms(
     if (program.programType === "bonus") continue;
     if (!program.slug.trim()) continue;
 
-    results.push(
-      await loadStudentDashboardProgram(
-        supabase,
-        userId,
-        program,
-        enrollment,
-        options
-      )
-    );
+    entries.push({ program, enrollment });
   }
+
+  if (entries.length === 0) return [];
+
+  const programIds = entries.map((entry) => entry.program.id);
+  const lessonsClient = includeLessons ? supabase : createAdminDbClient();
+  const { data: lessonsData, error: lessonsError } = await lessonsClient
+    .from("program_lessons")
+    .select("*")
+    .in("program_id", programIds)
+    .order("sort_order", { ascending: true });
+
+  if (lessonsError) throw new Error(lessonsError.message);
+
+  const lessonRows = (lessonsData ?? []) as ProgramLessonRow[];
+  const lessonsByProgram = new Map<string, ProgramLessonRow[]>();
+  for (const lessonRow of lessonRows) {
+    const bucket = lessonsByProgram.get(lessonRow.program_id);
+    if (bucket) {
+      bucket.push(lessonRow);
+    } else {
+      lessonsByProgram.set(lessonRow.program_id, [lessonRow]);
+    }
+  }
+
+  const allLessonIds = lessonRows.map((row) => row.id);
+  let progressData: import("./mappers").LessonProgressRow[] = [];
+  if (allLessonIds.length > 0) {
+    const { data, error: progressError } = await supabase
+      .from("lesson_progress")
+      .select("*")
+      .eq("student_id", userId)
+      .in("lesson_id", allLessonIds);
+    if (progressError) throw new Error(progressError.message);
+    progressData = (data as import("./mappers").LessonProgressRow[] | null) ?? [];
+  }
+
+  const progressByLesson = new Map(
+    progressData.map((row) => [row.lesson_id, row])
+  );
+
+  const results = entries.map(({ program, enrollment }) => {
+    const programLessonRows = lessonsByProgram.get(program.id) ?? [];
+    const programProgress = programLessonRows
+      .map((row) => progressByLesson.get(row.id))
+      .filter((row): row is import("./mappers").LessonProgressRow => row != null);
+
+    return buildStudentDashboardProgram(
+      program,
+      enrollment,
+      programLessonRows,
+      programProgress,
+      options
+    );
+  });
 
   results.sort((a, b) => a.program.sortOrder - b.program.sortOrder);
   return results;

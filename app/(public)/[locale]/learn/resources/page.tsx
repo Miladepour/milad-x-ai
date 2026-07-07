@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation";
 import StudentGlassCard from "@/components/members/StudentGlassCard";
 import StudentPortalButton from "@/components/members/StudentPortalButton";
-import { collectUsefulLinks } from "@/lib/members/learn-content";
 import { accountLoginPath } from "@/lib/members/paths";
-import { getStudentDashboard } from "@/lib/members/store";
+import { getStudentUsefulLinks } from "@/lib/members/store";
 import { urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { getStudentUser } from "@/lib/supabase/require-student";
 import { translations } from "@/lib/i18n/translations";
@@ -22,8 +21,7 @@ export default async function LearnResourcesPage({
   const student = await getStudentUser();
   if (!student) redirect(accountLoginPath(locale));
 
-  const programs = await getStudentDashboard(student.user.id);
-  const usefulLinks = collectUsefulLinks(programs);
+  const usefulLinks = await getStudentUsefulLinks(student.user.id);
 
   return (
     <div className="flex flex-col gap-5 pb-10 sm:gap-6">
