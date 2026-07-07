@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { CONSULTATION_BASE_PATH } from "@/lib/consultation/constants";
 import { COURSES_BASE_PATH } from "@/lib/courses";
 import { PORTFOLIO_BASE_PATH } from "@/lib/portfolio/constants";
@@ -45,6 +46,7 @@ const footerLinkClass =
   "font-dm text-sm text-cream/75 hover:text-orange transition-colors";
 
 export default function Footer() {
+  const pathname = usePathname();
   const { lang, href } = useLanguage();
   const t = useTranslation();
   const f = t.footer;
@@ -89,10 +91,12 @@ export default function Footer() {
     },
   ];
 
+  const showNewsletter = !pathname.includes("/learn");
+
   return (
     <footer className="border-t border-surface bg-background mt-auto" role="contentinfo">
       <div className="max-w-7xl mx-auto px-8 md:px-12 lg:px-16 py-12 md:py-14">
-        <FooterNewsletterSignup />
+        {showNewsletter ? <FooterNewsletterSignup /> : null}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
           <div className="sm:col-span-2 lg:col-span-1 lg:max-w-sm">

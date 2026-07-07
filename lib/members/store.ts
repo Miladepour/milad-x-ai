@@ -1410,23 +1410,55 @@ export async function inviteStudentAdmin(
     payload.accessStartsAt?.trim() || startOfTodayIso();
   const accessEndsAt = payload.accessEndsAt ?? null;
 
-  const { data: profileData, error: profileError } = await service
-    .from("student_profiles")
-    .upsert(
-      {
-        id: userId,
-        email,
-        full_name: payload.fullName.trim(),
-        locale: payload.locale,
-        phone: payload.phone?.trim() || null,
-        notes: payload.notes?.trim() || null,
-      },
-      { onConflict: "id" }
-    )
-    .select("*")
-    .single();
+  const isExistingStudent =
+    duplicateCheck.exists && duplicateCheck.duplicateKind === "new_program";
 
-  if (profileError) throw new Error(profileError.message);
+  let profileData: StudentProfileRow;
+
+  if (isExistingStudent) {
+    const updates: Record<string, unknown> = {};
+    if (fullName) updates.full_name = fullName;
+    if (payload.phone?.trim()) updates.phone = payload.phone.trim();
+    if (payload.notes?.trim()) updates.notes = payload.notes.trim();
+
+    if (Object.keys(updates).length > 0) {
+      const { data, error } = await service
+        .from("student_profiles")
+        .update(updates)
+        .eq("id", userId)
+        .select("*")
+        .single();
+      if (error) throw new Error(error.message);
+      profileData = data as StudentProfileRow;
+    } else {
+      const { data, error } = await service
+        .from("student_profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+      if (error) throw new Error(error.message);
+      profileData = data as StudentProfileRow;
+    }
+  } else {
+    const { data, error: profileError } = await service
+      .from("student_profiles")
+      .upsert(
+        {
+          id: userId,
+          email,
+          full_name: fullName,
+          locale: payload.locale,
+          phone: payload.phone?.trim() || null,
+          notes: payload.notes?.trim() || null,
+        },
+        { onConflict: "id" }
+      )
+      .select("*")
+      .single();
+
+    if (profileError) throw new Error(profileError.message);
+    profileData = data as StudentProfileRow;
+  }
 
   const { data: enrollmentData, error: enrollmentError } = await service
     .from("program_enrollments")
@@ -1450,7 +1482,7 @@ export async function inviteStudentAdmin(
   if (enrollmentError) throw new Error(enrollmentError.message);
 
   return {
-    student: studentProfileRowToProfile(profileData as StudentProfileRow),
+    student: studentProfileRowToProfile(profileData),
     enrollment: enrollmentRowToEnrollment(enrollmentData as ProgramEnrollmentRow),
     inviteLink,
   };

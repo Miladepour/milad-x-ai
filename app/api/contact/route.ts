@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCountryName } from "@/lib/countries";
 import type { ContactInquiryType } from "@/lib/contact/types";
+import { sendContactFormNotificationEmail } from "@/lib/email/resend";
 import {
   assertPublicFormAllowed,
   clampField,
@@ -75,6 +76,19 @@ export async function POST(request: Request) {
       id: data.id,
       fullName,
       inquiryType,
+    });
+
+    void sendContactFormNotificationEmail({
+      fullName,
+      email,
+      mobile,
+      countryName: getCountryName(country) ?? country,
+      inquiryType,
+      message,
+      locale,
+      submittedAt: new Date().toISOString(),
+    }).catch((err) => {
+      console.error("[contact] notify email failed:", err);
     });
 
     return NextResponse.json({ ok: true });

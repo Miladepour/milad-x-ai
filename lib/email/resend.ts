@@ -24,6 +24,7 @@ async function sendEmail(options: {
   subject: string;
   html: string;
   text?: string;
+  replyTo?: string;
 }): Promise<{ ok: boolean; messageId?: string; error?: string }> {
   const apiKey = process.env.RESEND_API_KEY?.trim();
   if (!apiKey) {
@@ -46,6 +47,7 @@ async function sendEmail(options: {
       subject: options.subject,
       html: options.html,
       ...(options.text ? { text: options.text } : {}),
+      ...(options.replyTo ? { reply_to: options.replyTo } : {}),
     }),
   });
 
@@ -234,6 +236,107 @@ export async function sendRawEmail(options: {
   to: string;
   subject: string;
   html: string;
+  text?: string;
+  replyTo?: string;
 }): Promise<{ ok: boolean; messageId?: string; error?: string }> {
   return sendEmail(options);
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function contactNotifyEmail(): string {
+  return process.env.CONTACT_NOTIFY_EMAIL?.trim() || "epour.milad@gmail.com";
+}
+
+function contactInquiryLabel(inquiryType: "private_course" | "collaboration"): string {
+  return inquiryType === "collaboration" ? "Project collaboration" : "Private course";
+}
+
+function contactFieldRow(label: string, value: string): string {
+  return `
+    <tr>
+      <td style="padding:10px 0;border-bottom:1px solid #ECECEC;font-size:13px;color:#666;width:120px;vertical-align:top;">
+        ${escapeHtml(label)}
+      </td>
+      <td style="padding:10px 0;border-bottom:1px solid #ECECEC;font-size:15px;color:#1A1A1A;vertical-align:top;">
+        ${escapeHtml(value)}
+      </td>
+    </tr>`;
+}
+
+/** Admin alert when someone submits the public contact form (transactional, not marketing). */
+export async function sendContactFormNotificationEmail(options: {
+  fullName: string;
+  email: string;
+  mobile: string;
+  countryName: string;
+  inquiryType: "private_course" | "collaboration";
+  message: string;
+  locale: string;
+  submittedAt: string;
+}): Promise<boolean> {
+  const inquiryLabel = contactInquiryLabel(options.inquiryType);
+  const submittedLabel = new Date(options.submittedAt).toLocaleString("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Europe/London",
+  });
+
+  const subject = `New contact form: ${options.fullName} — ${inquiryLabel}`;
+
+  const html = buildTransactionalEmailLayout(
+    `
+    <h1 style="margin:0 0 8px;font-size:20px;line-height:1.3;color:#1A1A1A;font-weight:700;">
+      New contact form submission
+    </h1>
+    <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#666;">
+      Someone submitted the contact form on mxaiacademy.com. Reply directly to this email to reach them.
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 20px;">
+      ${contactFieldRow("Name", options.fullName)}
+      ${contactFieldRow("Email", options.email)}
+      ${contactFieldRow("Mobile", options.mobile)}
+      ${contactFieldRow("Country", options.countryName)}
+      ${contactFieldRow("Inquiry", inquiryLabel)}
+      ${contactFieldRow("Locale", options.locale.toUpperCase())}
+      ${contactFieldRow("Submitted", submittedLabel)}
+    </table>
+    <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.06em;">
+      Message
+    </p>
+    <p style="margin:0;font-size:15px;line-height:1.7;color:#1A1A1A;white-space:pre-wrap;">${escapeHtml(options.message)}</p>
+  `,
+    { locale: "EN" }
+  );
+
+  const text = [
+    "New contact form submission",
+    "",
+    `Name: ${options.fullName}`,
+    `Email: ${options.email}`,
+    `Mobile: ${options.mobile}`,
+    `Country: ${options.countryName}`,
+    `Inquiry: ${inquiryLabel}`,
+    `Locale: ${options.locale.toUpperCase()}`,
+    `Submitted: ${submittedLabel}`,
+    "",
+    "Message:",
+    options.message,
+  ].join("\n");
+
+  const result = await sendEmail({
+    to: contactNotifyEmail(),
+    subject,
+    html,
+    text,
+    replyTo: options.email,
+  });
+
+  return result.ok;
 }
