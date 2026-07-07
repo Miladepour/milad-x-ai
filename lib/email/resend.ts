@@ -104,6 +104,46 @@ export async function sendInviteEmail(options: {
   return sendEmail({ to: options.to, subject, html }).then((r) => r.ok);
 }
 
+export async function sendPasswordResetEmail(options: {
+  to: string;
+  fullName: string;
+  resetLink: string;
+  locale: "EN" | "FA";
+}): Promise<boolean> {
+  const isFa = options.locale === "FA";
+  const name = options.fullName || (isFa ? "دانشجو" : "there");
+
+  const subject = isFa
+    ? "بازنشانی رمز عبور — MX AI Academy"
+    : "Reset your password — MX AI Academy";
+
+  const html = buildEmailLayout(
+    `
+    <h1 style="margin:0 0 16px;font-size:26px;line-height:1.3;color:#1A1A1A;font-weight:700;">
+      ${isFa ? `سلام ${name}!` : `Hi ${name}!`}
+    </h1>
+    <p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#4A4A4A;">
+      ${
+        isFa
+          ? "درخواست بازنشانی رمز عبور برای حساب دانشجویی شما ثبت شد. برای تنظیم رمز جدید روی دکمه زیر کلیک کنید."
+          : "We received a request to reset the password for your student account. Click below to choose a new password."
+      }
+    </p>
+    <p style="margin:0 0 28px;font-size:14px;color:#666;">
+      ${
+        isFa
+          ? "اگر این درخواست را شما نداده‌اید، این ایمیل را نادیده بگیرید. این لینک پس از مدت کوتاهی منقضی می‌شود."
+          : "If you did not request this, you can ignore this email. This link expires after a short time."
+      }
+    </p>
+    ${emailPrimaryButton(options.resetLink, isFa ? "تنظیم رمز جدید" : "Reset password")}
+  `,
+    { bannerId: "general", locale: options.locale }
+  );
+
+  return sendEmail({ to: options.to, subject, html }).then((r) => r.ok);
+}
+
 export async function sendWelcomeEmail(options: {
   to: string;
   fullName: string;

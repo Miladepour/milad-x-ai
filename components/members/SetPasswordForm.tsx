@@ -1,9 +1,13 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 import { Lock } from "lucide-react";
 import StudentAuthShell from "@/components/members/StudentAuthShell";
-import { studentDeviceBootstrapUrl } from "@/lib/members/paths";
+import {
+  accountForgotPasswordPath,
+  studentDeviceBootstrapUrl,
+} from "@/lib/members/paths";
 import { createClient } from "@/lib/supabase/client";
 import { translations } from "@/lib/i18n/translations";
 
@@ -18,6 +22,55 @@ export default function SetPasswordForm({ redirectTo }: SetPasswordFormProps) {
   const [confirm, setConfirm] = useState("");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
+  const [canSubmit, setCanSubmit] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function verifyStudentSession() {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        if (!cancelled) {
+          setStatus(t.setPasswordExpired);
+          setCheckingSession(false);
+        }
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("student_profiles")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (!profile) {
+        await supabase.auth.signOut({ scope: "local" });
+        if (!cancelled) {
+          setStatus(
+            "This account is not enrolled as a student. Use the link from your invite email."
+          );
+          setCheckingSession(false);
+        }
+        return;
+      }
+
+      if (!cancelled) {
+        setCanSubmit(true);
+        setCheckingSession(false);
+      }
+    }
+
+    void verifyStudentSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -74,6 +127,7 @@ export default function SetPasswordForm({ redirectTo }: SetPasswordFormProps) {
               autoComplete="new-password"
               required
               minLength={8}
+              disabled={!canSubmit || checkingSession}
             />
           </label>
           <label className="flex flex-col gap-2">
@@ -87,13 +141,14 @@ export default function SetPasswordForm({ redirectTo }: SetPasswordFormProps) {
               className="form-field"
               autoComplete="new-password"
               required
+              disabled={!canSubmit || checkingSession}
             />
           </label>
         </div>
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !canSubmit || checkingSession}
           className="w-full bg-orange px-5 py-3.5 font-mono text-xs uppercase tracking-widest text-background transition-colors hover:bg-cream disabled:opacity-50"
         >
           {loading ? "…" : t.savePassword}
@@ -102,6 +157,14 @@ export default function SetPasswordForm({ redirectTo }: SetPasswordFormProps) {
         {status && (
           <p className="font-dm text-sm leading-relaxed text-orange" role="alert">
             {status}
+          </p>
+        )}
+
+        {!canSubmit && !checkingSession && (
+          <p className="border-t border-surface pt-5 font-dm text-xs leading-relaxed text-cream/45">
+            <Link href={accountForgotPasswordPath()} className="text-orange hover:underline">
+              {t.forgotPasswordLink}
+            </Link>
           </p>
         )}
       </form>

@@ -95,6 +95,10 @@ export function accountSetPasswordPath(locale: UrlLocale): string {
   return localizedPath("/account/set-password", locale);
 }
 
+export function accountForgotPasswordPath(): string {
+  return localizedPath("/account/forgot-password", "en");
+}
+
 export function accountDeviceBlockedPath(locale: UrlLocale): string {
   return localizedPath("/account/device-blocked", locale);
 }

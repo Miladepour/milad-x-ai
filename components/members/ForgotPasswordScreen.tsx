@@ -2,32 +2,26 @@
 
 import { FormEvent, useRef, useState } from "react";
 import Link from "next/link";
-import { Lock } from "lucide-react";
+import { KeyRound } from "lucide-react";
 import TurnstileWidget, {
   type TurnstileWidgetHandle,
 } from "@/components/shared/TurnstileWidget";
 import StudentAuthShell from "@/components/members/StudentAuthShell";
-import { accountForgotPasswordPath, studentDeviceBootstrapUrl } from "@/lib/members/paths";
-import { createClient } from "@/lib/supabase/client";
+import { accountLoginPath } from "@/lib/members/paths";
 import { isTurnstileSiteKeyConfigured } from "@/lib/security/turnstile-client";
 import { translations } from "@/lib/i18n/translations";
-import { useLanguage } from "@/lib/i18n/context";
 
 const turnstileRequired = isTurnstileSiteKeyConfigured();
 const t = translations.EN.memberPortal;
 
-interface StudentLoginScreenProps {
-  redirectTo: string;
-}
-
-export default function StudentLoginScreen({ redirectTo }: StudentLoginScreenProps) {
-  const { href } = useLanguage();
+export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
+  const [success, setSuccess] = useState(false);
   const [needsCaptchaRetry, setNeedsCaptchaRetry] = useState(false);
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
+  const [honeypot, setHoneypot] = useState("");
   const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
   function resetCaptcha() {
@@ -45,52 +39,46 @@ export default function StudentLoginScreen({ redirectTo }: StudentLoginScreenPro
 
     setLoading(true);
     setStatus("");
+    setSuccess(false);
     setNeedsCaptchaRetry(false);
-    const supabase = createClient();
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-      options: captchaToken ? { captchaToken } : undefined,
-    });
+    try {
+      const res = await fetch("/api/members/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          turnstileToken: captchaToken || undefined,
+          website: honeypot,
+        }),
+      });
 
-    if (error) {
-      setStatus(error.message);
+      const data = (await res.json().catch(() => ({}))) as {
+        message?: string;
+        error?: string;
+      };
+
+      if (!res.ok) {
+        setStatus(data.error ?? t.forgotPasswordError);
+        if (turnstileRequired) {
+          resetCaptcha();
+          setNeedsCaptchaRetry(true);
+        }
+        setLoading(false);
+        return;
+      }
+
+      setSuccess(true);
+      setStatus(data.message ?? t.forgotPasswordSuccess);
+    } catch {
+      setStatus(t.forgotPasswordError);
       if (turnstileRequired) {
         resetCaptcha();
         setNeedsCaptchaRetry(true);
       }
-      setLoading(false);
-      return;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      setStatus("Sign-in failed.");
-      setLoading(false);
-      return;
-    }
-
-    const { data: profile } = await supabase
-      .from("student_profiles")
-      .select("id")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (!profile) {
-      await supabase.auth.signOut({ scope: "local" });
-      setStatus(
-        "This account is not enrolled as a student. Use the link from your invite email."
-      );
-      resetCaptcha();
-      setNeedsCaptchaRetry(true);
-      setLoading(false);
-      return;
-    }
-
-    window.location.href = studentDeviceBootstrapUrl(redirectTo);
+    setLoading(false);
   }
 
   return (
@@ -98,13 +86,13 @@ export default function StudentLoginScreen({ redirectTo }: StudentLoginScreenPro
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <div>
           <div className="mb-5 inline-flex h-11 w-11 items-center justify-center border border-orange/40 bg-orange/10">
-            <Lock className="h-5 w-5 text-orange" strokeWidth={1.75} aria-hidden />
+            <KeyRound className="h-5 w-5 text-orange" strokeWidth={1.75} aria-hidden />
           </div>
           <h1 className="font-dm text-3xl font-semibold tracking-tight text-cream">
-            {t.loginTitle}
+            {t.forgotPasswordTitle}
           </h1>
           <p className="mt-2 font-dm text-sm leading-relaxed text-cream/55">
-            {t.loginSubtitle}
+            {t.forgotPasswordSubtitle}
           </p>
         </div>
 
@@ -121,28 +109,21 @@ export default function StudentLoginScreen({ redirectTo }: StudentLoginScreenPro
               placeholder="you@example.com"
               autoComplete="email"
               required
+              disabled={success}
             />
-          </label>
-          <label className="flex flex-col gap-2">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-cream/45">
-              {t.password}
-            </span>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="form-field"
-              autoComplete="current-password"
-              required
-            />
-            <Link
-              href={accountForgotPasswordPath()}
-              className="self-end font-dm text-xs text-orange hover:underline"
-            >
-              {t.forgotPasswordLink}
-            </Link>
           </label>
         </div>
+
+        <input
+          type="text"
+          name="website"
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+          className="hidden"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden
+        />
 
         <div
           className={
@@ -163,16 +144,19 @@ export default function StudentLoginScreen({ redirectTo }: StudentLoginScreenPro
 
         <button
           type="submit"
-          disabled={loading || (turnstileRequired && !captchaToken)}
+          disabled={loading || success || (turnstileRequired && !captchaToken)}
           className="w-full bg-orange px-5 py-3.5 font-mono text-xs uppercase tracking-widest text-background transition-colors hover:bg-cream disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {loading ? t.signingIn : t.signIn}
+          {loading ? t.forgotPasswordSending : t.forgotPasswordSubmit}
         </button>
 
         {status && (
-          <p className="font-dm text-sm leading-relaxed text-orange" role="alert">
+          <p
+            className={`font-dm text-sm leading-relaxed ${success ? "text-cream/70" : "text-orange"}`}
+            role="alert"
+          >
             {status}
-            {needsCaptchaRetry && turnstileRequired && !captchaToken && (
+            {needsCaptchaRetry && turnstileRequired && !captchaToken && !success && (
               <>
                 {" "}
                 {t.captchaRetryHint}
@@ -182,10 +166,9 @@ export default function StudentLoginScreen({ redirectTo }: StudentLoginScreenPro
         )}
 
         <p className="border-t border-surface pt-5 font-dm text-xs leading-relaxed text-cream/45">
-          Invite-only access.{" "}
-          <a href={href("/contact")} className="text-orange hover:underline">
-            {t.contactSupport}
-          </a>
+          <Link href={accountLoginPath()} className="text-orange hover:underline">
+            {t.forgotPasswordBackToLogin}
+          </Link>
         </p>
       </form>
     </StudentAuthShell>

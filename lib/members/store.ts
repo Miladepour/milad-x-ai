@@ -1335,6 +1335,34 @@ export async function resendStudentInviteAdmin(
   };
 }
 
+/** Self-service forgot password — only for emails in `student_profiles`. */
+export async function createStudentPasswordResetLink(
+  email: string
+): Promise<{ resetLink: string; profile: StudentProfile } | null> {
+  const service = createServiceClient();
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) return null;
+
+  const { data: profileData, error } = await service
+    .from("student_profiles")
+    .select("*")
+    .eq("email", normalizedEmail)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!profileData) return null;
+
+  const profile = studentProfileRowToProfile(profileData as StudentProfileRow);
+  const { inviteLink: resetLink } = await generateStudentAuthLink(service, {
+    email: normalizedEmail,
+    fullName: profile.fullName,
+    locale: profile.locale,
+    linkOrder: ["recovery", "invite", "magiclink"],
+  });
+
+  return { resetLink, profile };
+}
+
 export async function deleteStudentAdmin(studentId: string): Promise<void> {
   const service = createServiceClient();
   const { data: profile, error: profileError } = await service
