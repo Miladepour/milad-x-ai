@@ -64,7 +64,7 @@ values (
 
 <h3>مرحله اول</h3>
 
-<p>فایل ZIP افزونه را از <a href="https://t.me/miladxtalks" target="_blank" rel="noreferrer noopener">کانال تلگرام MiladXtalks</a> دانلود کنید.</p>
+<p>فایل ZIP افزونه را از <a href="https://telegram.me/mxaiacademy" target="_blank" rel="noreferrer noopener">کانال تلگرام MX Ai Academy</a> دانلود کنید.</p>
 
 <h3>مرحله دوم</h3>
 

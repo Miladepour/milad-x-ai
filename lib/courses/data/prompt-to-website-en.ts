@@ -17,7 +17,7 @@ export const promptToWebsiteCourseEn: Course = {
     totalHours: "5 hours",
     partsCount: 2,
     timezone: "London, UK time",
-    applyUrl: "https://t.me/mxaiacademy",
+    applyUrl: "https://telegram.me/mxaiacademy",
     sessions: [
       { id: "1", date: "21 Jun 2026", time: "16:00", durationHours: 3 },
       { id: "2", date: "24 Jun 2026", time: "18:00", durationHours: 2 },

@@ -181,7 +181,7 @@ export default function CourseLocaleContentEditor({
                   },
                 })
               }
-              placeholder="https://t.me/mxaiacademy — replaces waitlist button when set"
+              placeholder="https://telegram.me/mxaiacademy — replaces waitlist button when set"
             />
           </label>
         </div>

@@ -72,7 +72,7 @@ const socialLinks = [
     icon: IconYouTube,
   },
   {
-    href: "https://t.me/miladxtalks",
+    href: "https://telegram.me/mxaiacademy",
     label: "Telegram",
     icon: IconTelegram,
   },
