@@ -79,6 +79,29 @@ export interface ProgramCertificate {
   createdAt: string;
 }
 
+export type CertificateListStatusFilter = "active" | "revoked" | "all";
+
+export interface CertificateAdminListItem {
+  certificate: ProgramCertificate;
+  studentEmail: string;
+  programSlug: string | null;
+  programTitle: string;
+}
+
+export interface CertificateListFilters {
+  page?: number;
+  search?: string;
+  status?: CertificateListStatusFilter;
+}
+
+export interface CertificateListResult {
+  items: CertificateAdminListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 export interface ProgramLesson {
   id: string;
   programId: string;

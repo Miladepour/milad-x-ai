@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import {
+  Award,
   BookOpen,
   Globe,
   GraduationCap,
@@ -30,6 +31,7 @@ export type AdminTab =
   | "programs"
   | "bonus-programs"
   | "students"
+  | "certificates"
   | "reviews"
   | "vip-guests";
 
@@ -72,6 +74,7 @@ export default function AdminShell({
   const navItems: NavItem[] = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "students", label: "Students", icon: GraduationCap, badge: navBadges.students },
+    { id: "certificates", label: "Certificates", icon: Award },
     { id: "reviews", label: "Reviews", icon: MessageSquare },
     { id: "vip-guests", label: "VIP guests", icon: Star },
     { id: "programs", label: "Member programs", icon: BookOpen },

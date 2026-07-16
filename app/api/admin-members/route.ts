@@ -40,9 +40,11 @@ import {
 import { saveBonusLinksAdmin } from "@/lib/members/bonus-store";
 import {
   issueCertificateAdmin,
+  listCertificatesAdmin,
   revokeCertificateAdmin,
   updateCertificateAdmin,
 } from "@/lib/members/certificate-store";
+import type { CertificateListStatusFilter } from "@/lib/members/types";
 import {
   getQuizForLessonAdmin,
   saveQuizForLessonAdmin,
@@ -698,6 +700,20 @@ export async function POST(request: Request) {
         total: recipients.length,
         campaignId,
       });
+    }
+
+    if (action === "list-certificates") {
+      const statusRaw = String(body.status ?? "active").trim();
+      const status: CertificateListStatusFilter =
+        statusRaw === "revoked" || statusRaw === "all" || statusRaw === "active"
+          ? statusRaw
+          : "active";
+      const result = await listCertificatesAdmin({
+        page: Number(body.page) || 1,
+        search: String(body.search ?? ""),
+        status,
+      });
+      return NextResponse.json({ ok: true, ...result });
     }
 
     if (action === "issue-certificate") {

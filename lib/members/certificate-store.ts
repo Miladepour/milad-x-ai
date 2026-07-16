@@ -9,9 +9,18 @@ import {
   type ProgramLessonRow,
   type StudentProfileRow,
 } from "@/lib/members/mappers";
-import type { MemberProgram, ProgramCertificate } from "@/lib/members/types";
+import type {
+  CertificateAdminListItem,
+  CertificateListFilters,
+  CertificateListResult,
+  CertificateListStatusFilter,
+  MemberProgram,
+  ProgramCertificate,
+} from "@/lib/members/types";
 import { createAdminDbClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
+
+export const CERTIFICATES_PAGE_SIZE = 20;
 
 export interface ProgramCertificateRow {
   id: string;
@@ -334,6 +343,98 @@ export async function studentHasActiveCertificates(studentId: string): Promise<b
 
   if (error) throw new Error(error.message);
   return (count ?? 0) > 0;
+}
+
+function escapeIlike(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+}
+
+function buildCertificateListResult(
+  items: CertificateAdminListItem[],
+  total: number,
+  page: number,
+  pageSize: number
+): CertificateListResult {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  return {
+    items,
+    total,
+    page,
+    pageSize,
+    totalPages,
+  };
+}
+
+export async function listCertificatesAdmin(
+  filters: CertificateListFilters = {}
+): Promise<CertificateListResult> {
+  const page = Math.max(1, filters.page ?? 1);
+  const pageSize = CERTIFICATES_PAGE_SIZE;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+  const search = filters.search?.trim() ?? "";
+  const status: CertificateListStatusFilter = filters.status ?? "active";
+
+  const supabase = createAdminDbClient();
+  let query = supabase
+    .from("program_certificates")
+    .select(
+      "*, student_profiles!inner(email), member_programs(slug, title)",
+      { count: "exact" }
+    )
+    .order("issued_at", { ascending: false });
+
+  if (status === "active") {
+    query = query.is("revoked_at", null);
+  } else if (status === "revoked") {
+    query = query.not("revoked_at", "is", null);
+  }
+
+  if (search) {
+    const term = escapeIlike(search);
+    if (search.includes("@")) {
+      query = query.ilike("student_profiles.email", `%${term}%`);
+    } else {
+      query = query.or(
+        [
+          `student_name.ilike.%${term}%`,
+          `certificate_number.ilike.%${term}%`,
+          `student_number.ilike.%${term}%`,
+          `program_title_en.ilike.%${term}%`,
+          `program_title_fa.ilike.%${term}%`,
+        ].join(",")
+      );
+    }
+  }
+
+  const { data, error, count } = await query.range(from, to);
+  if (error) throw new Error(error.message);
+
+  const items: CertificateAdminListItem[] = (data ?? []).map((row) => {
+    const profile = row.student_profiles as { email: string } | null;
+    const program = row.member_programs as { slug: string | null; title: string } | null;
+    const {
+      student_profiles: _profile,
+      member_programs: _program,
+      ...certRow
+    } = row as ProgramCertificateRow & {
+      student_profiles: { email: string } | null;
+      member_programs: { slug: string | null; title: string } | null;
+    };
+    const certificate = certificateRowToCertificate(certRow as ProgramCertificateRow);
+    return {
+      certificate,
+      studentEmail: profile?.email?.trim() || "",
+      programSlug: program?.slug?.trim() || null,
+      programTitle:
+        program?.title?.trim() ||
+        certificate.programTitleEn ||
+        certificate.programTitleFa ||
+        "Program",
+    };
+  });
+
+  return buildCertificateListResult(items, count ?? 0, page, pageSize);
 }
 
 export async function getStudentCertificateForProgram(

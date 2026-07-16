@@ -29,6 +29,12 @@ const StudentManager = dynamic(() => import("@/components/admin/StudentManager")
   ),
 });
 
+const CertificateManager = dynamic(() => import("@/components/admin/CertificateManager"), {
+  loading: () => (
+    <p className="font-dm text-sm text-cream/70">Loading certificates…</p>
+  ),
+});
+
 const AudienceManager = dynamic(() => import("@/components/admin/AudienceManager"), {
   loading: () => (
     <p className="font-dm text-sm text-cream/70">Loading audience…</p>
@@ -230,6 +236,14 @@ export default function AdminDashboard({
         <div className={tab === "students" ? "block" : "hidden"}>
           <div className="student-glass">
             <StudentManager membersRequest={membersRequest} onStatus={notify} />
+          </div>
+        </div>
+      )}
+
+      {visitedTabs.has("certificates") && (
+        <div className={tab === "certificates" ? "block" : "hidden"}>
+          <div className="student-glass">
+            <CertificateManager membersRequest={membersRequest} onStatus={notify} />
           </div>
         </div>
       )}
