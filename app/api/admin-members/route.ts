@@ -41,6 +41,7 @@ import { saveBonusLinksAdmin } from "@/lib/members/bonus-store";
 import {
   issueCertificateAdmin,
   revokeCertificateAdmin,
+  updateCertificateAdmin,
 } from "@/lib/members/certificate-store";
 import {
   getQuizForLessonAdmin,
@@ -719,6 +720,19 @@ export async function POST(request: Request) {
       }
       await revokeCertificateAdmin(certificateId);
       return NextResponse.json({ ok: true });
+    }
+
+    if (action === "update-certificate") {
+      const certificateId = String(body.certificateId ?? "").trim();
+      const studentName = String(body.studentName ?? "").trim();
+      if (!certificateId || !studentName) {
+        return NextResponse.json(
+          { error: "certificateId and studentName required" },
+          { status: 400 }
+        );
+      }
+      const certificate = await updateCertificateAdmin(certificateId, { studentName });
+      return NextResponse.json({ ok: true, certificate });
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });

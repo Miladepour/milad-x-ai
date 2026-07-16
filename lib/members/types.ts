@@ -313,6 +313,7 @@ export interface StudentProfileEnrollmentSummary {
 export interface StudentProfileAccount {
   profile: StudentProfile;
   enrollments: StudentProfileEnrollmentSummary[];
+  hasActiveCertificate: boolean;
 }
 
 export interface AddEnrollmentPayload {

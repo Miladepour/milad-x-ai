@@ -298,6 +298,44 @@ export async function revokeCertificateAdmin(certificateId: string): Promise<voi
   if (error) throw new Error(error.message);
 }
 
+export async function updateCertificateAdmin(
+  certificateId: string,
+  payload: { studentName: string }
+): Promise<ProgramCertificate> {
+  const studentName = payload.studentName.trim().replace(/\s+/g, " ");
+  if (studentName.length < 2) {
+    throw new Error("Certificate name must be at least 2 characters.");
+  }
+  if (studentName.length > 120) {
+    throw new Error("Certificate name is too long.");
+  }
+
+  const supabase = createAdminDbClient();
+  const { data, error } = await supabase
+    .from("program_certificates")
+    .update({ student_name: studentName })
+    .eq("id", certificateId)
+    .is("revoked_at", null)
+    .select("*")
+    .single();
+
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Certificate not found or already revoked.");
+  return certificateRowToCertificate(data as ProgramCertificateRow);
+}
+
+export async function studentHasActiveCertificates(studentId: string): Promise<boolean> {
+  const supabase = createAdminDbClient();
+  const { count, error } = await supabase
+    .from("program_certificates")
+    .select("id", { count: "exact", head: true })
+    .eq("student_id", studentId)
+    .is("revoked_at", null);
+
+  if (error) throw new Error(error.message);
+  return (count ?? 0) > 0;
+}
+
 export async function getStudentCertificateForProgram(
   studentId: string,
   programId: string

@@ -69,6 +69,8 @@ export default function StudentProfilePanel({
     null
   );
   const [extendConfirming, setExtendConfirming] = useState(false);
+  const [editingCertificateId, setEditingCertificateId] = useState<string | null>(null);
+  const [certificateNameDraft, setCertificateNameDraft] = useState("");
 
   async function load() {
     setLoading(true);
@@ -278,10 +280,37 @@ export default function StudentProfilePanel({
     onStatus("Revoking certificate…");
     try {
       await membersRequest("revoke-certificate", { certificateId });
+      if (editingCertificateId === certificateId) {
+        setEditingCertificateId(null);
+        setCertificateNameDraft("");
+      }
       await load();
       onStatus("Certificate revoked.");
     } catch (err) {
       onStatus(err instanceof Error ? err.message : "Could not revoke certificate");
+    }
+  }
+
+  function startEditCertificateName(certificateId: string, currentName: string) {
+    setEditingCertificateId(certificateId);
+    setCertificateNameDraft(currentName);
+  }
+
+  async function handleSaveCertificateName(certificateId: string) {
+    const studentName = certificateNameDraft.trim();
+    if (studentName.length < 2) {
+      onStatus("Certificate name must be at least 2 characters.");
+      return;
+    }
+    onStatus("Updating certificate name…");
+    try {
+      await membersRequest("update-certificate", { certificateId, studentName });
+      setEditingCertificateId(null);
+      setCertificateNameDraft("");
+      await load();
+      onStatus("Certificate name updated.");
+    } catch (err) {
+      onStatus(err instanceof Error ? err.message : "Could not update certificate name");
     }
   }
 
@@ -631,24 +660,79 @@ export default function StudentProfilePanel({
                       </p>
                     )}
                     {item.program?.certificateEnabled && (
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <div className="mt-2 space-y-2">
                         {data.certificatesByProgramId[item.programId] ? (
                           <>
                             <p className="font-mono text-[10px] uppercase tracking-widest text-emerald-400/90">
                               Certificate:{" "}
                               {data.certificatesByProgramId[item.programId].certificateNumber}
                             </p>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleRevokeCertificate(
-                                  data.certificatesByProgramId[item.programId].id
-                                )
-                              }
-                              className="border border-surface px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-cream/70 hover:border-red-400 hover:text-red-300"
-                            >
-                              Revoke
-                            </button>
+                            {editingCertificateId ===
+                            data.certificatesByProgramId[item.programId].id ? (
+                              <div className="flex flex-wrap items-center gap-2">
+                                <input
+                                  type="text"
+                                  value={certificateNameDraft}
+                                  onChange={(e) => setCertificateNameDraft(e.target.value)}
+                                  className="min-w-[12rem] flex-1 border border-surface bg-background px-2 py-1 font-dm text-sm text-cream"
+                                  maxLength={120}
+                                  placeholder="Name on certificate"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleSaveCertificateName(
+                                      data.certificatesByProgramId[item.programId].id
+                                    )
+                                  }
+                                  className="border border-orange px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-orange hover:bg-orange hover:text-background"
+                                >
+                                  Save name
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingCertificateId(null);
+                                    setCertificateNameDraft("");
+                                  }}
+                                  className="border border-surface px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-cream/70 hover:border-cream/50"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="font-dm text-xs text-cream/70">
+                                  Name on certificate:{" "}
+                                  <span className="text-cream">
+                                    {data.certificatesByProgramId[item.programId].studentName}
+                                  </span>
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    startEditCertificateName(
+                                      data.certificatesByProgramId[item.programId].id,
+                                      data.certificatesByProgramId[item.programId].studentName
+                                    )
+                                  }
+                                  className="border border-surface px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-cream/70 hover:border-orange hover:text-orange"
+                                >
+                                  Edit name
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleRevokeCertificate(
+                                      data.certificatesByProgramId[item.programId].id
+                                    )
+                                  }
+                                  className="border border-surface px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-cream/70 hover:border-red-400 hover:text-red-300"
+                                >
+                                  Revoke
+                                </button>
+                              </div>
+                            )}
                           </>
                         ) : (
                           <button

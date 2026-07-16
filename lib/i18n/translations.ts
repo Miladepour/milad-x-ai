@@ -620,6 +620,8 @@ export const translations = {
       profilePasswordUpdated: "Password updated.",
       profileWrongPassword: "Current password is incorrect.",
       profileSaveFailed: "Could not save profile.",
+      profileFullNameLocked:
+        "You have an active certificate. Your name cannot be changed here. If you need a correction, contact support.",
       profileViewProfile: "View profile",
       studentIdLabel: "Student ID",
       profileNoEnrollments: "No enrollments yet.",
@@ -1304,6 +1306,8 @@ export const translations = {
       profilePasswordUpdated: "رمز عبور به‌روزرسانی شد.",
       profileWrongPassword: "رمز فعلی اشتباه است.",
       profileSaveFailed: "ذخیره پروفایل انجام نشد.",
+      profileFullNameLocked:
+        "شما گواهینامه فعال دارید. نام شما در اینجا قابل تغییر نیست. در صورت نیاز به اصلاح، با پشتیبانی تماس بگیرید.",
       profileViewProfile: "مشاهده پروفایل",
       studentIdLabel: "شناسه دانشجو",
       profileNoEnrollments: "هنوز ثبت‌نامی وجود ندارد.",

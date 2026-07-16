@@ -53,6 +53,7 @@ export interface StudentProfileLabels {
   passwordUpdated: string;
   wrongPassword: string;
   saveFailed: string;
+  fullNameLocked: string;
   noEnrollments: string;
   course: string;
   status: string;
@@ -70,6 +71,7 @@ interface StudentProfilePageProps {
   initialProfile: StudentProfile;
   initialEnrollments: StudentProfileEnrollmentSummary[];
   initialDevices: StudentDevice[];
+  hasActiveCertificate: boolean;
   softMode: boolean;
   deviceLabels: StudentDevicesLabels;
   dateLocale: "en-GB" | "fa-IR";
@@ -109,6 +111,7 @@ export default function StudentProfilePage({
   initialProfile,
   initialEnrollments,
   initialDevices,
+  hasActiveCertificate,
   softMode,
   deviceLabels,
   dateLocale,
@@ -146,7 +149,7 @@ export default function StudentProfilePage({
         credentials: "same-origin",
         body: JSON.stringify({
           action: "update-profile",
-          fullName,
+          ...(hasActiveCertificate ? {} : { fullName }),
           phone,
           locale: localePref,
         }),
@@ -247,7 +250,20 @@ export default function StudentProfilePage({
                 autoComplete="name"
                 required
                 maxLength={120}
+                readOnly={hasActiveCertificate}
+                disabled={hasActiveCertificate}
+                aria-describedby={
+                  hasActiveCertificate ? "profile-fullname-locked-help" : undefined
+                }
               />
+              {hasActiveCertificate && (
+                <p
+                  id="profile-fullname-locked-help"
+                  className="font-dm text-xs text-cream/45"
+                >
+                  {labels.fullNameLocked}
+                </p>
+              )}
             </label>
 
             <label className="flex flex-col gap-2">

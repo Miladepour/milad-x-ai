@@ -1,7 +1,10 @@
 import { cache } from "react";
 import { createAdminDbClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
-import { certificatesByProgramIdForStudent } from "@/lib/members/certificate-store";
+import {
+  certificatesByProgramIdForStudent,
+  studentHasActiveCertificates,
+} from "@/lib/members/certificate-store";
 import {
   listBonusLinksAdmin,
   saveBonusLinksAdmin,
@@ -773,13 +776,29 @@ export async function getStudentProfileAccount(
     });
   }
 
-  return { profile, enrollments };
+  const hasActiveCertificate = await studentHasActiveCertificates(userId);
+
+  return { profile, enrollments, hasActiveCertificate };
 }
 
 export async function updateStudentSelf(
   userId: string,
   payload: StudentSelfUpdatePayload
 ): Promise<StudentProfile> {
+  if (payload.fullName !== undefined) {
+    const hasCerts = await studentHasActiveCertificates(userId);
+    if (hasCerts) {
+      const current = await getStudentProfile(userId);
+      const nextName = payload.fullName.trim();
+      const currentName = current?.fullName.trim() ?? "";
+      if (nextName !== currentName) {
+        throw new Error(
+          "Your name cannot be changed while you have an active certificate. Contact support if you need a correction."
+        );
+      }
+    }
+  }
+
   const supabase = createClient();
   const row: Record<string, unknown> = {};
 

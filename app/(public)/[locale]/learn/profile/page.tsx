@@ -54,6 +54,7 @@ export default async function LearnProfilePage({
       initialProfile={account.profile}
       initialEnrollments={account.enrollments}
       initialDevices={devices}
+      hasActiveCertificate={account.hasActiveCertificate}
       softMode={softMode}
       deviceLabels={deviceLabels}
       dateLocale={dateLocale}
@@ -83,6 +84,7 @@ export default async function LearnProfilePage({
         passwordUpdated: t.memberPortal.profilePasswordUpdated,
         wrongPassword: t.memberPortal.profileWrongPassword,
         saveFailed: t.memberPortal.profileSaveFailed,
+        fullNameLocked: t.memberPortal.profileFullNameLocked,
         noEnrollments: t.memberPortal.profileNoEnrollments,
         course: t.memberPortal.profileCourse,
         status: t.memberPortal.profileStatus,
