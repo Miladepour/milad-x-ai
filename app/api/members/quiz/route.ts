@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     }
 
     if (programKind === "main") {
-      if (lessonData.program.comingSoon) {
+      if (lessonData.program.comingSoon || lessonData.program.certificateOnly) {
         return NextResponse.json(
           { error: "Course content is not available yet." },
           { status: 403 }

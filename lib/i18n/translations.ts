@@ -544,6 +544,16 @@ export const translations = {
       certificateIncluded: "Certificate included",
       certificateIncludedHint:
         "Complete all lessons in this program to unlock your certificate.",
+      certificatePendingStatus: "Certificate pending",
+      certificateIssuedStatus: "Certificate issued",
+      certificateOnlyPendingTitle: "Private certificate program",
+      certificateOnlyPendingBody:
+        "This is a private 1:1 program. Your certificate will appear here after it is issued by the academy.",
+      certificateOnlyIssuedTitle: "Your certificate is ready",
+      certificateOnlyIssuedBody:
+        "Your certificate for this private program has been issued. You can view and download it below.",
+      certificateOnlyPendingHint:
+        "No certificate yet. Contact support if you expected it to be ready.",
       programCompletedTitle: "Congratulations — you finished this program!",
       programCompletedBody:
         "Your certificate is ready. Open the Certificates page to view and download it.",
@@ -1230,6 +1240,16 @@ export const translations = {
       certificateIncluded: "شامل گواهینامه",
       certificateIncludedHint:
         "برای دریافت گواهینامه، همه درس‌های این برنامه را کامل کنید.",
+      certificatePendingStatus: "گواهینامه در انتظار صدور",
+      certificateIssuedStatus: "گواهینامه صادر شده",
+      certificateOnlyPendingTitle: "برنامه گواهینامه خصوصی",
+      certificateOnlyPendingBody:
+        "این یک برنامه خصوصی یک‌به‌یک است. پس از صدور گواهینامه توسط آکادمی، اینجا نمایش داده می‌شود.",
+      certificateOnlyIssuedTitle: "گواهینامه شما آماده است",
+      certificateOnlyIssuedBody:
+        "گواهینامه این برنامه خصوصی صادر شده است. می‌توانید آن را در ادامه مشاهده و دریافت کنید.",
+      certificateOnlyPendingHint:
+        "هنوز گواهینامه‌ای صادر نشده است. اگر انتظار داشتید آماده باشد، با پشتیبانی تماس بگیرید.",
       programCompletedTitle: "تبریک — این برنامه را تمام کردید!",
       programCompletedBody:
         "گواهینامه شما آماده است. برای مشاهده و دریافت آن به صفحه گواهینامه‌ها بروید.",

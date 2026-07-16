@@ -34,6 +34,11 @@ export interface MemberProgram {
   certificateHours: number | null;
   /** When true, enrolled students see the program but lesson content stays locked. */
   comingSoon: boolean;
+  /**
+   * Private / 1:1 style program: no lesson curriculum in the student UI.
+   * Certificate is issued manually by admin; progress % is not shown.
+   */
+  certificateOnly: boolean;
   programType: ProgramType;
   createdAt: string;
   updatedAt: string;
@@ -248,6 +253,8 @@ export interface StudentDashboardProgram {
   continueLesson: ProgramLesson | null;
   /** Timestamp used to pick the most recently active program for Continue watching. */
   continueWatchingAt: number;
+  /** True when the student has an active (non-revoked) certificate for this program. */
+  certificateIssued: boolean;
 }
 
 export interface MemberProgramPayload {
@@ -266,6 +273,7 @@ export interface MemberProgramPayload {
   certificateTitleFa?: string | null;
   certificateHours?: number | null;
   comingSoon?: boolean;
+  certificateOnly?: boolean;
   programType?: ProgramType;
 }
 

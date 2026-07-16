@@ -42,6 +42,7 @@ export async function generateMetadata({
       certificateTitleFa: null,
       certificateHours: null,
       comingSoon: false,
+      certificateOnly: false,
       programType: "main",
       createdAt: "",
       updatedAt: "",

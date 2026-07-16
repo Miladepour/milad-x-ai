@@ -36,6 +36,8 @@ export default async function LearnProgramsPage({
     expiredOn: t.memberPortal.expiredOn,
     programLocked: t.memberPortal.programLocked,
     certificateIncluded: t.memberPortal.certificateIncluded,
+    certificatePending: t.memberPortal.certificatePendingStatus,
+    certificateIssued: t.memberPortal.certificateIssuedStatus,
   };
 
   return (

@@ -71,6 +71,7 @@ export default function StudentProfilePanel({
   const [extendConfirming, setExtendConfirming] = useState(false);
   const [editingCertificateId, setEditingCertificateId] = useState<string | null>(null);
   const [certificateNameDraft, setCertificateNameDraft] = useState("");
+  const [panelTab, setPanelTab] = useState<"profile" | "programs">("profile");
 
   async function load() {
     setLoading(true);
@@ -103,6 +104,7 @@ export default function StudentProfilePanel({
   }
 
   useEffect(() => {
+    setPanelTab("profile");
     load().catch(() => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentId]);
@@ -405,6 +407,41 @@ export default function StudentProfilePanel({
         </button>
       </div>
 
+      <div
+        className="flex gap-1 border-b border-white/[0.08]"
+        role="tablist"
+        aria-label="Student profile sections"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={panelTab === "profile"}
+          onClick={() => setPanelTab("profile")}
+          className={`px-4 py-2.5 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+            panelTab === "profile"
+              ? "border-b-2 border-orange text-orange"
+              : "text-cream/50 hover:text-cream"
+          }`}
+        >
+          Profile
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={panelTab === "programs"}
+          onClick={() => setPanelTab("programs")}
+          className={`px-4 py-2.5 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+            panelTab === "programs"
+              ? "border-b-2 border-orange text-orange"
+              : "text-cream/50 hover:text-cream"
+          }`}
+        >
+          Enrolled programs ({data.enrollments.length})
+        </button>
+      </div>
+
+      {panelTab === "profile" && (
+        <div className="flex flex-col gap-6" role="tabpanel">
       <div className="flex flex-col gap-3 border border-white/[0.08] p-4">
         <p className="font-mono text-xs uppercase tracking-widest text-cream/50">
           Account actions
@@ -532,7 +569,11 @@ export default function StudentProfilePanel({
           Save profile
         </button>
       </form>
+        </div>
+      )}
 
+      {panelTab === "programs" && (
+        <div className="flex flex-col gap-6" role="tabpanel">
       <section className="flex flex-col gap-3">
         <p className="font-mono text-xs uppercase tracking-widest text-orange">
           Enrolled programs ({data.enrollments.length})
@@ -645,10 +686,19 @@ export default function StudentProfilePanel({
                         ? `expires ${formatDateOnly(item.accessEndsAt)}`
                         : "no expiry"}
                     </p>
-                    <p className="font-dm text-xs text-cream/50">
-                      Progress: {item.completedLessons ?? 0}/{item.totalLessons ?? 0} (
-                      {item.progressPercent ?? 0}%)
-                    </p>
+                    {item.program?.certificateOnly ? (
+                      <p className="font-dm text-xs text-cream/50">
+                        Certificate-only
+                        {data.certificatesByProgramId[item.programId]
+                          ? " · certificate issued"
+                          : " · certificate pending"}
+                      </p>
+                    ) : (
+                      <p className="font-dm text-xs text-cream/50">
+                        Progress: {item.completedLessons ?? 0}/{item.totalLessons ?? 0} (
+                        {item.progressPercent ?? 0}%)
+                      </p>
+                    )}
                     {getEnrollmentAccessBlockReason(item) && (
                       <p className="mt-1 font-dm text-xs text-amber-300/90">
                         Student cannot open: {getEnrollmentAccessBlockReason(item)}
@@ -774,6 +824,9 @@ export default function StudentProfilePanel({
             </li>
           ))}
         </ul>
+        {data.enrollments.length === 0 && (
+          <p className="font-dm text-sm text-cream/55">No programs enrolled yet.</p>
+        )}
       </section>
 
       <form
@@ -853,6 +906,8 @@ export default function StudentProfilePanel({
           Add program to student
         </button>
       </form>
+        </div>
+      )}
 
       <ExtendAccessModal
         open={extendEnrollment !== null}

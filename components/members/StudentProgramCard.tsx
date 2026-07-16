@@ -18,6 +18,11 @@ interface StudentProgramCardProps {
   openLabel: string;
   certificateIncluded?: boolean;
   certificateIncludedLabel?: string;
+  /** Certificate-only programs: hide lesson progress, show cert status instead. */
+  certificateOnly?: boolean;
+  certificateIssued?: boolean;
+  certificatePendingLabel?: string;
+  certificateIssuedLabel?: string;
 }
 
 function LockIcon() {
@@ -55,12 +60,20 @@ export default function StudentProgramCard({
   openLabel,
   certificateIncluded = false,
   certificateIncludedLabel = "",
+  certificateOnly = false,
+  certificateIssued = false,
+  certificatePendingLabel = "",
+  certificateIssuedLabel = "",
 }: StudentProgramCardProps) {
   const cardClassName = `student-glass-strong group flex h-full flex-col overflow-hidden rounded-2xl transition-colors ${
     locked
       ? "cursor-not-allowed opacity-90"
       : "hover:border-orange/30"
   }`;
+
+  const statusLabel = certificateIssued
+    ? certificateIssuedLabel
+    : certificatePendingLabel;
 
   const content = (
     <>
@@ -100,15 +113,27 @@ export default function StudentProgramCard({
           </div>
         )}
         <div className="absolute bottom-3 start-3 end-3">
-          <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-            <div
-              className={`h-full rounded-full ${locked ? "bg-cream/40" : "bg-orange"}`}
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-          <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-cream/70">
-            {progressPercent}% {progressLabel}
-          </p>
+          {certificateOnly ? (
+            <p
+              className={`font-mono text-[10px] uppercase tracking-widest ${
+                certificateIssued ? "text-emerald-300/90" : "text-cream/70"
+              }`}
+            >
+              {statusLabel}
+            </p>
+          ) : (
+            <>
+              <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className={`h-full rounded-full ${locked ? "bg-cream/40" : "bg-orange"}`}
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-cream/70">
+                {progressPercent}% {progressLabel}
+              </p>
+            </>
+          )}
         </div>
       </div>
 
@@ -130,9 +155,13 @@ export default function StudentProgramCard({
             {description || "\u00a0"}
           </p>
           <p className="mt-4 font-dm text-sm font-medium leading-relaxed text-cream sm:text-base">
-            <span className="font-semibold">
-              {completedLessons}/{totalLessons} {lessonsLabel}
-            </span>
+            {certificateOnly ? (
+              <span className="font-semibold">{statusLabel}</span>
+            ) : (
+              <span className="font-semibold">
+                {completedLessons}/{totalLessons} {lessonsLabel}
+              </span>
+            )}
             <span className="mx-2 text-cream/50">·</span>
             <span>
               {accessLabel}: {accessValue}

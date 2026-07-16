@@ -26,7 +26,7 @@ export async function getAuthorizedLessonBunnyVideoUrl(
   const data = await getStudentLesson(userId, slug, id);
   if (!data || data.lesson.lessonType !== "video") return null;
 
-  if (data.program.comingSoon) return null;
+  if (data.program.comingSoon || data.program.certificateOnly) return null;
 
   const completedIds = await getCompletedLessonIds(
     userId,

@@ -3,6 +3,7 @@ import { createAdminDbClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import {
   certificatesByProgramIdForStudent,
+  getStudentCertificateForProgram,
   studentHasActiveCertificates,
 } from "@/lib/members/certificate-store";
 import {
@@ -183,6 +184,9 @@ export async function upsertProgramAdmin(
         ? null
         : payload.certificateHours,
     coming_soon: isBonus ? false : Boolean(payload.comingSoon),
+    certificate_only: isBonus
+      ? false
+      : Boolean(payload.certificateOnly) && Boolean(payload.certificateEnabled),
     program_type: programType,
   };
 
@@ -406,7 +410,7 @@ export async function isLessonContentLockedForStudent(
         .maybeSingle(),
       supabase
         .from("member_programs")
-        .select("coming_soon, program_type")
+        .select("coming_soon, certificate_only, program_type")
         .eq("id", lessonRow.program_id)
         .maybeSingle(),
     ]);
@@ -428,7 +432,7 @@ export async function isLessonContentLockedForStudent(
   const enrollment = enrollmentRowToEnrollment(enrollmentRow as ProgramEnrollmentRow);
   if (!isEnrollmentActive(enrollment)) return true;
 
-  return Boolean(programRow.coming_soon);
+  return Boolean(programRow.coming_soon) || Boolean(programRow.certificate_only);
 }
 
 async function buildEnrollmentProgressContext(
@@ -845,12 +849,17 @@ async function loadStudentDashboardProgram(
     progressData = (data as import("./mappers").LessonProgressRow[] | null) ?? [];
   }
 
+  const certificate = await getStudentCertificateForProgram(userId, program.id);
+
   return buildStudentDashboardProgram(
     program,
     enrollment,
     lessonRows,
     progressData,
-    options
+    {
+      ...options,
+      certificateIssued: Boolean(certificate),
+    }
   );
 }
 
@@ -859,7 +868,7 @@ function buildStudentDashboardProgram(
   enrollment: ProgramEnrollment,
   lessonRows: ProgramLessonRow[],
   progressData: import("./mappers").LessonProgressRow[],
-  options?: { includeLessons?: boolean }
+  options?: { includeLessons?: boolean; certificateIssued?: boolean }
 ): StudentDashboardProgram {
   const includeLessons = options?.includeLessons ?? true;
   const lessonIds = lessonRows.map((row) => row.id);
@@ -890,6 +899,7 @@ function buildStudentDashboardProgram(
     totalLessons,
     continueLesson,
     continueWatchingAt,
+    certificateIssued: Boolean(options?.certificateIssued),
   };
 }
 
@@ -940,6 +950,7 @@ export const getStudentUsefulLinks = cache(async function getStudentUsefulLinks(
       totalLessons: 0,
       continueLesson: null,
       continueWatchingAt: 0,
+      certificateIssued: false,
     });
   }
 
@@ -1041,6 +1052,8 @@ async function listStudentEnrollmentPrograms(
     progressData.map((row) => [row.lesson_id, row])
   );
 
+  const certificatesByProgramId = await certificatesByProgramIdForStudent(userId);
+
   const results = entries.map(({ program, enrollment }) => {
     const programLessonRows = lessonsByProgram.get(program.id) ?? [];
     const programProgress = programLessonRows
@@ -1052,7 +1065,10 @@ async function listStudentEnrollmentPrograms(
       enrollment,
       programLessonRows,
       programProgress,
-      options
+      {
+        ...options,
+        certificateIssued: Boolean(certificatesByProgramId[program.id]),
+      }
     );
   });
 

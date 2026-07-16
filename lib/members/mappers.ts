@@ -30,6 +30,7 @@ export interface MemberProgramRow {
   certificate_title_fa?: string | null;
   certificate_hours?: number | string | null;
   coming_soon?: boolean | null;
+  certificate_only?: boolean | null;
   program_type?: string | null;
   created_at: string;
   updated_at: string;
@@ -165,6 +166,7 @@ export function memberProgramRowToProgram(row: MemberProgramRow): MemberProgram 
         ? certificateHours
         : null,
     comingSoon: Boolean(row.coming_soon),
+    certificateOnly: Boolean(row.certificate_only),
     programType: parseProgramType(row.program_type),
     createdAt: row.created_at,
     updatedAt: row.updated_at,

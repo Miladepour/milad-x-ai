@@ -72,6 +72,7 @@ const emptyProgram = (
   certificateTitleFa: null,
   certificateHours: null,
   comingSoon: mode === "main",
+  certificateOnly: false,
   programType: mode,
 });
 
@@ -198,6 +199,7 @@ export default function ProgramEditor({
           certificateTitleFa: isBonus ? null : program.certificateTitleFa,
           certificateHours: isBonus ? null : program.certificateHours,
           comingSoon: isBonus ? false : program.comingSoon,
+          certificateOnly: isBonus ? false : program.certificateOnly,
           programType: mode,
         },
       })) as { program: MemberProgram };
@@ -502,6 +504,7 @@ export default function ProgramEditor({
                   <p className="font-mono text-[10px] uppercase tracking-widest text-cream/50">
                     {p.slug} · {p.status}
                     {p.comingSoon ? " · coming soon" : ""}
+                    {p.certificateOnly ? " · certificate only" : ""}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -599,6 +602,7 @@ export default function ProgramEditor({
             <input
               type="checkbox"
               checked={program.comingSoon}
+              disabled={program.certificateOnly}
               onChange={(e) =>
                 setProgram((p) => ({ ...p, comingSoon: e.target.checked }))
               }
@@ -607,8 +611,9 @@ export default function ProgramEditor({
             <span>
               <span className="font-semibold text-orange">Coming soon</span>
               <span className="mt-1 block text-cream/65">
-                Enrolled students can see this program on their dashboard, but all
-                lessons stay locked until you turn this off and upload materials.
+                {program.certificateOnly
+                  ? "Not used for certificate-only programs."
+                  : "Enrolled students can see this program on their dashboard, but all lessons stay locked until you turn this off and upload materials."}
               </span>
             </span>
           </label>
@@ -728,7 +733,11 @@ export default function ProgramEditor({
               type="checkbox"
               checked={program.certificateEnabled}
               onChange={(e) =>
-                setProgram((p) => ({ ...p, certificateEnabled: e.target.checked }))
+                setProgram((p) => ({
+                  ...p,
+                  certificateEnabled: e.target.checked,
+                  certificateOnly: e.target.checked ? p.certificateOnly : false,
+                }))
               }
               className="size-4 accent-orange"
             />
@@ -736,6 +745,28 @@ export default function ProgramEditor({
           </label>
           {program.certificateEnabled && (
             <div className="grid gap-4 md:grid-cols-2">
+              <label className="flex items-start gap-3 font-dm text-sm text-cream md:col-span-2">
+                <input
+                  type="checkbox"
+                  checked={program.certificateOnly}
+                  onChange={(e) =>
+                    setProgram((p) => ({
+                      ...p,
+                      certificateOnly: e.target.checked,
+                      comingSoon: e.target.checked ? false : p.comingSoon,
+                    }))
+                  }
+                  className="mt-0.5 size-4 shrink-0 accent-orange"
+                />
+                <span>
+                  <span className="font-medium">Certificate-only program</span>
+                  <span className="mt-1 block text-cream/55">
+                    For private 1:1 courses without lessons. Students see certificate status
+                    instead of lesson progress. You issue the certificate manually from the
+                    student profile.
+                  </span>
+                </span>
+              </label>
               <Field label="Certificate title (English)">
                 <input
                   value={program.certificateTitleEn ?? ""}
@@ -776,7 +807,11 @@ export default function ProgramEditor({
                     }));
                   }}
                   className="form-field max-w-xs"
-                  placeholder="Auto from lesson durations"
+                  placeholder={
+                    program.certificateOnly
+                      ? "e.g. 8 (recommended for certificate-only)"
+                      : "Auto from lesson durations"
+                  }
                 />
               </Field>
             </div>
@@ -864,9 +899,11 @@ export default function ProgramEditor({
               <div>
                 <h2 className="font-dm text-xl text-cream">Lessons</h2>
                 <p className="mt-1 font-dm text-xs text-cream/55">
-                  {lessons.length === 0
-                    ? "No lessons yet. Add your first lesson below."
-                    : `${lessons.length} lesson${lessons.length === 1 ? "" : "s"} · click a row to edit`}
+                  {program.certificateOnly
+                    ? "Certificate-only: lessons are optional. Leave empty for private 1:1 programs."
+                    : lessons.length === 0
+                      ? "No lessons yet. Add your first lesson below."
+                      : `${lessons.length} lesson${lessons.length === 1 ? "" : "s"} · click a row to edit`}
                 </p>
               </div>
               <button

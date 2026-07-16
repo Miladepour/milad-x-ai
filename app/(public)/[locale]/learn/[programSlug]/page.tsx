@@ -69,6 +69,7 @@ export default async function LearnProgramPage({
     notFound();
   }
 
+  const certificateOnly = data.program.certificateOnly;
   const completedIds = await getCompletedLessonIds(
     student.user.id,
     data.lessons.map((lesson) => lesson.id)
@@ -92,6 +93,7 @@ export default async function LearnProgramPage({
       : null;
 
   if (
+    !certificateOnly &&
     data.program.certificateEnabled &&
     data.progressPercent === 100 &&
     !certificate
@@ -100,11 +102,14 @@ export default async function LearnProgramPage({
   }
 
   const programCompleted = data.progressPercent === 100;
-  const contentLocked = data.program.comingSoon;
+  const contentLocked = data.program.comingSoon || certificateOnly;
+  const certificateHref = certificate
+    ? learnProgramCertificatePath(data.program.slug, locale)
+    : null;
 
   return (
     <div className="flex flex-col gap-5 pb-10 sm:gap-6">
-      {contentLocked && (
+      {data.program.comingSoon && !certificateOnly && (
         <StudentGlassCard className="border border-orange/25 bg-orange/5">
           <h2 className="font-dm text-lg font-semibold text-orange sm:text-xl">
             {t.memberPortal.programComingSoonTitle}
@@ -115,25 +120,39 @@ export default async function LearnProgramPage({
         </StudentGlassCard>
       )}
 
-      {programCompleted && data.program.certificateEnabled && !contentLocked && (
-        <StudentProgramCompletionBanner
-          title={t.memberPortal.programCompletedTitle}
-          body={
-            certificate
-              ? t.memberPortal.programCompletedBodyWithCert
-              : t.memberPortal.programCompletedBody
-          }
-          rewatchHint={t.memberPortal.programCompletedRewatchHint}
-          certificatesHref={learnCertificatesPath(locale)}
-          certificatesCta={t.memberPortal.programCompletedCertificatesCta}
-          certificateHref={
-            certificate
-              ? learnProgramCertificatePath(data.program.slug, locale)
-              : null
-          }
-          viewCertificateCta={t.memberPortal.certificateView}
-        />
+      {certificateOnly && (
+        <StudentGlassCard className="border border-orange/25 bg-orange/5">
+          <h2 className="font-dm text-lg font-semibold text-orange sm:text-xl">
+            {certificate
+              ? t.memberPortal.certificateOnlyIssuedTitle
+              : t.memberPortal.certificateOnlyPendingTitle}
+          </h2>
+          <p className="mt-2 font-dm text-sm leading-relaxed text-cream/70">
+            {certificate
+              ? t.memberPortal.certificateOnlyIssuedBody
+              : t.memberPortal.certificateOnlyPendingBody}
+          </p>
+        </StudentGlassCard>
       )}
+
+      {programCompleted &&
+        data.program.certificateEnabled &&
+        !data.program.comingSoon &&
+        !certificateOnly && (
+          <StudentProgramCompletionBanner
+            title={t.memberPortal.programCompletedTitle}
+            body={
+              certificate
+                ? t.memberPortal.programCompletedBodyWithCert
+                : t.memberPortal.programCompletedBody
+            }
+            rewatchHint={t.memberPortal.programCompletedRewatchHint}
+            certificatesHref={learnCertificatesPath(locale)}
+            certificatesCta={t.memberPortal.programCompletedCertificatesCta}
+            certificateHref={certificateHref}
+            viewCertificateCta={t.memberPortal.certificateView}
+          />
+        )}
 
       <StudentGlassCard>
         <StudentPortalButton href={learnPath(locale)} variant="secondary">
@@ -143,34 +162,75 @@ export default async function LearnProgramPage({
           {programTitle}
         </h1>
         <p className="mt-3 font-dm text-cream/70">{programDescription}</p>
-        <div className="mt-5 flex items-center gap-3">
-          <div className="h-2 max-w-xs flex-1 overflow-hidden rounded-full bg-white/10">
-            <div
-              className="h-full rounded-full bg-orange"
-              style={{ width: `${data.progressPercent}%` }}
-            />
-          </div>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-cream/50">
-            {t.memberPortal.progress}: {data.progressPercent}% ({data.completedLessons}/
-            {data.totalLessons})
-          </p>
-        </div>
-        {data.program.certificateEnabled && (
+
+        {certificateOnly ? (
           <div className="mt-5 flex flex-col items-start gap-3">
-            <StudentCertificateBadge label={t.memberPortal.certificateIncluded} />
-            <StudentPortalButton
-              href={learnProgramCertificatePath(data.program.slug, locale)}
-              variant="primary"
-              disabled={!programCompleted}
+            <p
+              className={`font-mono text-[10px] uppercase tracking-widest ${
+                certificate ? "text-emerald-300/90" : "text-cream/55"
+              }`}
             >
-              {t.memberPortal.certificateView}
-            </StudentPortalButton>
-            {!programCompleted ? (
-              <p className="font-dm text-sm text-cream/60">
-                {t.memberPortal.certificateIncludedHint}
-              </p>
-            ) : null}
+              {certificate
+                ? t.memberPortal.certificateIssuedStatus
+                : t.memberPortal.certificatePendingStatus}
+            </p>
+            {data.program.certificateEnabled && (
+              <>
+                <StudentCertificateBadge label={t.memberPortal.certificateIncluded} />
+                <StudentPortalButton
+                  href={certificateHref ?? learnCertificatesPath(locale)}
+                  variant="primary"
+                  disabled={!certificate}
+                >
+                  {t.memberPortal.certificateView}
+                </StudentPortalButton>
+                {!certificate ? (
+                  <p className="font-dm text-sm text-cream/60">
+                    {t.memberPortal.certificateOnlyPendingHint}
+                  </p>
+                ) : (
+                  <StudentPortalButton
+                    href={learnCertificatesPath(locale)}
+                    variant="secondary"
+                  >
+                    {t.memberPortal.programCompletedCertificatesCta}
+                  </StudentPortalButton>
+                )}
+              </>
+            )}
           </div>
+        ) : (
+          <>
+            <div className="mt-5 flex items-center gap-3">
+              <div className="h-2 max-w-xs flex-1 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-orange"
+                  style={{ width: `${data.progressPercent}%` }}
+                />
+              </div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-cream/50">
+                {t.memberPortal.progress}: {data.progressPercent}% ({data.completedLessons}/
+                {data.totalLessons})
+              </p>
+            </div>
+            {data.program.certificateEnabled && (
+              <div className="mt-5 flex flex-col items-start gap-3">
+                <StudentCertificateBadge label={t.memberPortal.certificateIncluded} />
+                <StudentPortalButton
+                  href={learnProgramCertificatePath(data.program.slug, locale)}
+                  variant="primary"
+                  disabled={!programCompleted}
+                >
+                  {t.memberPortal.certificateView}
+                </StudentPortalButton>
+                {!programCompleted ? (
+                  <p className="font-dm text-sm text-cream/60">
+                    {t.memberPortal.certificateIncludedHint}
+                  </p>
+                ) : null}
+              </div>
+            )}
+          </>
         )}
       </StudentGlassCard>
 
@@ -189,39 +249,41 @@ export default async function LearnProgramPage({
         </StudentGlassCard>
       )}
 
-      <StudentGlassCard>
-        <h2 className="student-section-title">{t.memberPortal.lessonList}</h2>
-        <ul className="mt-3 space-y-2">
-          {sortedLessons.map((lesson, index) => {
-            const unlock = unlockMap.get(lesson.id);
-            const locked = contentLocked || !unlock?.unlocked;
-            const completed = completedIds.has(lesson.id);
+      {!certificateOnly && (
+        <StudentGlassCard>
+          <h2 className="student-section-title">{t.memberPortal.lessonList}</h2>
+          <ul className="mt-3 space-y-2">
+            {sortedLessons.map((lesson, index) => {
+              const unlock = unlockMap.get(lesson.id);
+              const locked = contentLocked || !unlock?.unlocked;
+              const completed = completedIds.has(lesson.id);
 
-            return (
-              <li key={lesson.id}>
-                <StudentLessonCard
-                  href={learnLessonPath(data.program.slug, lesson.id, locale)}
-                  index={index}
-                  title={resolveLessonTitle(lesson, internal)}
-                  description={resolveLessonBody(lesson, internal)}
-                  durationMinutes={lesson.durationMinutes}
-                  openLabel={t.memberPortal.openLesson}
-                  locked={locked}
-                  lockedLabel={
-                    contentLocked
-                      ? t.memberPortal.programComingSoonShort
-                      : t.memberPortal.lessonLockedTitle
-                  }
-                  completed={completed}
-                  completedLabel={t.memberPortal.completed}
-                  lessonType={lesson.lessonType}
-                  typeLabels={typeLabels}
-                />
-              </li>
-            );
-          })}
-        </ul>
-      </StudentGlassCard>
+              return (
+                <li key={lesson.id}>
+                  <StudentLessonCard
+                    href={learnLessonPath(data.program.slug, lesson.id, locale)}
+                    index={index}
+                    title={resolveLessonTitle(lesson, internal)}
+                    description={resolveLessonBody(lesson, internal)}
+                    durationMinutes={lesson.durationMinutes}
+                    openLabel={t.memberPortal.openLesson}
+                    locked={locked}
+                    lockedLabel={
+                      data.program.comingSoon
+                        ? t.memberPortal.programComingSoonShort
+                        : t.memberPortal.lessonLockedTitle
+                    }
+                    completed={completed}
+                    completedLabel={t.memberPortal.completed}
+                    lessonType={lesson.lessonType}
+                    typeLabels={typeLabels}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        </StudentGlassCard>
+      )}
     </div>
   );
 }

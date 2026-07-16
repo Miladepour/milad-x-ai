@@ -74,14 +74,18 @@ export default async function LearnLessonPage({
   );
   const unlock = isLessonUnlocked(data.lessons, data.lesson.id, completedIds);
 
-  if (data.program.comingSoon) {
+  if (data.program.comingSoon || data.program.certificateOnly) {
     return (
       <ProgramContentLocked
         locale={locale}
         programSlug={params.programSlug}
         labels={{
-          title: t.memberPortal.programComingSoonTitle,
-          body: t.memberPortal.programComingSoonBody,
+          title: data.program.certificateOnly
+            ? t.memberPortal.certificateOnlyPendingTitle
+            : t.memberPortal.programComingSoonTitle,
+          body: data.program.certificateOnly
+            ? t.memberPortal.certificateOnlyPendingBody
+            : t.memberPortal.programComingSoonBody,
           backToProgram: t.memberPortal.lessonLockedBackToProgram,
         }}
       />
