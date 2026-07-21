@@ -544,6 +544,8 @@ export const translations = {
       certificateIncluded: "Certificate included",
       certificateIncludedHint:
         "Complete all lessons in this program to unlock your certificate.",
+      certificateIssuedEarlyHint:
+        "Your certificate has already been issued for this program. You can open it here or from your Certificates page.",
       certificatePendingStatus: "Certificate pending",
       certificateIssuedStatus: "Certificate issued",
       certificateOnlyPendingTitle: "Private certificate program",
@@ -1240,6 +1242,8 @@ export const translations = {
       certificateIncluded: "شامل گواهینامه",
       certificateIncludedHint:
         "برای دریافت گواهینامه، همه درس‌های این برنامه را کامل کنید.",
+      certificateIssuedEarlyHint:
+        "گواهینامه این برنامه قبلاً برای شما صادر شده است. می‌توانید آن را از همین‌جا یا از صفحه گواهینامه‌ها مشاهده کنید.",
       certificatePendingStatus: "گواهینامه در انتظار صدور",
       certificateIssuedStatus: "گواهینامه صادر شده",
       certificateOnlyPendingTitle: "برنامه گواهینامه خصوصی",

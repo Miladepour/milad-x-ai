@@ -39,8 +39,10 @@ import {
 } from "@/lib/members/store";
 import { saveBonusLinksAdmin } from "@/lib/members/bonus-store";
 import {
+  bulkIssueCertificatesAdmin,
   issueCertificateAdmin,
   listCertificatesAdmin,
+  previewBulkIssueCertificatesAdmin,
   revokeCertificateAdmin,
   updateCertificateAdmin,
 } from "@/lib/members/certificate-store";
@@ -727,6 +729,29 @@ export async function POST(request: Request) {
       }
       const certificate = await issueCertificateAdmin(studentId, programId, admin.id);
       return NextResponse.json({ ok: true, certificate });
+    }
+
+    if (action === "preview-bulk-issue-certificates") {
+      const programId = String(body.programId ?? "").trim();
+      if (!programId) {
+        return NextResponse.json({ error: "programId required" }, { status: 400 });
+      }
+      const preview = await previewBulkIssueCertificatesAdmin(programId);
+      return NextResponse.json({ ok: true, preview });
+    }
+
+    if (action === "bulk-issue-certificates") {
+      const programId = String(body.programId ?? "").trim();
+      if (!programId) {
+        return NextResponse.json({ error: "programId required" }, { status: 400 });
+      }
+      const studentIds = Array.isArray(body.studentIds)
+        ? (body.studentIds as unknown[]).map((id) => String(id).trim()).filter(Boolean)
+        : undefined;
+      const result = await bulkIssueCertificatesAdmin(programId, admin.id, {
+        studentIds,
+      });
+      return NextResponse.json({ ok: true, result });
     }
 
     if (action === "revoke-certificate") {

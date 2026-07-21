@@ -1,4 +1,5 @@
 import { isEnrollmentActive } from "@/lib/members/access";
+import { sendCertificateIssuedEmail } from "@/lib/email/resend";
 import {
   enrollmentRowToEnrollment,
   memberProgramRowToProgram,
@@ -10,12 +11,17 @@ import {
   type StudentProfileRow,
 } from "@/lib/members/mappers";
 import type {
+  BulkIssueCertificatesPreview,
+  BulkIssueCertificatesResult,
+  BulkIssueCertificateAlreadyIssued,
+  BulkIssueCertificateStudent,
   CertificateAdminListItem,
   CertificateListFilters,
   CertificateListResult,
   CertificateListStatusFilter,
   MemberProgram,
   ProgramCertificate,
+  StudentProfile,
 } from "@/lib/members/types";
 import { createAdminDbClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
@@ -207,9 +213,9 @@ async function insertCertificate(
   studentId: string,
   programId: string,
   issuedBy: string | null
-): Promise<ProgramCertificate> {
+): Promise<{ certificate: ProgramCertificate; created: boolean }> {
   const existing = await loadActiveCertificate(studentId, programId);
-  if (existing) return existing;
+  if (existing) return { certificate: existing, created: false };
 
   const program = await loadProgramRow(programId);
   if (!program) throw new Error("Program not found");
@@ -256,12 +262,54 @@ async function insertCertificate(
   if (error) {
     if (error.code === "23505") {
       const retry = await loadActiveCertificate(studentId, programId);
-      if (retry) return retry;
+      if (retry) return { certificate: retry, created: false };
     }
     throw new Error(error.message);
   }
 
-  return certificateRowToCertificate(data as ProgramCertificateRow);
+  return {
+    certificate: certificateRowToCertificate(data as ProgramCertificateRow),
+    created: true,
+  };
+}
+
+async function loadStudentProfile(studentId: string): Promise<StudentProfile | null> {
+  const supabase = createAdminDbClient();
+  const { data, error } = await supabase
+    .from("student_profiles")
+    .select("*")
+    .eq("id", studentId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+  return studentProfileRowToProfile(data as StudentProfileRow);
+}
+
+async function sendCertificateIssuedEmailIfPossible(
+  studentId: string,
+  program: MemberProgram,
+  certificate: ProgramCertificate
+): Promise<void> {
+  try {
+    const profile = await loadStudentProfile(studentId);
+    if (!profile?.email?.trim()) return;
+
+    await sendCertificateIssuedEmail({
+      to: profile.email,
+      fullName: profile.fullName,
+      programTitle:
+        certificate.programTitleEn?.trim() ||
+        certificate.programTitleFa?.trim() ||
+        program.titleEn.trim() ||
+        program.titleFa.trim() ||
+        program.title,
+      programSlug: program.slug,
+      locale: profile.locale,
+    });
+  } catch (error) {
+    console.error("[certificate] email send failed", error);
+  }
 }
 
 export async function issueCertificateIfEligible(
@@ -272,7 +320,13 @@ export async function issueCertificateIfEligible(
   try {
     const { eligible } = await checkCertificateEligibility(studentId, programId);
     if (!eligible) return null;
-    return await insertCertificate(studentId, programId, issuedBy);
+    const program = await loadProgramRow(programId);
+    if (!program) return null;
+    const { certificate, created } = await insertCertificate(studentId, programId, issuedBy);
+    if (created) {
+      await sendCertificateIssuedEmailIfPossible(studentId, program, certificate);
+    }
+    return certificate;
   } catch (error) {
     console.error("[certificate] auto-issue failed", error);
     return null;
@@ -293,7 +347,11 @@ export async function issueCertificateAdmin(
   const enrollmentRow = await loadEnrollment(studentId, programId);
   if (!enrollmentRow) throw new Error("Student is not enrolled in this program");
 
-  return insertCertificate(studentId, programId, issuedBy);
+  const { certificate, created } = await insertCertificate(studentId, programId, issuedBy);
+  if (created) {
+    await sendCertificateIssuedEmailIfPossible(studentId, program, certificate);
+  }
+  return certificate;
 }
 
 export async function revokeCertificateAdmin(certificateId: string): Promise<void> {
@@ -435,6 +493,153 @@ export async function listCertificatesAdmin(
   });
 
   return buildCertificateListResult(items, count ?? 0, page, pageSize);
+}
+
+type BulkEnrollmentProfile = {
+  id: string;
+  email: string;
+  full_name: string;
+  student_number: string;
+};
+
+type BulkEnrollmentRow = {
+  student_id: string;
+  student_profiles: BulkEnrollmentProfile | BulkEnrollmentProfile[] | null;
+};
+
+function resolveEnrollmentProfile(
+  profile: BulkEnrollmentRow["student_profiles"]
+): BulkEnrollmentProfile | null {
+  if (!profile) return null;
+  return Array.isArray(profile) ? profile[0] ?? null : profile;
+}
+
+function mapEnrollmentToStudent(row: BulkEnrollmentRow): BulkIssueCertificateStudent | null {
+  const profile = resolveEnrollmentProfile(row.student_profiles);
+  if (!profile?.id) return null;
+  return {
+    studentId: profile.id,
+    studentName: profile.full_name?.trim() || profile.email,
+    email: profile.email,
+    studentNumber: profile.student_number?.trim() || "",
+  };
+}
+
+export async function previewBulkIssueCertificatesAdmin(
+  programId: string
+): Promise<BulkIssueCertificatesPreview> {
+  const program = await loadProgramRow(programId);
+  if (!program) throw new Error("Program not found");
+
+  const supabase = createAdminDbClient();
+  const { data: enrollmentRows, error: enrollmentError } = await supabase
+    .from("program_enrollments")
+    .select("student_id, student_profiles(id, email, full_name, student_number)")
+    .eq("program_id", programId);
+
+  if (enrollmentError) throw new Error(enrollmentError.message);
+
+  const { data: certificateRows, error: certificateError } = await supabase
+    .from("program_certificates")
+    .select("student_id, certificate_number")
+    .eq("program_id", programId)
+    .is("revoked_at", null);
+
+  if (certificateError) throw new Error(certificateError.message);
+
+  const certByStudentId = new Map(
+    (certificateRows ?? []).map((row) => [
+      String(row.student_id),
+      String(row.certificate_number),
+    ])
+  );
+
+  const pendingStudents: BulkIssueCertificateStudent[] = [];
+  const alreadyIssuedStudents: BulkIssueCertificateAlreadyIssued[] = [];
+  const seenStudentIds = new Set<string>();
+
+  for (const row of (enrollmentRows ?? []) as unknown as BulkEnrollmentRow[]) {
+    const student = mapEnrollmentToStudent(row);
+    if (!student || seenStudentIds.has(student.studentId)) continue;
+    seenStudentIds.add(student.studentId);
+
+    const certificateNumber = certByStudentId.get(student.studentId);
+    if (certificateNumber) {
+      alreadyIssuedStudents.push({ ...student, certificateNumber });
+    } else {
+      pendingStudents.push(student);
+    }
+  }
+
+  return {
+    programId,
+    programTitle: program.titleEn.trim() || program.titleFa.trim() || program.title,
+    certificateEnabled: program.certificateEnabled,
+    totalEnrolled: seenStudentIds.size,
+    alreadyIssued: alreadyIssuedStudents.length,
+    pendingIssue: pendingStudents.length,
+    pendingStudents,
+    alreadyIssuedStudents,
+  };
+}
+
+export async function bulkIssueCertificatesAdmin(
+  programId: string,
+  issuedBy: string,
+  options?: { studentIds?: string[] }
+): Promise<BulkIssueCertificatesResult> {
+  const preview = await previewBulkIssueCertificatesAdmin(programId);
+  if (!preview.certificateEnabled) {
+    throw new Error("Enable certificates on this program first");
+  }
+
+  const includeSet =
+    options?.studentIds != null ? new Set(options.studentIds) : null;
+
+  const issuedStudentIds = new Set(
+    preview.alreadyIssuedStudents.map((student) => student.studentId)
+  );
+  let issued = 0;
+  let alreadyIssued = preview.alreadyIssued;
+  const failures: BulkIssueCertificatesResult["failures"] = [];
+
+  for (const student of preview.pendingStudents) {
+    if (includeSet && !includeSet.has(student.studentId)) {
+      continue;
+    }
+
+    if (issuedStudentIds.has(student.studentId)) {
+      alreadyIssued++;
+      continue;
+    }
+
+    try {
+      const existing = await loadActiveCertificate(student.studentId, programId);
+      if (existing) {
+        issuedStudentIds.add(student.studentId);
+        alreadyIssued++;
+        continue;
+      }
+
+      await issueCertificateAdmin(student.studentId, programId, issuedBy);
+      issuedStudentIds.add(student.studentId);
+      issued++;
+    } catch (error) {
+      failures.push({
+        ...student,
+        reason: error instanceof Error ? error.message : "Could not issue certificate",
+      });
+    }
+  }
+
+  return {
+    programId: preview.programId,
+    programTitle: preview.programTitle,
+    issued,
+    alreadyIssued,
+    failed: failures.length,
+    failures,
+  };
 }
 
 export async function getStudentCertificateForProgram(

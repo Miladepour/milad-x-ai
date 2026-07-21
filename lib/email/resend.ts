@@ -1,10 +1,12 @@
 import type { EmailBannerId } from "@/lib/email/banners";
+import { learnCertificatesPath, learnProgramCertificatePath } from "@/lib/members/paths";
 import {
   buildEmailLayout,
   buildTransactionalEmailLayout,
   emailPrimaryButton,
   emailSecondaryButton,
 } from "@/lib/email/template";
+import { SITE_URL } from "@/lib/i18n/config";
 
 const RESEND_API = "https://api.resend.com/emails";
 
@@ -227,6 +229,72 @@ export async function sendAccessExpiringEmail(options: {
   );
 
   return sendEmail({ to: options.to, subject, html }).then((r) => r.ok);
+}
+
+export async function sendCertificateIssuedEmail(options: {
+  to: string;
+  fullName: string;
+  programTitle: string;
+  programSlug?: string | null;
+  locale: "EN" | "FA";
+}): Promise<boolean> {
+  const isFa = options.locale === "FA";
+  const name = options.fullName || (isFa ? "دانشجو" : "there");
+  const logicalHref = options.programSlug?.trim()
+    ? learnProgramCertificatePath(
+        options.programSlug.trim(),
+        isFa ? "fa" : "en"
+      )
+    : learnCertificatesPath(isFa ? "fa" : "en");
+  const portalHref = `${SITE_URL}${logicalHref}`;
+
+  const subject = isFa
+    ? `گواهی ${options.programTitle} شما آماده است`
+    : `Your certificate for ${options.programTitle} is ready`;
+
+  const html = buildTransactionalEmailLayout(
+    `
+    <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#1A1A1A;font-weight:700;">
+      ${
+        isFa
+          ? "تبریک برای رسیدن به این نقطه مهم"
+          : "Congratulations on this milestone"
+      }
+    </h1>
+    <p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#4A4A4A;">
+      ${
+        isFa
+          ? `سلام ${name}، گواهی شما برای <strong style="color:#1A1A1A;">${options.programTitle}</strong> صادر شده است.`
+          : `Hi ${name}, your certificate for <strong style="color:#1A1A1A;">${options.programTitle}</strong> has been issued.`
+      }
+    </p>
+    <p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#4A4A4A;">
+      ${
+        isFa
+          ? "می‌توانید آن را در پنل دانشجویی خود مشاهده و دانلود کنید. همچنین می‌توانید آن را در شبکه‌های اجتماعی یا لینکدین به اشتراک بگذارید."
+          : "You can view and download it from your student portal. Feel free to share it on social media or add it to LinkedIn."
+      }
+    </p>
+    <p style="margin:0 0 28px;font-size:16px;line-height:1.7;color:#4A4A4A;">
+      ${
+        isFa
+          ? "به مسیرتان ادامه دهید و به دنیا نشان دهید که در هوش مصنوعی در حال پیشرفت هستید."
+          : "Keep going and let the world know you are making progress in AI."
+      }
+    </p>
+    ${emailPrimaryButton(
+      portalHref,
+      isFa ? "مشاهده گواهی در پنل" : "View certificate in portal"
+    )}
+  `,
+    { locale: options.locale }
+  );
+
+  const text = isFa
+    ? `سلام ${name}!\n\nتبریک برای رسیدن به این نقطه مهم.\nگواهی شما برای ${options.programTitle} صادر شده است.\n\nمی‌توانید آن را در پنل دانشجویی مشاهده و دانلود کنید و در شبکه‌های اجتماعی یا لینکدین به اشتراک بگذارید.\n${portalHref}\n\nبه دنیا نشان دهید که در هوش مصنوعی در حال پیشرفت هستید.\n\nMX AI Academy`
+    : `Hi ${name}!\n\nCongratulations on this milestone.\nYour certificate for ${options.programTitle} has been issued.\n\nYou can view and download it from your student portal, then share it on social media or LinkedIn.\n${portalHref}\n\nKeep going and let the world know you are making progress in AI.\n\nMX AI Academy`;
+
+  return sendEmail({ to: options.to, subject, html, text }).then((r) => r.ok);
 }
 
 export { buildEmailLayout } from "@/lib/email/template";

@@ -219,13 +219,17 @@ export default async function LearnProgramPage({
                 <StudentPortalButton
                   href={learnProgramCertificatePath(data.program.slug, locale)}
                   variant="primary"
-                  disabled={!programCompleted}
+                  disabled={!certificate}
                 >
                   {t.memberPortal.certificateView}
                 </StudentPortalButton>
-                {!programCompleted ? (
+                {!certificate ? (
                   <p className="font-dm text-sm text-cream/60">
                     {t.memberPortal.certificateIncludedHint}
+                  </p>
+                ) : !programCompleted ? (
+                  <p className="font-dm text-sm text-emerald-300/90">
+                    {t.memberPortal.certificateIssuedEarlyHint}
                   </p>
                 ) : null}
               </div>

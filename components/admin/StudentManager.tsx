@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import StudentAnnouncements from "@/components/admin/StudentAnnouncements";
 import StudentEmailComposer from "@/components/admin/StudentEmailComposer";
 import ExtendAccessModal from "@/components/admin/ExtendAccessModal";
+import BulkIssueCertificatesModal from "@/components/admin/BulkIssueCertificatesModal";
 import { AccountActivationBadge } from "@/components/admin/AccountActivationBadge";
 import StudentProfilePanel from "@/components/admin/StudentProfilePanel";
 import { getEnrollmentAccessBlockReason } from "@/lib/members/access";
@@ -82,6 +83,10 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
   const [inviteSending, setInviteSending] = useState(false);
   const [extendTarget, setExtendTarget] = useState<ExtendTarget | null>(null);
   const [extendConfirming, setExtendConfirming] = useState(false);
+  const [bulkIssueProgram, setBulkIssueProgram] = useState<{
+    programId: string;
+    programTitle: string;
+  } | null>(null);
   const [listPage, setListPage] = useState(1);
 
   const load = useCallback(async () => {
@@ -414,6 +419,18 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
       programId: filterProgram,
       programTitle: program?.title ?? "Selected program",
       enrollments: programEnrollments,
+    });
+  }
+
+  function openBulkIssueCertificates() {
+    if (!filterProgram) {
+      onStatus("Select a program first to bulk issue certificates.");
+      return;
+    }
+    const program = programs.find((item) => item.id === filterProgram);
+    setBulkIssueProgram({
+      programId: filterProgram,
+      programTitle: program?.title ?? "Selected program",
     });
   }
 
@@ -761,6 +778,14 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
               >
                 Extend all in program
               </button>
+              <button
+                type="button"
+                onClick={openBulkIssueCertificates}
+                disabled={!filterProgram}
+                className="rounded-full border border-orange/50 px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-orange hover:bg-orange hover:text-background disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Bulk issue certificates
+              </button>
             </div>
 
             <p className="font-dm text-sm text-cream/60">
@@ -814,6 +839,27 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
                           {items.length} program{items.length === 1 ? "" : "s"} · Click to open
                           profile
                         </p>
+                        {items.length > 0 && (() => {
+                          const issuedCount = items.filter((e) => e.certificateIssued).length;
+                          const pendingCount = items.length - issuedCount;
+                          return (
+                            <p className="mt-1 font-mono text-[10px] uppercase tracking-widest">
+                              {issuedCount > 0 && (
+                                <span className="text-emerald-300/90">
+                                  {issuedCount} cert{issuedCount === 1 ? "" : "s"} issued
+                                </span>
+                              )}
+                              {issuedCount > 0 && pendingCount > 0 && (
+                                <span className="text-cream/30"> · </span>
+                              )}
+                              {pendingCount > 0 && (
+                                <span className="text-amber-300/80">
+                                  {pendingCount} no cert
+                                </span>
+                              )}
+                            </p>
+                          );
+                        })()}
                       </button>
                       <div className="flex shrink-0 flex-wrap gap-2">
                         <button
@@ -984,6 +1030,19 @@ export default function StudentManager({ membersRequest, onStatus }: StudentMana
             }}
             onConfirm={confirmExtendAccess}
           />
+
+          {bulkIssueProgram && (
+            <BulkIssueCertificatesModal
+              open={bulkIssueProgram !== null}
+              programId={bulkIssueProgram.programId}
+              programTitle={bulkIssueProgram.programTitle}
+              membersRequest={membersRequest}
+              onClose={() => setBulkIssueProgram(null)}
+              onComplete={() => {
+                void load();
+              }}
+            />
+          )}
         </>
       )}
     </div>

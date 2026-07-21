@@ -486,7 +486,23 @@ async function buildEnrollmentProgressContext(
     }
   }
 
-  return { lessonsByProgram, completedByStudent };
+  const activeCertKeys = new Set<string>();
+  if (studentIds.length > 0 && programIds.length > 0) {
+    const { data: certs, error: certsError } = await supabase
+      .from("program_certificates")
+      .select("student_id, program_id")
+      .in("student_id", studentIds)
+      .in("program_id", programIds)
+      .is("revoked_at", null);
+
+    if (certsError) throw new Error(certsError.message);
+
+    for (const cert of certs ?? []) {
+      activeCertKeys.add(`${cert.student_id}:${cert.program_id}`);
+    }
+  }
+
+  return { lessonsByProgram, completedByStudent, activeCertKeys };
 }
 
 function enrichEnrollmentRowWithContext(
@@ -515,6 +531,9 @@ function enrichEnrollmentRowWithContext(
     }
   }
 
+  const certKey = `${enrollment.studentId}:${program?.id ?? ""}`;
+  const certificateIssued = context.activeCertKeys.has(certKey);
+
   return {
     ...enrollment,
     student,
@@ -522,6 +541,7 @@ function enrichEnrollmentRowWithContext(
     completedLessons,
     totalLessons,
     progressPercent: computeProgressPercent(completedLessons, totalLessons),
+    certificateIssued,
   };
 }
 
@@ -537,7 +557,7 @@ async function enrichEnrollmentRow(
 }
 
 export async function listEnrollmentsAdmin(): Promise<EnrollmentWithDetails[]> {
-  const supabase = createClient();
+  const supabase = createAdminDbClient();
   const { data, error } = await supabase
     .from("program_enrollments")
     .select("*, student_profiles(*), member_programs(*)")
@@ -559,7 +579,7 @@ export async function listEnrollmentsAdmin(): Promise<EnrollmentWithDetails[]> {
 export async function getStudentAdmin(
   studentId: string
 ): Promise<StudentWithEnrollments | null> {
-  const supabase = createClient();
+  const supabase = createAdminDbClient();
   const { data: profileData, error } = await supabase
     .from("student_profiles")
     .select("*")

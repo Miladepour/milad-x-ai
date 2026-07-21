@@ -107,6 +107,37 @@ export interface CertificateListResult {
   totalPages: number;
 }
 
+export interface BulkIssueCertificateStudent {
+  studentId: string;
+  studentName: string;
+  email: string;
+  studentNumber: string;
+}
+
+export interface BulkIssueCertificateAlreadyIssued extends BulkIssueCertificateStudent {
+  certificateNumber: string;
+}
+
+export interface BulkIssueCertificatesPreview {
+  programId: string;
+  programTitle: string;
+  certificateEnabled: boolean;
+  totalEnrolled: number;
+  alreadyIssued: number;
+  pendingIssue: number;
+  pendingStudents: BulkIssueCertificateStudent[];
+  alreadyIssuedStudents: BulkIssueCertificateAlreadyIssued[];
+}
+
+export interface BulkIssueCertificatesResult {
+  programId: string;
+  programTitle: string;
+  issued: number;
+  alreadyIssued: number;
+  failed: number;
+  failures: Array<BulkIssueCertificateStudent & { reason: string }>;
+}
+
 export interface ProgramLesson {
   id: string;
   programId: string;
@@ -241,6 +272,8 @@ export interface EnrollmentWithDetails extends ProgramEnrollment {
   progressPercent?: number;
   completedLessons?: number;
   totalLessons?: number;
+  /** True when the student has an active (non-revoked) certificate for this enrollment's program. */
+  certificateIssued?: boolean;
 }
 
 export interface StudentDashboardProgram {
