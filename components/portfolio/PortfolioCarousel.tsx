@@ -13,6 +13,8 @@ interface PortfolioCarouselProps {
   ariaLabel: string;
   prevLabel: string;
   nextLabel: string;
+  /** Mirror arrow icons for RTL reading direction */
+  rtl?: boolean;
   children: ReactNode;
 }
 
@@ -20,6 +22,7 @@ export default function PortfolioCarousel({
   ariaLabel,
   prevLabel,
   nextLabel,
+  rtl = false,
   children,
 }: PortfolioCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -92,7 +95,11 @@ export default function PortfolioCarousel({
         onClick={() => scroll("left")}
         className={`${arrowClass} start-0 -ms-1 md:-ms-3`}
       >
-        <ChevronLeft className="h-5 w-5 shrink-0" aria-hidden />
+        {rtl ? (
+          <ChevronRight className="h-5 w-5 shrink-0" aria-hidden />
+        ) : (
+          <ChevronLeft className="h-5 w-5 shrink-0" aria-hidden />
+        )}
       </button>
 
       <button
@@ -102,7 +109,11 @@ export default function PortfolioCarousel({
         onClick={() => scroll("right")}
         className={`${arrowClass} end-0 -me-1 md:-me-3`}
       >
-        <ChevronRight className="h-5 w-5 shrink-0" aria-hidden />
+        {rtl ? (
+          <ChevronLeft className="h-5 w-5 shrink-0" aria-hidden />
+        ) : (
+          <ChevronRight className="h-5 w-5 shrink-0" aria-hidden />
+        )}
       </button>
 
       <div

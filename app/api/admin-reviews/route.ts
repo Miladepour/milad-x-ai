@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { parseEmailBannerId } from "@/lib/email/banners";
 import { sendLoggedStudentBroadcastEmails } from "@/lib/email/send-logged-student-broadcast";
@@ -59,6 +60,9 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "reviewId and status required" }, { status: 400 });
       }
       const review = await updateProgramReviewStatusAdmin(reviewId, status);
+      revalidatePath("/fa");
+      revalidatePath("/en");
+      revalidatePath("/");
       return NextResponse.json({ ok: true, review });
     }
 

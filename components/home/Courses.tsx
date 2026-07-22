@@ -25,7 +25,7 @@ export default function Courses({ courses: catalog }: CoursesProps) {
   }));
 
   return (
-    <section className="w-full bg-background py-28 px-8 md:px-12 lg:px-16">
+    <section className="w-full bg-background pt-10 md:pt-12 pb-10 md:pb-12 px-8 md:px-12 lg:px-16">
       <div className="max-w-6xl mx-auto flex flex-col gap-3">
         <header>
           <span className="type-section-label font-mono text-orange uppercase tracking-[0.35em] rtl:tracking-normal block mb-1">

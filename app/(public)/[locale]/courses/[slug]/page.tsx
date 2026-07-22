@@ -1,5 +1,6 @@
 import CourseDetail from "@/components/courses/CourseDetail";
 import { getAllCourseSlugs, getCourseBySlug } from "@/lib/courses/store";
+import { listPublicProgramReviewsForCourse } from "@/lib/reviews/store";
 import { locales, urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { pageAlternates } from "@/lib/i18n/metadata";
 import type { Metadata } from "next";
@@ -34,7 +35,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CourseDetailPage({ params }: PageProps) {
   const locale = urlLocaleToInternal(params.locale as UrlLocale);
-  const course = await getCourseBySlug(params.slug, locale);
+  const [course, reviews] = await Promise.all([
+    getCourseBySlug(params.slug, locale),
+    listPublicProgramReviewsForCourse({ locale, courseSlug: params.slug, limit: 12 }),
+  ]);
   if (!course) notFound();
-  return <CourseDetail course={course} />;
+  return <CourseDetail course={course} reviews={reviews} />;
 }

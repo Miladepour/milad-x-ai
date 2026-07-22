@@ -5,13 +5,16 @@ import type { Course } from "@/lib/courses";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import ConsultationCtaBanner from "@/components/shared/ConsultationCtaBanner";
+import StudentReviewsSection from "@/components/reviews/StudentReviewsSection";
 import CourseCard from "./CourseCard";
+import type { PublicProgramReview } from "@/lib/reviews/types";
 
 interface CoursesListingProps {
   courses: Course[];
+  reviews: PublicProgramReview[];
 }
 
-export default function CoursesListing({ courses }: CoursesListingProps) {
+export default function CoursesListing({ courses, reviews }: CoursesListingProps) {
   const { href } = useLanguage();
   const t = useTranslation();
   const p = t.coursesPage;
@@ -39,6 +42,14 @@ export default function CoursesListing({ courses }: CoursesListingProps) {
             <CourseCard key={course.slug} course={course} />
           ))}
         </div>
+
+        {reviews.length > 0 ? (
+          <StudentReviewsSection
+            reviews={reviews}
+            variant="embedded"
+            className="mt-14 md:mt-16 pt-10 border-t border-surface/80"
+          />
+        ) : null}
 
         <ConsultationCtaBanner embedded className="mt-14 md:mt-16" />
       </div>

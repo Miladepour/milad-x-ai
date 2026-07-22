@@ -1,7 +1,9 @@
 import { programReviewRowToReview } from "@/lib/reviews/mappers";
+import { reviewProgramSlugForCourse } from "@/lib/reviews/course-program-slug";
 import type {
   ProgramReview,
   ProgramReviewStatus,
+  PublicProgramReview,
   ReviewProgramOption,
   SubmitProgramReviewPayload,
 } from "@/lib/reviews/types";
@@ -63,6 +65,114 @@ export async function getPublishedReviewProgramBySlug(
     titleEn: (row.title_en ?? row.title ?? "").trim(),
     titleFa: (row.title_fa ?? row.title ?? "").trim(),
   };
+}
+
+export async function listPublicProgramReviews(options: {
+  locale: "EN" | "FA";
+  limit?: number;
+}): Promise<PublicProgramReview[]> {
+  const supabase = createServiceClient();
+  const limit = Math.min(Math.max(options.limit ?? 6, 1), 24);
+
+  const { data, error } = await supabase
+    .from("program_reviews")
+    .select(
+      `
+      id,
+      reviewer_name,
+      rating,
+      rating_overall,
+      public_review,
+      locale,
+      member_programs (
+        slug,
+        title_en,
+        title_fa,
+        title
+      )
+    `
+    )
+    .eq("status", "published")
+    .eq("consent_public_display", true)
+    .eq("locale", options.locale)
+    .order("submitted_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
+
+  return mapPublicReviewRows(data ?? [], options.locale);
+}
+
+function mapPublicReviewRows(
+  data: unknown[],
+  locale: "EN" | "FA"
+): PublicProgramReview[] {
+  type PublicReviewRow = {
+    id: string;
+    reviewer_name: string;
+    rating: number;
+    rating_overall: number | null;
+    public_review: string;
+    member_programs: ProgramMeta | ProgramMeta[] | null;
+  };
+
+  return data.map((raw) => {
+    const row = raw as unknown as PublicReviewRow;
+    const programRaw = row.member_programs;
+    const program = Array.isArray(programRaw) ? programRaw[0] ?? null : programRaw;
+    const meta = program ? programMetaFromRow(program) : null;
+    const titleEn = meta?.titleEn ?? "";
+    const titleFa = meta?.titleFa ?? "";
+    const programTitle =
+      locale === "FA" ? titleFa || titleEn : titleEn || titleFa;
+
+    return {
+      id: row.id,
+      reviewerName: row.reviewer_name,
+      rating: row.rating_overall ?? row.rating,
+      publicReview: row.public_review,
+      programSlug: meta?.slug ?? "",
+      programTitle,
+    };
+  });
+}
+
+export async function listPublicProgramReviewsForCourse(options: {
+  locale: "EN" | "FA";
+  courseSlug: string;
+  limit?: number;
+}): Promise<PublicProgramReview[]> {
+  const programSlug = reviewProgramSlugForCourse(options.courseSlug);
+  const supabase = createServiceClient();
+  const limit = Math.min(Math.max(options.limit ?? 12, 1), 24);
+
+  const { data, error } = await supabase
+    .from("program_reviews")
+    .select(
+      `
+      id,
+      reviewer_name,
+      rating,
+      rating_overall,
+      public_review,
+      locale,
+      member_programs!inner (
+        slug,
+        title_en,
+        title_fa,
+        title
+      )
+    `
+    )
+    .eq("status", "published")
+    .eq("consent_public_display", true)
+    .eq("locale", options.locale)
+    .eq("member_programs.slug", programSlug)
+    .order("submitted_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
+  return mapPublicReviewRows(data ?? [], options.locale);
 }
 
 export async function submitProgramReview(

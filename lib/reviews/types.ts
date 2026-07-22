@@ -32,6 +32,16 @@ export interface ReviewProgramOption {
   titleFa: string;
 }
 
+/** Fields safe to expose on marketing pages */
+export interface PublicProgramReview {
+  id: string;
+  reviewerName: string;
+  rating: number;
+  publicReview: string;
+  programSlug: string;
+  programTitle: string;
+}
+
 export interface SubmitProgramReviewPayload {
   programId: string;
   reviewerName: string;

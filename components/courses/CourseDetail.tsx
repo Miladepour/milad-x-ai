@@ -1,5 +1,6 @@
 "use client";
 
+import type { PublicProgramReview } from "@/lib/reviews/types";
 import type { Course } from "@/lib/courses";
 import { COURSES_BASE_PATH, getWaitlistPath } from "@/lib/courses";
 import { getCourseApplyUrl } from "@/lib/courses/registration";
@@ -23,6 +24,7 @@ import CourseSectionNav, { type CourseSectionNavLink } from "./CourseSectionNav"
 import CourseStructureAccordion from "./CourseStructureAccordion";
 import CourseWhatYouLearn from "./CourseWhatYouLearn";
 import CourseTutorsSection from "@/components/courses/CourseTutorsSection";
+import StudentReviewsSection from "@/components/reviews/StudentReviewsSection";
 
 function resolveCourseCta(course: Course, waitlistHref: string) {
   const applyUrl = getCourseApplyUrl(course);
@@ -34,9 +36,10 @@ function resolveCourseCta(course: Course, waitlistHref: string) {
 
 interface CourseDetailProps {
   course: Course;
+  reviews?: PublicProgramReview[];
 }
 
-export default function CourseDetail({ course }: CourseDetailProps) {
+export default function CourseDetail({ course, reviews = [] }: CourseDetailProps) {
   const { lang, href } = useLanguage();
   const t = useTranslation();
   const p = t.coursesPage;
@@ -71,6 +74,7 @@ export default function CourseDetail({ course }: CourseDetailProps) {
     { id: "prerequisites", label: d.requirements },
     ...(introSection ? [{ id: "intro", label: d.aboutCourse }] : []),
     ...(outcomeSection ? [{ id: "outcome", label: d.whatYouGain }] : []),
+    ...(reviews.length > 0 ? [{ id: "reviews", label: d.studentReviews }] : []),
     ...(course.faq.length > 0 ? [{ id: "faq", label: d.faq }] : []),
   ];
 
@@ -215,6 +219,15 @@ export default function CourseDetail({ course }: CourseDetailProps) {
                 </div>
               </CourseSectionCard>
             )}
+
+            {reviews.length > 0 ? (
+              <StudentReviewsSection
+                reviews={reviews}
+                variant="embedded"
+                sectionId="reviews"
+                hideProgramLink
+              />
+            ) : null}
 
             {course.faq.length > 0 && (
               <CourseFaqAccordion
