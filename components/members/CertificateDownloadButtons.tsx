@@ -41,8 +41,23 @@ function downloadBlob(blob: Blob, filename: string) {
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
-  // Delay revoke so Safari can start the download.
   window.setTimeout(() => URL.revokeObjectURL(url), 2_000);
+}
+
+function openBlobInNewTab(blob: Blob) {
+  const url = URL.createObjectURL(blob);
+  const opened = window.open(url, "_blank", "noopener,noreferrer");
+  if (!opened) {
+    // Popup blocked — still avoid replacing this page with a blank blob URL.
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.target = "_blank";
+    anchor.rel = "noopener noreferrer";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+  }
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
 async function saveBlob(blob: Blob, filename: string): Promise<void> {
@@ -50,23 +65,22 @@ async function saveBlob(blob: Blob, filename: string): Promise<void> {
     type: blob.type || "application/octet-stream",
   });
 
-  if (isIosLike() && navigator.canShare?.({ files: [file] })) {
+  // Prefer share sheet — iOS ignores <a download> and can navigate this tab to a blank blob.
+  if (typeof navigator !== "undefined" && navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title: filename });
       return;
     } catch (error) {
       if ((error as Error).name === "AbortError") return;
-      // Fall through to blob download / open.
     }
   }
 
-  try {
-    downloadBlob(blob, filename);
-  } catch {
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank", "noopener,noreferrer");
-    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  if (isIosLike()) {
+    openBlobInNewTab(blob);
+    return;
   }
+
+  downloadBlob(blob, filename);
 }
 
 function IconInstagram({ className }: { className?: string }) {

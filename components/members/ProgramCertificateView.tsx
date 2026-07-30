@@ -19,7 +19,7 @@ export default function ProgramCertificateView({
   actions,
 }: ProgramCertificateViewProps) {
   return (
-    <div className="mx-auto w-full max-w-5xl relative">
+    <div className="relative mx-auto w-full min-w-0 max-w-5xl">
       <CertificatePreviewFrame>
         <CertificateDocument
           certificate={certificate}
@@ -29,10 +29,10 @@ export default function ProgramCertificateView({
         />
       </CertificatePreviewFrame>
 
+      {/* Keep capture clones off-screen; never move them into the viewport during export. */}
       <div
         aria-hidden
-        className="pointer-events-none fixed left-0 top-0 -z-10 overflow-visible opacity-[0.01]"
-        style={{ transform: "translateX(-100vw)" }}
+        className="pointer-events-none absolute left-[-9999px] top-0 overflow-visible"
       >
         <CertificateDocument
           certificate={certificate}

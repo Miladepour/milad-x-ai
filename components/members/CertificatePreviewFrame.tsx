@@ -10,59 +10,63 @@ interface CertificatePreviewFrameProps {
 const { width: CERTIFICATE_WIDTH, height: CERTIFICATE_HEIGHT } =
   getCertificateDimensions("document");
 
-function initialScale(): number {
-  if (typeof window === "undefined") return 1;
-  const available = Math.max(window.innerWidth - 32, 1);
-  return Math.min(1, available / CERTIFICATE_WIDTH);
-}
-
 export default function CertificatePreviewFrame({
   children,
 }: CertificatePreviewFrameProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(initialScale);
+  const hostRef = useRef<HTMLDivElement>(null);
+  // Stay unset until measured so SSR/first paint never locks in a full-size (960px) layout.
+  const [scale, setScale] = useState<number | null>(null);
 
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
+    const host = hostRef.current;
+    if (!host) return;
 
     const update = () => {
-      const available = el.clientWidth;
-      // Ignore zero-width frames (common during mobile layout) so we never scale(0).
-      if (available <= 0) return;
+      // Measure the host's laid-out width. Host is width:100% + min-w-0 and has no
+      // intrinsic large children contributing to width, so it follows the page column.
+      const available = host.getBoundingClientRect().width;
+      if (available <= 1) return;
       setScale(Math.min(1, available / CERTIFICATE_WIDTH));
     };
 
     update();
     const ro = new ResizeObserver(update);
-    ro.observe(el);
+    ro.observe(host);
     window.addEventListener("orientationchange", update);
+    window.addEventListener("resize", update);
     return () => {
       ro.disconnect();
       window.removeEventListener("orientationchange", update);
+      window.removeEventListener("resize", update);
     };
   }, []);
 
-  const scaledWidth = CERTIFICATE_WIDTH * scale;
-  const scaledHeight = CERTIFICATE_HEIGHT * scale;
+  const resolvedScale = scale ?? 0;
+  const scaledHeight = CERTIFICATE_HEIGHT * resolvedScale;
 
   return (
-    <div ref={containerRef} className="certificate-preview-host mx-auto w-full max-w-[960px]">
-      <div
-        className="certificate-preview-scaler mx-auto overflow-hidden"
-        style={{ width: scaledWidth, height: scaledHeight }}
-      >
+    <div
+      ref={hostRef}
+      className="certificate-preview-host mx-auto w-full min-w-0 max-w-[960px] overflow-hidden"
+      style={{
+        // Reserve aspect ratio before measure so layout doesn't jump wildly.
+        aspectRatio: scale === null ? `${CERTIFICATE_WIDTH} / ${CERTIFICATE_HEIGHT}` : undefined,
+        height: scale === null ? undefined : scaledHeight,
+      }}
+    >
+      {scale === null ? null : (
         <div
+          className="certificate-preview-scaler"
           style={{
             width: CERTIFICATE_WIDTH,
             height: CERTIFICATE_HEIGHT,
-            transform: `scale(${scale})`,
+            transform: `scale(${resolvedScale})`,
             transformOrigin: "top left",
           }}
         >
           {children}
         </div>
-      </div>
+      )}
     </div>
   );
 }
