@@ -24,23 +24,68 @@ async function preloadFonts(): Promise<void> {
   }
 }
 
+function absoluteUrl(src: string): string {
+  try {
+    return new URL(src, window.location.href).href;
+  } catch {
+    return src;
+  }
+}
+
+let signatureDataUrlCache: Promise<string> | null = null;
+
+async function getSignatureDataUrl(): Promise<string> {
+  if (!signatureDataUrlCache) {
+    signatureDataUrlCache = (async () => {
+      const response = await fetch("/api/certificate-signature", {
+        credentials: "same-origin",
+        cache: "force-cache",
+      });
+      if (!response.ok) {
+        throw new Error("Signature fetch failed");
+      }
+      return blobToDataUrl(await response.blob());
+    })().catch((error) => {
+      signatureDataUrlCache = null;
+      throw error;
+    });
+  }
+  return signatureDataUrlCache;
+}
+
+async function waitForImage(img: HTMLImageElement): Promise<void> {
+  if (img.complete && img.naturalWidth > 0) {
+    try {
+      await img.decode();
+    } catch {
+      // decode() can reject for already-decoded or broken images
+    }
+    return;
+  }
+
+  await new Promise<void>((resolve) => {
+    const done = () => resolve();
+    img.addEventListener("load", done, { once: true });
+    img.addEventListener("error", done, { once: true });
+  });
+
+  try {
+    await img.decode();
+  } catch {
+    // ignore
+  }
+}
+
 async function preloadImages(root: HTMLElement): Promise<void> {
   const images = Array.from(root.querySelectorAll("img"));
   await Promise.all(
-    images.map(
-      (img) =>
-        new Promise<void>((resolve) => {
-          if (!img.getAttribute("crossorigin")) {
-            img.crossOrigin = "anonymous";
-          }
-          if (img.complete && img.naturalWidth > 0) {
-            resolve();
-            return;
-          }
-          img.addEventListener("load", () => resolve(), { once: true });
-          img.addEventListener("error", () => resolve(), { once: true });
-        })
-    )
+    images.map(async (img) => {
+      img.loading = "eager";
+      if (!img.getAttribute("crossorigin")) {
+        img.crossOrigin = "anonymous";
+      }
+      await waitForImage(img);
+    })
   );
 }
 
@@ -50,18 +95,32 @@ async function inlineImagesForExport(root: HTMLElement): Promise<() => void> {
 
   await Promise.all(
     images.map(async (img) => {
-      const src = img.currentSrc || img.src;
-      if (!src || src.startsWith("data:")) return;
+      const rawSrc = img.currentSrc || img.src;
+      if (!rawSrc || rawSrc.startsWith("data:")) return;
+
+      const previous = img.src;
+      const isSignature =
+        img.classList.contains("certificate-signature-image") ||
+        rawSrc.includes("/api/certificate-signature");
 
       try {
-        const response = await fetch(src, { credentials: "same-origin" });
-        if (!response.ok) return;
-        const dataUrl = await blobToDataUrl(await response.blob());
-        const previous = img.src;
+        const dataUrl = isSignature
+          ? await getSignatureDataUrl()
+          : await (async () => {
+              const response = await fetch(absoluteUrl(rawSrc), {
+                credentials: "same-origin",
+              });
+              if (!response.ok) return null;
+              return blobToDataUrl(await response.blob());
+            })();
+
+        if (!dataUrl) return;
+
         img.src = dataUrl;
         restores.push(() => {
           img.src = previous;
         });
+        await waitForImage(img);
       } catch {
         // Keep original src if inlining fails.
       }
@@ -100,11 +159,15 @@ function prepareCertificateForExport(element: HTMLElement) {
 }
 
 /**
- * Safari crops/shifts off-screen nodes (left:-9999px). Stage the capture target
- * at (0,0) inside a zero-size clipped host so it rasterizes correctly without
- * covering the visible page.
+ * Safari crops off-screen (-9999px) nodes and skips images when the stage is
+ * width/height 0 (percentage footers collapse → signature paints at 0 size).
+ * Stage at full certificate size, fully invisible, so layout + images are real.
  */
-function stageElementForCapture(element: HTMLElement): () => void {
+function stageElementForCapture(
+  element: HTMLElement,
+  width: number,
+  height: number
+): () => void {
   const parent = element.parentElement;
   const nextSibling = element.nextSibling;
 
@@ -114,12 +177,12 @@ function stageElementForCapture(element: HTMLElement): () => void {
     "position:fixed",
     "left:0",
     "top:0",
-    "width:0",
-    "height:0",
-    "overflow:hidden",
+    `width:${width}px`,
+    `height:${height}px`,
     "opacity:0",
     "pointer-events:none",
     "z-index:-9999",
+    "overflow:hidden",
   ].join(";");
 
   const previous = {
@@ -187,8 +250,7 @@ function isMobileDevice(): boolean {
 function resolveCapturePixelRatio(format: CertificateFormat): number {
   const base = CERTIFICATE_CAPTURE_PIXEL_RATIO[format];
   if (!isMobileDevice()) return base;
-  // Keep quality readable on phones without OOMing Safari.
-  return Math.min(base, format === "document" ? 2 : 2);
+  return Math.min(base, 2);
 }
 
 const CAPTURE_TIMEOUT_MS = 25_000;
@@ -228,8 +290,15 @@ export async function captureCertificatePng(
 
   const { width, height } = getCertificateDimensions(format);
 
+  // Warm signature before staging so every format reuses one cached data URL.
+  try {
+    await getSignatureDataUrl();
+  } catch {
+    // Continue; inlining may still succeed from the img src.
+  }
+
   await Promise.all([preloadFonts(), preloadImages(element)]);
-  const unstage = stageElementForCapture(element);
+  const unstage = stageElementForCapture(element, width, height);
   const restoreStyles = prepareCertificateForExport(element);
   const restoreImages = await inlineImagesForExport(element);
 

@@ -282,6 +282,8 @@ function CertificateFooter({
             src={signatureUrl}
             alt=""
             crossOrigin="anonymous"
+            loading="eager"
+            decoding="sync"
             className="certificate-signature-image mb-1 w-auto object-contain object-left rtl:object-right"
             style={{
               height: tokens.signatureHeight,
