@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { jsPDF } from "jspdf";
-import { captureCertificatePng } from "@/lib/members/certificate-capture";
+import {
+  blobFromDataUrl,
+  captureCertificatePng,
+  captureCertificatePngBlob,
+} from "@/lib/members/certificate-capture";
 import type { CertificateFormat } from "@/lib/members/certificate-layout";
 
 interface CertificateDownloadButtonsProps {
@@ -19,6 +23,51 @@ interface CertificateDownloadButtonsProps {
 }
 
 type BusyFormat = CertificateFormat | "pdf" | null;
+
+function isIosLike(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return (
+    /iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
+}
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.rel = "noopener";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  // Delay revoke so Safari can start the download.
+  window.setTimeout(() => URL.revokeObjectURL(url), 2_000);
+}
+
+async function saveBlob(blob: Blob, filename: string): Promise<void> {
+  const file = new File([blob], filename, {
+    type: blob.type || "application/octet-stream",
+  });
+
+  if (isIosLike() && navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: filename });
+      return;
+    } catch (error) {
+      if ((error as Error).name === "AbortError") return;
+      // Fall through to blob download / open.
+    }
+  }
+
+  try {
+    downloadBlob(blob, filename);
+  } catch {
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank", "noopener,noreferrer");
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+}
 
 function IconInstagram({ className }: { className?: string }) {
   return (
@@ -131,15 +180,19 @@ export default function CertificateDownloadButtons({
     setError("");
     setBusy(format);
     try {
-      const dataUrl = await captureCertificatePng(format);
+      const blob = await captureCertificatePngBlob(format);
       const suffix =
         format === "document" ? "" : format === "story" ? "-story" : "-post";
-      const link = document.createElement("a");
-      link.download = `${certificateNumber}${suffix}.png`;
-      link.href = dataUrl;
-      link.click();
+      await saveBlob(blob, `${certificateNumber}${suffix}.png`);
     } catch {
-      setError("Could not save PNG. Try again.");
+      try {
+        const dataUrl = await captureCertificatePng(format);
+        const suffix =
+          format === "document" ? "" : format === "story" ? "-story" : "-post";
+        await saveBlob(blobFromDataUrl(dataUrl), `${certificateNumber}${suffix}.png`);
+      } catch {
+        setError("Could not save PNG. Try again.");
+      }
     } finally {
       setBusy(null);
     }
@@ -156,7 +209,8 @@ export default function CertificateDownloadButtons({
         format: "a4",
       });
       pdf.addImage(dataUrl, "PNG", 0, 0, 297, 210);
-      pdf.save(`${certificateNumber}.pdf`);
+      const blob = pdf.output("blob");
+      await saveBlob(blob, `${certificateNumber}.pdf`);
     } catch {
       setError("Could not save PDF. Try again.");
     } finally {

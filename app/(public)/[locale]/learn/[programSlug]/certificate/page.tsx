@@ -5,14 +5,18 @@ import CertificateLinkedInButton from "@/components/members/CertificateLinkedInB
 import ProgramCertificateView from "@/components/members/ProgramCertificateView";
 import StudentGlassCard from "@/components/members/StudentGlassCard";
 import StudentPortalButton from "@/components/members/StudentPortalButton";
-import { getStudentCertificateForProgram } from "@/lib/members/certificate-store";
+import { getStudentCertificatePageBySlug } from "@/lib/members/certificate-store";
 import {
   buildLinkedInCertificationUrl,
   certificateVerifyUrl,
   resolveCertificateProgramTitle,
 } from "@/lib/members/certificate-utils";
-import { learnProgramPath } from "@/lib/members/paths";
-import { getStudentProgram } from "@/lib/members/store";
+import {
+  accountLoginPath,
+  learnCertificatesPath,
+  learnProgramCertificatePath,
+  learnProgramPath,
+} from "@/lib/members/paths";
 import { urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { getStudentUser } from "@/lib/supabase/require-student";
 import { translations } from "@/lib/i18n/translations";
@@ -29,31 +33,50 @@ export default async function LearnProgramCertificatePage({
   const t = translations[internal];
 
   const student = await getStudentUser();
-  if (!student) notFound();
+  if (!student) {
+    redirect(
+      accountLoginPath(
+        locale,
+        learnProgramCertificatePath(params.programSlug, locale)
+      )
+    );
+  }
 
-  const data = await getStudentProgram(student.user.id, params.programSlug);
+  const data = await getStudentCertificatePageBySlug(
+    student.user.id,
+    params.programSlug
+  );
   if (!data) notFound();
 
   if (!data.program.certificateEnabled) {
-    redirect(learnProgramPath(data.program.slug, locale));
+    redirect(
+      data.enrollmentActive
+        ? learnProgramPath(data.program.slug, locale)
+        : learnCertificatesPath(locale)
+    );
   }
 
-  const certificate = await getStudentCertificateForProgram(
-    student.user.id,
-    data.program.id
-  );
+  const { program, certificate, enrollmentActive } = data;
+  const backHref = enrollmentActive
+    ? learnProgramPath(program.slug, locale)
+    : learnCertificatesPath(locale);
+  const backLabel = enrollmentActive
+    ? t.memberPortal.backToProgram
+    : t.memberPortal.navCertificates;
 
   if (!certificate) {
     return (
       <div className="flex flex-col gap-5 pb-10">
         <StudentGlassCard>
-          <StudentPortalButton href={learnProgramPath(data.program.slug, locale)} variant="secondary">
-            {t.memberPortal.backToProgram}
+          <StudentPortalButton href={backHref} variant="secondary">
+            {backLabel}
           </StudentPortalButton>
           <h1 className="mt-5 font-dm text-2xl font-semibold text-orange">
             {t.memberPortal.certificateTitle}
           </h1>
-          <p className="mt-3 font-dm text-cream/70">{t.memberPortal.certificateNotReady}</p>
+          <p className="mt-3 font-dm text-cream/70">
+            {t.memberPortal.certificateNotReady}
+          </p>
         </StudentGlassCard>
       </div>
     );
@@ -73,8 +96,8 @@ export default async function LearnProgramCertificatePage({
   return (
     <div className="flex flex-col gap-5 pb-10">
       <StudentGlassCard>
-        <StudentPortalButton href={learnProgramPath(data.program.slug, locale)} variant="secondary">
-          {t.memberPortal.backToProgram}
+        <StudentPortalButton href={backHref} variant="secondary">
+          {backLabel}
         </StudentPortalButton>
         <h1 className="mt-5 font-dm text-2xl font-semibold text-orange sm:text-3xl">
           {t.memberPortal.certificateTitle}

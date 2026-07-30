@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import StudentDashboardShell from "@/components/members/StudentDashboardShell";
 import StudentDeviceBlocked from "@/components/members/StudentDeviceBlocked";
 import StudentDeviceRegistrar from "@/components/members/StudentDeviceRegistrar";
 import { resolveLessonTitle } from "@/lib/members/lesson-localized";
 import { resolveProgramTitle } from "@/lib/members/program-localized";
-import { accountLoginPath, learnLessonPath } from "@/lib/members/paths";
+import {
+  accountLoginPath,
+  isSafeStudentRedirect,
+  learnLessonPath,
+} from "@/lib/members/paths";
 import {
   getStudentDashboard,
   getStudentEnrollmentCount,
@@ -24,6 +29,13 @@ import {
   deviceBootstrapUrl,
   verifyStudentDeviceAccess,
 } from "@/lib/members/device-session";
+
+function learnLoginRedirect(locale: UrlLocale): string {
+  const pathname = headers().get("x-mxai-pathname")?.trim();
+  const redirectTo =
+    pathname && isSafeStudentRedirect(pathname) ? pathname : undefined;
+  return accountLoginPath(locale, redirectTo);
+}
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -47,8 +59,12 @@ export default async function LearnLayout({
   const student = await getStudentUser();
 
   if (!student) {
-    redirect(accountLoginPath(locale));
+    redirect(learnLoginRedirect(locale));
   }
+
+  const pathname = headers().get("x-mxai-pathname")?.trim();
+  const bootstrapNext =
+    pathname && isSafeStudentRedirect(pathname) ? pathname : undefined;
 
   let deviceAccess: Awaited<ReturnType<typeof verifyStudentDeviceAccess>>;
   try {
@@ -81,7 +97,7 @@ export default async function LearnLayout({
 
   // redirect() throws — must stay outside try/catch or bootstrap never runs.
   if (deviceAccess.needsBootstrap && isStudentDeviceCapEnforced()) {
-    redirect(deviceBootstrapUrl(locale));
+    redirect(deviceBootstrapUrl(locale, bootstrapNext));
   }
 
   if (!deviceAccess.allowed) {

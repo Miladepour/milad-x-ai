@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import StudentLoginScreen from "@/components/members/StudentLoginScreen";
 import {
   accountLoginPath,
-  learnPath,
   resolveStudentLoginRedirect,
 } from "@/lib/members/paths";
 import { getStudentUser } from "@/lib/supabase/require-student";
@@ -21,17 +20,16 @@ export default async function StudentLoginPage({
   searchParams: { redirectTo?: string };
 }) {
   const locale = (isValidLocale(params.locale) ? params.locale : "en") as UrlLocale;
+  const redirectTo = resolveStudentLoginRedirect(searchParams.redirectTo, locale);
 
   if (locale === "fa") {
-    redirect(accountLoginPath("fa"));
+    redirect(accountLoginPath("fa", searchParams.redirectTo));
   }
 
   const student = await getStudentUser();
   if (student) {
-    redirect(learnPath(locale));
+    redirect(redirectTo);
   }
-
-  const redirectTo = resolveStudentLoginRedirect(searchParams.redirectTo, locale);
 
   return <StudentLoginScreen redirectTo={redirectTo} />;
 }

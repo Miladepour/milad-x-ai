@@ -77,10 +77,25 @@ function prepareCertificateForExport(element: HTMLElement) {
   const previous = {
     boxShadow: element.style.boxShadow,
     overflow: element.style.overflow,
+    position: element.style.position,
+    left: element.style.left,
+    top: element.style.top,
+    opacity: element.style.opacity,
+    zIndex: element.style.zIndex,
+    pointerEvents: element.style.pointerEvents,
+    transform: element.style.transform,
   };
 
   element.style.boxShadow = "none";
   element.style.overflow = "hidden";
+  // Safari often fails to rasterize nodes parked at left:-9999px — bring into view briefly.
+  element.style.position = "fixed";
+  element.style.left = "0";
+  element.style.top = "0";
+  element.style.opacity = "0.01";
+  element.style.zIndex = "-1";
+  element.style.pointerEvents = "none";
+  element.style.transform = "none";
 
   element.querySelectorAll<HTMLElement>(".certificate-noise-overlay").forEach((node) => {
     node.dataset.exportMixBlend = node.style.mixBlendMode;
@@ -91,6 +106,13 @@ function prepareCertificateForExport(element: HTMLElement) {
   return () => {
     element.style.boxShadow = previous.boxShadow;
     element.style.overflow = previous.overflow;
+    element.style.position = previous.position;
+    element.style.left = previous.left;
+    element.style.top = previous.top;
+    element.style.opacity = previous.opacity;
+    element.style.zIndex = previous.zIndex;
+    element.style.pointerEvents = previous.pointerEvents;
+    element.style.transform = previous.transform;
     element.querySelectorAll<HTMLElement>(".certificate-noise-overlay").forEach((node) => {
       node.style.mixBlendMode = node.dataset.exportMixBlend ?? "";
       node.style.opacity = "";
@@ -110,6 +132,17 @@ function dataUrlToBlob(dataUrl: string): Blob {
   return new Blob([bytes], { type: mime });
 }
 
+function resolveCapturePixelRatio(format: CertificateFormat): number {
+  const base = CERTIFICATE_CAPTURE_PIXEL_RATIO[format];
+  if (typeof window === "undefined") return base;
+  const isCoarse =
+    window.matchMedia?.("(pointer: coarse)").matches ||
+    /iPad|iPhone|iPod/i.test(navigator.userAgent);
+  if (!isCoarse) return base;
+  // Lower memory pressure on phones while keeping usable export quality.
+  return Math.min(base, format === "document" ? 2 : 1.5);
+}
+
 export async function captureCertificatePng(
   format: CertificateFormat = "document"
 ): Promise<string> {
@@ -125,9 +158,14 @@ export async function captureCertificatePng(
   const restoreImages = await inlineImagesForExport(element);
 
   try {
+    // Give Safari a paint frame after moving the node into view.
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => resolve());
+    });
+
     return await toPng(element, {
       cacheBust: true,
-      pixelRatio: CERTIFICATE_CAPTURE_PIXEL_RATIO[format],
+      pixelRatio: resolveCapturePixelRatio(format),
       width,
       height,
       backgroundColor: "#0D0D0D",

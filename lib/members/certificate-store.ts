@@ -305,6 +305,7 @@ async function sendCertificateIssuedEmailIfPossible(
         program.titleFa.trim() ||
         program.title,
       programSlug: program.slug,
+      certificateNumber: certificate.certificateNumber,
       locale: profile.locale,
     });
   } catch (error) {
@@ -658,6 +659,61 @@ export async function getStudentCertificateForProgram(
   if (error) throw new Error(error.message);
   if (!data) return null;
   return certificateRowToCertificate(data as ProgramCertificateRow);
+}
+
+/**
+ * Certificate page data — available even when enrollment access has ended.
+ * Returns null only when the program is missing/bonus or the student has
+ * neither an enrollment nor an issued certificate for it.
+ */
+export async function getStudentCertificatePageBySlug(
+  studentId: string,
+  programSlug: string
+): Promise<{
+  program: MemberProgram;
+  certificate: ProgramCertificate | null;
+  enrollmentActive: boolean;
+} | null> {
+  const slug = programSlug.trim().toLowerCase();
+  if (!slug) return null;
+
+  const supabase = createClient();
+  const { data: programData, error: programError } = await supabase
+    .from("member_programs")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (programError) throw new Error(programError.message);
+  if (!programData) return null;
+
+  const program = memberProgramRowToProgram(programData as MemberProgramRow);
+  if (program.programType === "bonus") return null;
+
+  const [{ data: enrollmentRow, error: enrollmentError }, certificate] =
+    await Promise.all([
+      supabase
+        .from("program_enrollments")
+        .select("*")
+        .eq("student_id", studentId)
+        .eq("program_id", program.id)
+        .maybeSingle(),
+      getStudentCertificateForProgram(studentId, program.id),
+    ]);
+
+  if (enrollmentError) throw new Error(enrollmentError.message);
+
+  const enrollment = enrollmentRow
+    ? enrollmentRowToEnrollment(enrollmentRow as ProgramEnrollmentRow)
+    : null;
+
+  if (!certificate && !enrollment) return null;
+
+  return {
+    program,
+    certificate,
+    enrollmentActive: enrollment ? isEnrollmentActive(enrollment) : false,
+  };
 }
 
 export async function getCertificateByNumber(

@@ -3,6 +3,8 @@ import type { NextRequest } from "next/server";
 import { defaultLocale, localePrefix } from "@/lib/i18n/config";
 import { updateSession } from "@/lib/supabase/middleware";
 
+const PATHNAME_HEADER = "x-mxai-pathname";
+
 /** Public marketing pages — skip Supabase session refresh to save server CPU. */
 function isPublicMarketingPath(pathname: string): boolean {
   let path = pathname;
@@ -21,8 +23,15 @@ function isPublicMarketingPath(pathname: string): boolean {
   );
 }
 
+function withPathnameHeaders(request: NextRequest): Headers {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(PATHNAME_HEADER, request.nextUrl.pathname);
+  return requestHeaders;
+}
+
 function handleRequest(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
+  const requestHeaders = withPathnameHeaders(request);
 
   if (
     pathname.startsWith("/_next") ||
@@ -48,7 +57,9 @@ function handleRequest(request: NextRequest): NextResponse {
   }
 
   if (pathname.startsWith("/api") || pathname.startsWith("/auth")) {
-    return NextResponse.next();
+    return NextResponse.next({
+      request: { headers: requestHeaders },
+    });
   }
 
   if (pathname === `/${defaultLocale}` || pathname.startsWith(`/${defaultLocale}/`)) {
@@ -58,12 +69,16 @@ function handleRequest(request: NextRequest): NextResponse {
   }
 
   if (pathname === `/${localePrefix}` || pathname.startsWith(`/${localePrefix}/`)) {
-    return NextResponse.next();
+    return NextResponse.next({
+      request: { headers: requestHeaders },
+    });
   }
 
   const url = request.nextUrl.clone();
   url.pathname = pathname === "/" ? `/${defaultLocale}` : `/${defaultLocale}${pathname}`;
-  return NextResponse.rewrite(url);
+  return NextResponse.rewrite(url, {
+    request: { headers: requestHeaders },
+  });
 }
 
 export async function middleware(request: NextRequest) {

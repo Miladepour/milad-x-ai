@@ -22,7 +22,13 @@ export async function updateSession(
 
   try {
     const { url, anonKey } = getSupabaseEnv();
-    let sessionResponse = NextResponse.next({ request });
+    const requestHeaders = new Headers(request.headers);
+    if (!requestHeaders.get("x-mxai-pathname")) {
+      requestHeaders.set("x-mxai-pathname", request.nextUrl.pathname);
+    }
+    const nextRequest = { headers: requestHeaders };
+
+    let sessionResponse = NextResponse.next({ request: nextRequest });
 
     const supabase = createServerClient(url, anonKey, {
       cookies: {
@@ -33,7 +39,7 @@ export async function updateSession(
           cookiesToSet.forEach(({ name, value }) => {
             request.cookies.set(name, value);
           });
-          sessionResponse = NextResponse.next({ request });
+          sessionResponse = NextResponse.next({ request: nextRequest });
           cookiesToSet.forEach(({ name, value, options }) => {
             sessionResponse.cookies.set(name, value, options);
           });

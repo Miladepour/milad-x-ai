@@ -31,7 +31,8 @@ export default function ProgramCertificateView({
 
       <div
         aria-hidden
-        className="pointer-events-none absolute left-[-9999px] top-0 overflow-visible"
+        className="pointer-events-none fixed left-0 top-0 -z-10 overflow-visible opacity-[0.01]"
+        style={{ transform: "translateX(-100vw)" }}
       >
         <CertificateDocument
           certificate={certificate}

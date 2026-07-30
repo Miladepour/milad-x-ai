@@ -1,5 +1,10 @@
 import type { EmailBannerId } from "@/lib/email/banners";
-import { learnCertificatesPath, learnProgramCertificatePath } from "@/lib/members/paths";
+import {
+  accountLoginPath,
+  learnCertificatesPath,
+  learnProgramCertificatePath,
+} from "@/lib/members/paths";
+import { certificateVerifyUrl } from "@/lib/members/certificate-utils";
 import {
   buildEmailLayout,
   buildTransactionalEmailLayout,
@@ -236,17 +241,20 @@ export async function sendCertificateIssuedEmail(options: {
   fullName: string;
   programTitle: string;
   programSlug?: string | null;
+  certificateNumber?: string | null;
   locale: "EN" | "FA";
 }): Promise<boolean> {
   const isFa = options.locale === "FA";
   const name = options.fullName || (isFa ? "دانشجو" : "there");
+  const urlLocale = isFa ? "fa" : "en";
   const logicalHref = options.programSlug?.trim()
-    ? learnProgramCertificatePath(
-        options.programSlug.trim(),
-        isFa ? "fa" : "en"
-      )
-    : learnCertificatesPath(isFa ? "fa" : "en");
-  const portalHref = `${SITE_URL}${logicalHref}`;
+    ? learnProgramCertificatePath(options.programSlug.trim(), urlLocale)
+    : learnCertificatesPath(urlLocale);
+  // Login deep-link so logged-out recipients return to the certificate after sign-in.
+  const portalHref = `${SITE_URL}${accountLoginPath(urlLocale, logicalHref)}`;
+  const verifyHref = options.certificateNumber?.trim()
+    ? certificateVerifyUrl(options.certificateNumber.trim(), "en")
+    : null;
 
   const subject = isFa
     ? `گواهی ${options.programTitle} شما آماده است`
@@ -282,17 +290,31 @@ export async function sendCertificateIssuedEmail(options: {
           : "Keep going and let the world know you are making progress in AI."
       }
     </p>
-    ${emailPrimaryButton(
-      portalHref,
-      isFa ? "مشاهده گواهی در پنل" : "View certificate in portal"
-    )}
+    <p style="margin:0 0 12px;">
+      ${emailPrimaryButton(
+        portalHref,
+        isFa ? "مشاهده گواهی در پنل" : "View certificate in portal"
+      )}
+    </p>
+    ${
+      verifyHref
+        ? `<p style="margin:0;">${emailSecondaryButton(
+            verifyHref,
+            isFa ? "صفحه تأیید عمومی" : "Public verification page"
+          )}</p>`
+        : ""
+    }
   `,
     { locale: options.locale }
   );
 
   const text = isFa
-    ? `سلام ${name}!\n\nتبریک برای رسیدن به این نقطه مهم.\nگواهی شما برای ${options.programTitle} صادر شده است.\n\nمی‌توانید آن را در پنل دانشجویی مشاهده و دانلود کنید و در شبکه‌های اجتماعی یا لینکدین به اشتراک بگذارید.\n${portalHref}\n\nبه دنیا نشان دهید که در هوش مصنوعی در حال پیشرفت هستید.\n\nMX AI Academy`
-    : `Hi ${name}!\n\nCongratulations on this milestone.\nYour certificate for ${options.programTitle} has been issued.\n\nYou can view and download it from your student portal, then share it on social media or LinkedIn.\n${portalHref}\n\nKeep going and let the world know you are making progress in AI.\n\nMX AI Academy`;
+    ? `سلام ${name}!\n\nتبریک برای رسیدن به این نقطه مهم.\nگواهی شما برای ${options.programTitle} صادر شده است.\n\nمی‌توانید آن را در پنل دانشجویی مشاهده و دانلود کنید و در شبکه‌های اجتماعی یا لینکدین به اشتراک بگذارید.\n${portalHref}${
+        verifyHref ? `\nتأیید عمومی: ${verifyHref}` : ""
+      }\n\nبه دنیا نشان دهید که در هوش مصنوعی در حال پیشرفت هستید.\n\nMX AI Academy`
+    : `Hi ${name}!\n\nCongratulations on this milestone.\nYour certificate for ${options.programTitle} has been issued.\n\nYou can view and download it from your student portal, then share it on social media or LinkedIn.\n${portalHref}${
+        verifyHref ? `\nPublic verification: ${verifyHref}` : ""
+      }\n\nKeep going and let the world know you are making progress in AI.\n\nMX AI Academy`;
 
   return sendEmail({ to: options.to, subject, html, text }).then((r) => r.ok);
 }

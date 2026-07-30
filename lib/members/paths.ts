@@ -82,13 +82,24 @@ export function learnLessonPath(
   return localizedPath(`/learn/${programSlug}/${lessonId}`, locale);
 }
 
-/** Student login always uses the English URL; pass locale to return to that dashboard after sign-in. */
-export function accountLoginPath(returnLocale: UrlLocale = "en"): string {
+/**
+ * Student login always uses the English URL.
+ * Pass `redirectTo` (a safe /learn path) to return there after sign-in;
+ * otherwise FA defaults to the FA dashboard and EN uses the login screen default.
+ */
+export function accountLoginPath(
+  returnLocale: UrlLocale = "en",
+  redirectTo?: string
+): string {
   const login = localizedPath("/account/login", "en");
-  if (returnLocale === "en") {
-    return login;
-  }
-  return `${login}?redirectTo=${encodeURIComponent(learnPath(returnLocale))}`;
+  const target =
+    redirectTo && isSafeStudentRedirect(redirectTo)
+      ? redirectTo
+      : returnLocale === "fa"
+        ? learnPath("fa")
+        : null;
+  if (!target) return login;
+  return `${login}?redirectTo=${encodeURIComponent(target)}`;
 }
 
 export function accountSetPasswordPath(locale: UrlLocale): string {
