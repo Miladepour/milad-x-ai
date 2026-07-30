@@ -79,11 +79,29 @@ function openBlobInNewTab(blob: Blob) {
   window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
-/** Mobile-only save: share sheet when available, else download / open tab. Never used on desktop. */
+function ensureBlobType(blob: Blob, filename: string): Blob {
+  if (blob.type) return blob;
+  if (filename.toLowerCase().endsWith(".pdf")) {
+    return new Blob([blob], { type: "application/pdf" });
+  }
+  if (filename.toLowerCase().endsWith(".png")) {
+    return new Blob([blob], { type: "image/png" });
+  }
+  return blob;
+}
+
+/**
+ * Mobile-only save.
+ * - PNG: share sheet (Save Image) when available
+ * - PDF: share → Save to Files when available; otherwise open/download fallbacks
+ * Never used on desktop.
+ */
 async function saveOnMobile(blob: Blob, filename: string): Promise<void> {
-  const file = new File([blob], filename, {
-    type: blob.type || "application/octet-stream",
+  const typed = ensureBlobType(blob, filename);
+  const file = new File([typed], filename, {
+    type: typed.type || "application/octet-stream",
   });
+  const isPdf = filename.toLowerCase().endsWith(".pdf");
 
   if (navigator.canShare?.({ files: [file] })) {
     try {
@@ -94,13 +112,14 @@ async function saveOnMobile(blob: Blob, filename: string): Promise<void> {
     }
   }
 
-  // Android Chrome usually honors download; iOS often does not.
-  if (isIosLike()) {
-    openBlobInNewTab(blob);
-    return;
-  }
+  // Android / some browsers: trigger a real download.
+  downloadBlob(typed, filename);
 
-  downloadBlob(blob, filename);
+  // iOS often ignores <a download>, especially for PDF — open so the user can
+  // use Share → Save to Files from the system viewer.
+  if (isIosLike() || isPdf) {
+    window.setTimeout(() => openBlobInNewTab(typed), 250);
+  }
 }
 
 function IconInstagram({ className }: { className?: string }) {
@@ -246,7 +265,11 @@ export default function CertificateDownloadButtons({
       const filename = `${certificateNumber}.pdf`;
 
       if (isMobileDevice()) {
-        await saveOnMobile(pdf.output("blob"), filename);
+        // Ensure PDF MIME type — some WebViews omit it from jsPDF output("blob").
+        const pdfBlob = new Blob([pdf.output("arraybuffer")], {
+          type: "application/pdf",
+        });
+        await saveOnMobile(pdfBlob, filename);
       } else {
         // Desktop: original jsPDF save path.
         pdf.save(filename);

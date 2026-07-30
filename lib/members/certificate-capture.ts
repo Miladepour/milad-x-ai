@@ -99,6 +99,68 @@ function prepareCertificateForExport(element: HTMLElement) {
   };
 }
 
+/**
+ * Safari crops/shifts off-screen nodes (left:-9999px). Stage the capture target
+ * at (0,0) inside a zero-size clipped host so it rasterizes correctly without
+ * covering the visible page.
+ */
+function stageElementForCapture(element: HTMLElement): () => void {
+  const parent = element.parentElement;
+  const nextSibling = element.nextSibling;
+
+  const stage = document.createElement("div");
+  stage.setAttribute("data-certificate-capture-stage", "true");
+  stage.style.cssText = [
+    "position:fixed",
+    "left:0",
+    "top:0",
+    "width:0",
+    "height:0",
+    "overflow:hidden",
+    "opacity:0",
+    "pointer-events:none",
+    "z-index:-9999",
+  ].join(";");
+
+  const previous = {
+    position: element.style.position,
+    left: element.style.left,
+    top: element.style.top,
+    right: element.style.right,
+    bottom: element.style.bottom,
+    transform: element.style.transform,
+    margin: element.style.margin,
+    inset: element.style.inset,
+  };
+
+  document.body.appendChild(stage);
+  stage.appendChild(element);
+
+  element.style.position = "relative";
+  element.style.left = "0";
+  element.style.top = "0";
+  element.style.right = "auto";
+  element.style.bottom = "auto";
+  element.style.transform = "none";
+  element.style.margin = "0";
+
+  return () => {
+    element.style.position = previous.position;
+    element.style.left = previous.left;
+    element.style.top = previous.top;
+    element.style.right = previous.right;
+    element.style.bottom = previous.bottom;
+    element.style.transform = previous.transform;
+    element.style.margin = previous.margin;
+    element.style.inset = previous.inset;
+
+    if (parent) {
+      parent.insertBefore(element, nextSibling);
+    }
+    stage.remove();
+  };
+}
+
 function dataUrlToBlob(dataUrl: string): Blob {
   const [header, base64] = dataUrl.split(",");
   const mime = header.match(/:(.*?);/)?.[1] ?? "image/png";
@@ -110,19 +172,26 @@ function dataUrlToBlob(dataUrl: string): Blob {
   return new Blob([bytes], { type: mime });
 }
 
-function resolveCapturePixelRatio(format: CertificateFormat): number {
-  const base = CERTIFICATE_CAPTURE_PIXEL_RATIO[format];
-  if (typeof navigator === "undefined") return base;
-  const mobile =
+function isMobileDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  if (
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       navigator.userAgent
-    ) ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  if (!mobile) return base;
-  return Math.min(base, 1);
+    )
+  ) {
+    return true;
+  }
+  return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
 }
 
-const CAPTURE_TIMEOUT_MS = 20_000;
+function resolveCapturePixelRatio(format: CertificateFormat): number {
+  const base = CERTIFICATE_CAPTURE_PIXEL_RATIO[format];
+  if (!isMobileDevice()) return base;
+  // Keep quality readable on phones without OOMing Safari.
+  return Math.min(base, format === "document" ? 2 : 2);
+}
+
+const CAPTURE_TIMEOUT_MS = 25_000;
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -141,6 +210,14 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   });
 }
 
+function waitForPaint(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => resolve());
+    });
+  });
+}
+
 export async function captureCertificatePng(
   format: CertificateFormat = "document"
 ): Promise<string> {
@@ -152,20 +229,27 @@ export async function captureCertificatePng(
   const { width, height } = getCertificateDimensions(format);
 
   await Promise.all([preloadFonts(), preloadImages(element)]);
+  const unstage = stageElementForCapture(element);
   const restoreStyles = prepareCertificateForExport(element);
   const restoreImages = await inlineImagesForExport(element);
 
   try {
+    await waitForPaint();
     return await withTimeout(
       toPng(element, {
         cacheBust: true,
         pixelRatio: resolveCapturePixelRatio(format),
         width,
         height,
+        canvasWidth: width,
+        canvasHeight: height,
         backgroundColor: "#0D0D0D",
         skipFonts: false,
         style: {
           transform: "none",
+          left: "0",
+          top: "0",
+          margin: "0",
         },
       }),
       CAPTURE_TIMEOUT_MS
@@ -173,6 +257,7 @@ export async function captureCertificatePng(
   } finally {
     restoreImages();
     restoreStyles();
+    unstage();
   }
 }
 
