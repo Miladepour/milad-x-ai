@@ -219,8 +219,16 @@ html.rtl .uppercase {
   text-transform: none;
 }
 
-html.rtl .tracking-widest,
-html.rtl .tracking-\[0\.35em\] {
+/* Letter-spacing breaks Arabic/Persian glyph joining — reset all tracking in RTL */
+:is(html.rtl, [dir="rtl"]) :is(
+  .tracking-tighter,
+  .tracking-tight,
+  .tracking-wide,
+  .tracking-wider,
+  .tracking-widest,
+  .student-section-title,
+  [class*="tracking-["]
+) {
   letter-spacing: 0;
 }
 
