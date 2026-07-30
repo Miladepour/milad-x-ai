@@ -14,16 +14,13 @@ export default function CertificatePreviewFrame({
   children,
 }: CertificatePreviewFrameProps) {
   const hostRef = useRef<HTMLDivElement>(null);
-  // Stay unset until measured so SSR/first paint never locks in a full-size (960px) layout.
-  const [scale, setScale] = useState<number | null>(null);
+  const [scale, setScale] = useState(1);
 
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
 
     const update = () => {
-      // Measure the host's laid-out width. Host is width:100% + min-w-0 and has no
-      // intrinsic large children contributing to width, so it follows the page column.
       const available = host.getBoundingClientRect().width;
       if (available <= 1) return;
       setScale(Math.min(1, available / CERTIFICATE_WIDTH));
@@ -41,32 +38,24 @@ export default function CertificatePreviewFrame({
     };
   }, []);
 
-  const resolvedScale = scale ?? 0;
-  const scaledHeight = CERTIFICATE_HEIGHT * resolvedScale;
-
   return (
     <div
       ref={hostRef}
-      className="certificate-preview-host mx-auto w-full min-w-0 max-w-[960px] overflow-hidden"
-      style={{
-        // Reserve aspect ratio before measure so layout doesn't jump wildly.
-        aspectRatio: scale === null ? `${CERTIFICATE_WIDTH} / ${CERTIFICATE_HEIGHT}` : undefined,
-        height: scale === null ? undefined : scaledHeight,
-      }}
+      className="certificate-preview-host relative mx-auto w-full min-w-0 max-w-[960px] overflow-hidden"
+      style={{ height: CERTIFICATE_HEIGHT * scale }}
     >
-      {scale === null ? null : (
-        <div
-          className="certificate-preview-scaler"
-          style={{
-            width: CERTIFICATE_WIDTH,
-            height: CERTIFICATE_HEIGHT,
-            transform: `scale(${resolvedScale})`,
-            transformOrigin: "top left",
-          }}
-        >
-          {children}
-        </div>
-      )}
+      {/* Absolute so the 960px certificate never expands the page column. */}
+      <div
+        className="certificate-preview-scaler absolute left-0 top-0"
+        style={{
+          width: CERTIFICATE_WIDTH,
+          height: CERTIFICATE_HEIGHT,
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 }

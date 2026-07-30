@@ -5,7 +5,6 @@ import { jsPDF } from "jspdf";
 import {
   blobFromDataUrl,
   captureCertificatePng,
-  captureCertificatePngBlob,
 } from "@/lib/members/certificate-capture";
 import type { CertificateFormat } from "@/lib/members/certificate-layout";
 
@@ -24,12 +23,33 @@ interface CertificateDownloadButtonsProps {
 
 type BusyFormat = CertificateFormat | "pdf" | null;
 
+/** Phones/tablets only — never treat desktop Chrome as mobile just because canShare exists. */
+function isMobileDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) {
+    return true;
+  }
+  // iPadOS 13+ reports as MacIntel with touch
+  return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+}
+
 function isIosLike(): boolean {
   if (typeof navigator === "undefined") return false;
   return (
     /iPad|iPhone|iPod/i.test(navigator.userAgent) ||
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
   );
+}
+
+function downloadDataUrl(dataUrl: string, filename: string) {
+  const link = document.createElement("a");
+  link.download = filename;
+  link.href = dataUrl;
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 }
 
 function downloadBlob(blob: Blob, filename: string) {
@@ -48,7 +68,6 @@ function openBlobInNewTab(blob: Blob) {
   const url = URL.createObjectURL(blob);
   const opened = window.open(url, "_blank", "noopener,noreferrer");
   if (!opened) {
-    // Popup blocked — still avoid replacing this page with a blank blob URL.
     const anchor = document.createElement("a");
     anchor.href = url;
     anchor.target = "_blank";
@@ -60,13 +79,13 @@ function openBlobInNewTab(blob: Blob) {
   window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
-async function saveBlob(blob: Blob, filename: string): Promise<void> {
+/** Mobile-only save: share sheet when available, else download / open tab. Never used on desktop. */
+async function saveOnMobile(blob: Blob, filename: string): Promise<void> {
   const file = new File([blob], filename, {
     type: blob.type || "application/octet-stream",
   });
 
-  // Prefer share sheet — iOS ignores <a download> and can navigate this tab to a blank blob.
-  if (typeof navigator !== "undefined" && navigator.canShare?.({ files: [file] })) {
+  if (navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title: filename });
       return;
@@ -75,6 +94,7 @@ async function saveBlob(blob: Blob, filename: string): Promise<void> {
     }
   }
 
+  // Android Chrome usually honors download; iOS often does not.
   if (isIosLike()) {
     openBlobInNewTab(blob);
     return;
@@ -194,19 +214,19 @@ export default function CertificateDownloadButtons({
     setError("");
     setBusy(format);
     try {
-      const blob = await captureCertificatePngBlob(format);
+      const dataUrl = await captureCertificatePng(format);
       const suffix =
         format === "document" ? "" : format === "story" ? "-story" : "-post";
-      await saveBlob(blob, `${certificateNumber}${suffix}.png`);
-    } catch {
-      try {
-        const dataUrl = await captureCertificatePng(format);
-        const suffix =
-          format === "document" ? "" : format === "story" ? "-story" : "-post";
-        await saveBlob(blobFromDataUrl(dataUrl), `${certificateNumber}${suffix}.png`);
-      } catch {
-        setError("Could not save PNG. Try again.");
+      const filename = `${certificateNumber}${suffix}.png`;
+
+      if (isMobileDevice()) {
+        await saveOnMobile(blobFromDataUrl(dataUrl), filename);
+      } else {
+        // Desktop: direct download only — never open the OS share sheet.
+        downloadDataUrl(dataUrl, filename);
       }
+    } catch {
+      setError("Could not save PNG. Try again.");
     } finally {
       setBusy(null);
     }
@@ -223,8 +243,14 @@ export default function CertificateDownloadButtons({
         format: "a4",
       });
       pdf.addImage(dataUrl, "PNG", 0, 0, 297, 210);
-      const blob = pdf.output("blob");
-      await saveBlob(blob, `${certificateNumber}.pdf`);
+      const filename = `${certificateNumber}.pdf`;
+
+      if (isMobileDevice()) {
+        await saveOnMobile(pdf.output("blob"), filename);
+      } else {
+        // Desktop: original jsPDF save path.
+        pdf.save(filename);
+      }
     } catch {
       setError("Could not save PDF. Try again.");
     } finally {

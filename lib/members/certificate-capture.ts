@@ -79,7 +79,6 @@ function prepareCertificateForExport(element: HTMLElement) {
     overflow: element.style.overflow,
   };
 
-  // Do not move the node into the viewport — that blanks the page on mobile.
   element.style.boxShadow = "none";
   element.style.overflow = "hidden";
 
@@ -113,12 +112,13 @@ function dataUrlToBlob(dataUrl: string): Blob {
 
 function resolveCapturePixelRatio(format: CertificateFormat): number {
   const base = CERTIFICATE_CAPTURE_PIXEL_RATIO[format];
-  if (typeof window === "undefined") return base;
-  const isCoarse =
-    window.matchMedia?.("(pointer: coarse)").matches ||
-    /iPad|iPhone|iPod/i.test(navigator.userAgent);
-  if (!isCoarse) return base;
-  // Keep mobile captures light — high ratios OOM Safari and fail silently.
+  if (typeof navigator === "undefined") return base;
+  const mobile =
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    ) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (!mobile) return base;
   return Math.min(base, 1);
 }
 
