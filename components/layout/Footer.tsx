@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CONSULTATION_BASE_PATH } from "@/lib/consultation/constants";
 import { COURSES_BASE_PATH } from "@/lib/courses";
+import { PRIVATE_AI_COURSE_BASE_PATH } from "@/lib/private-ai-course/constants";
 import { PORTFOLIO_BASE_PATH } from "@/lib/portfolio/constants";
 import { TUTORIALS_BASE_PATH } from "@/lib/tutorials/constants";
 import { toLocaleDigits } from "@/lib/i18n/digits";
@@ -69,7 +70,7 @@ export default function Footer() {
       href: href(`${COURSES_BASE_PATH}/${WORKSHOP_SLUG}`),
       label: f.offeringWorkshop,
     },
-    { href: href(COURSES_BASE_PATH), label: f.offeringPrivate },
+    { href: href(PRIVATE_AI_COURSE_BASE_PATH), label: f.offeringPrivate },
     { href: href(CONSULTATION_BASE_PATH), label: f.offeringConsultation },
   ];
 

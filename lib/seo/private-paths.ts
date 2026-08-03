@@ -13,6 +13,7 @@ export const PUBLIC_SITEMAP_PATHS = [
   "/",
   "/contact",
   "/consultation",
+  "/private-ai-course",
   "/blog",
   "/courses",
   "/portfolio",
