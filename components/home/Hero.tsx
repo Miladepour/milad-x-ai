@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Button from '@/components/ui/Button';
 import { COURSES_BASE_PATH } from '@/lib/courses';
+import { PRIVATE_AI_COURSE_BASE_PATH } from '@/lib/private-ai-course/constants';
 import { useLanguage } from '@/lib/i18n/context';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 
@@ -97,6 +98,9 @@ export default function Hero() {
             </Button>
             <Button variant="outline" size="lg" href={href(COURSES_BASE_PATH)}>
               {t.hero.cta2}
+            </Button>
+            <Button variant="outline" size="lg" href={href(PRIVATE_AI_COURSE_BASE_PATH)}>
+              {t.hero.cta3}
             </Button>
           </div>
 
