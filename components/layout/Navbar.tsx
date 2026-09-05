@@ -13,6 +13,8 @@ import { CONSULTATION_BASE_PATH } from "@/lib/consultation/constants";
 import { PRIVATE_AI_COURSE_BASE_PATH } from "@/lib/private-ai-course/constants";
 import { PORTFOLIO_BASE_PATH } from "@/lib/portfolio/constants";
 import { TUTORIALS_BASE_PATH } from "@/lib/tutorials/constants";
+import { CONTACT_BASE_PATH } from "@/lib/contact/constants";
+import { BLOG_BASE_PATH } from "@/lib/blog/constants";
 import type { UrlLocale } from "@/lib/i18n/config";
 
 function isNavActive(
@@ -64,6 +66,25 @@ export default function Navbar() {
   const { lang, urlLocale, setLang, href } = useLanguage();
   const t = useTranslation();
 
+  const navItems = [
+    { href: href("/"), path: "/", label: t.navbar.home },
+    { href: href(COURSES_BASE_PATH), path: COURSES_BASE_PATH, label: t.navbar.courses },
+    {
+      href: href(PRIVATE_AI_COURSE_BASE_PATH),
+      path: PRIVATE_AI_COURSE_BASE_PATH,
+      label: t.navbar.privateCourse,
+    },
+    { href: href(TUTORIALS_BASE_PATH), path: TUTORIALS_BASE_PATH, label: t.navbar.tutorials },
+    {
+      href: href(CONSULTATION_BASE_PATH),
+      path: CONSULTATION_BASE_PATH,
+      label: t.navbar.consultation,
+    },
+    { href: href(BLOG_BASE_PATH), path: BLOG_BASE_PATH, label: t.navbar.blog },
+    { href: href(PORTFOLIO_BASE_PATH), path: PORTFOLIO_BASE_PATH, label: t.navbar.portfolio },
+    { href: href(CONTACT_BASE_PATH), path: CONTACT_BASE_PATH, label: t.navbar.contact },
+  ];
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -95,69 +116,15 @@ export default function Navbar() {
 
         <div className="flex shrink-0 items-center gap-4 sm:gap-6">
           <div className="hidden lg:flex items-center gap-8">
-            <Link
-              href={href("/")}
-              className={navLinkClass(isNavActive(pathname, "/", urlLocale), "desktop")}
-            >
-              {t.navbar.home}
-            </Link>
-            <Link
-              href={href(PORTFOLIO_BASE_PATH)}
-              className={navLinkClass(
-                isNavActive(pathname, PORTFOLIO_BASE_PATH, urlLocale),
-                "desktop"
-              )}
-            >
-              {t.navbar.portfolio}
-            </Link>
-            <Link
-              href={href(COURSES_BASE_PATH)}
-              className={navLinkClass(
-                isNavActive(pathname, COURSES_BASE_PATH, urlLocale),
-                "desktop"
-              )}
-            >
-              {t.navbar.courses}
-            </Link>
-            <Link
-              href={href(PRIVATE_AI_COURSE_BASE_PATH)}
-              className={navLinkClass(
-                isNavActive(pathname, PRIVATE_AI_COURSE_BASE_PATH, urlLocale),
-                "desktop"
-              )}
-            >
-              {t.navbar.privateCourse}
-            </Link>
-            <Link
-              href={href(TUTORIALS_BASE_PATH)}
-              className={navLinkClass(
-                isNavActive(pathname, TUTORIALS_BASE_PATH, urlLocale),
-                "desktop"
-              )}
-            >
-              {t.navbar.tutorials}
-            </Link>
-            <Link
-              href={href("/blog")}
-              className={navLinkClass(isNavActive(pathname, "/blog", urlLocale), "desktop")}
-            >
-              {t.navbar.blog}
-            </Link>
-            <Link
-              href={href(CONSULTATION_BASE_PATH)}
-              className={navLinkClass(
-                isNavActive(pathname, CONSULTATION_BASE_PATH, urlLocale),
-                "desktop"
-              )}
-            >
-              {t.navbar.consultation}
-            </Link>
-            <Link
-              href={href("/contact")}
-              className={navLinkClass(isNavActive(pathname, "/contact", urlLocale), "desktop")}
-            >
-              {t.navbar.contact}
-            </Link>
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                href={item.href}
+                className={navLinkClass(isNavActive(pathname, item.path, urlLocale), "desktop")}
+              >
+                {item.label}
+              </Link>
+            ))}
             <StudentNavButton
               urlLocale={urlLocale}
               active={isStudentAreaActive(pathname, urlLocale)}
@@ -221,77 +188,16 @@ export default function Navbar() {
             className="w-full"
             onNavigate={() => setMenuOpen(false)}
           />
-          <Link
-            href={href("/")}
-            className={navLinkClass(isNavActive(pathname, "/", urlLocale), "mobile")}
-            onClick={() => setMenuOpen(false)}
-          >
-            {t.navbar.home}
-          </Link>
-          <Link
-            href={href(PORTFOLIO_BASE_PATH)}
-            className={navLinkClass(
-              isNavActive(pathname, PORTFOLIO_BASE_PATH, urlLocale),
-              "mobile"
-            )}
-            onClick={() => setMenuOpen(false)}
-          >
-            {t.navbar.portfolio}
-          </Link>
-          <Link
-            href={href(COURSES_BASE_PATH)}
-            className={navLinkClass(
-              isNavActive(pathname, COURSES_BASE_PATH, urlLocale),
-              "mobile"
-            )}
-            onClick={() => setMenuOpen(false)}
-          >
-            {t.navbar.courses}
-          </Link>
-          <Link
-            href={href(PRIVATE_AI_COURSE_BASE_PATH)}
-            className={navLinkClass(
-              isNavActive(pathname, PRIVATE_AI_COURSE_BASE_PATH, urlLocale),
-              "mobile"
-            )}
-            onClick={() => setMenuOpen(false)}
-          >
-            {t.navbar.privateCourse}
-          </Link>
-          <Link
-            href={href(TUTORIALS_BASE_PATH)}
-            className={navLinkClass(
-              isNavActive(pathname, TUTORIALS_BASE_PATH, urlLocale),
-              "mobile"
-            )}
-            onClick={() => setMenuOpen(false)}
-          >
-            {t.navbar.tutorials}
-          </Link>
-          <Link
-            href={href("/blog")}
-            className={navLinkClass(isNavActive(pathname, "/blog", urlLocale), "mobile")}
-            onClick={() => setMenuOpen(false)}
-          >
-            {t.navbar.blog}
-          </Link>
-          <Link
-            href={href(CONSULTATION_BASE_PATH)}
-            className={navLinkClass(
-              isNavActive(pathname, CONSULTATION_BASE_PATH, urlLocale),
-              "mobile"
-            )}
-            onClick={() => setMenuOpen(false)}
-          >
-            {t.navbar.consultation}
-          </Link>
-          <Link
-            href={href("/contact")}
-            className={navLinkClass(isNavActive(pathname, "/contact", urlLocale), "mobile")}
-            onClick={() => setMenuOpen(false)}
-          >
-            {t.navbar.contact}
-          </Link>
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              href={item.href}
+              className={navLinkClass(isNavActive(pathname, item.path, urlLocale), "mobile")}
+              onClick={() => setMenuOpen(false)}
+            >
+              {item.label}
+            </Link>
+          ))}
         </div>
       </div>
     </header>

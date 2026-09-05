@@ -56,11 +56,12 @@ export default function Footer() {
 
   const exploreLinks = [
     { href: href("/"), label: n.home },
-    { href: href(PORTFOLIO_BASE_PATH), label: n.portfolio },
     { href: href(COURSES_BASE_PATH), label: n.courses },
+    { href: href(PRIVATE_AI_COURSE_BASE_PATH), label: n.privateCourse },
     { href: href(TUTORIALS_BASE_PATH), label: n.tutorials },
-    { href: href("/blog"), label: n.blog },
     { href: href(CONSULTATION_BASE_PATH), label: n.consultation },
+    { href: href("/blog"), label: n.blog },
+    { href: href(PORTFOLIO_BASE_PATH), label: n.portfolio },
     { href: href("/contact"), label: n.contact },
   ];
 

@@ -37,8 +37,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const titlePrefix =
     internal === "FA"
-      ? `ثبت‌نام در لیست انتظار — ${course.listTitle}`
-      : `Join waiting list — ${course.listTitle}`;
+      ? `ثبت‌نام در لیست انتظار: ${course.listTitle}`
+      : `Join waiting list: ${course.listTitle}`;
 
   return {
     title: titlePrefix,

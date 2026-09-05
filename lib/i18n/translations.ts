@@ -59,10 +59,12 @@ export const translations = {
       label: "PORTFOLIO",
       title: "My Work",
       description:
-        "AI video, imagery, and applications — a full look at what I create for brands, creators, and my own products.",
+        "AI video, imagery, and applications. A full look at what I create for brands, creators, and my own products.",
+      descriptionMore:
+        "Reels, stills, and live apps made with current AI tools and the same workflows I teach in courses and tutorials.",
       backHome: "← Back to home",
       applicationsTitle: "Applications",
-      imagesEmpty: "Square images coming soon — add Cloudinary URLs in lib/portfolio/media.ts",
+      imagesEmpty: "Square images coming soon. Add Cloudinary URLs in lib/portfolio/media.ts",
       viewApp: "Open app",
     },
     courses: {
@@ -114,7 +116,7 @@ export const translations = {
       ],
     },
     bookcall: {
-      heading: "Bring AI into your work — practically and with purpose",
+      heading: "Bring AI into your work, practically and with purpose",
       sub: "In a private 30-minute session, we review your needs or business and help you find the right path for learning, content creation, automation, marketing, or executing business ideas with AI.",
       cta: "Book a private consultation",
     },
@@ -303,11 +305,13 @@ export const translations = {
       label: "Learn for free",
       title: "Free AI Tutorials",
       introLead:
-        "AI is reshaping content, business, and technology faster than ever. Here you will find free AI tutorials in clear, practical English — built from real-world experience.",
+        "AI is reshaping content, business, and technology faster than ever. Here you will find free AI tutorials in clear, practical English, built from real-world experience.",
+      introNote:
+        "Video walkthroughs, step-by-step guides, and regularly updated lessons on the latest AI tools. No technical background required.",
       introMore: {
         title: "About these tutorials",
         paragraphs: [
-          "Every lesson draws on hands-on work in content creation, digital marketing, design, video, and everyday AI tools — no technical background required.",
+          "Every lesson draws on hands-on work in content creation, digital marketing, design, video, and everyday AI tools. No technical background required.",
           "You get video walkthroughs, step-by-step guides, practical tips, and regularly updated lessons on the latest AI tools and techniques.",
           "Whether you are starting from zero, exploring new AI apps, boosting productivity, or growing a business, this is a solid place to begin.",
         ],
@@ -334,7 +338,7 @@ export const translations = {
       emptyLabel: "Coming soon",
       emptyTitle: "First lessons on the way",
       emptyMessage:
-        "New free tutorials are being added. Check back soon — or explore live workshops and courses in the meantime.",
+        "New free tutorials are being added. Check back soon, or explore live workshops and courses in the meantime.",
       watchTutorial: "Watch tutorial →",
       freeBadge: "Free",
       ctaTitle: "Ready to go deeper?",
@@ -345,9 +349,11 @@ export const translations = {
     blogPage: {
       backHome: "← Back to home",
       label: "Insights",
-      title: "Blog",
+      title: "AI Blog",
       description:
-        "Thoughts on AI, creativity, content production, and building with new tools.",
+        "Practical articles on using AI for content, design, video, and everyday work. Written from real projects, courses, and the tools I actually use.",
+      descriptionMore:
+        "New posts cover prompt craft, creative workflows, and the same skills taught in MX AI Academy courses and free tutorials.",
       emptyLabel: "Coming soon",
       emptyTitle: "Nothing here yet",
       emptyMessage:
@@ -359,9 +365,11 @@ export const translations = {
       label: "Get in touch",
       title: "Contact",
       description:
-        "Interested in a private course or working together on a project? Send me a message and I will get back to you.",
+        "Interested in a private AI course or working together on a project? Send a message and I will get back to you.",
       subdescription:
-        "Tell me whether you are looking for private training or a creative collaboration — and share a few details so we can start the conversation.",
+        "Tell me whether you are looking for one-to-one training or a creative collaboration, and share a few details so we can start the conversation.",
+      heroNote:
+        "I usually reply within a few days. Include your goal, timeline, and any links that help me understand the work.",
       inquiryLabel: "What are you reaching out about?",
       inquiryOneOnOne: "Private course",
       inquiryOneOnOneHint: "One-to-one training tailored to your goals",
@@ -376,7 +384,7 @@ export const translations = {
       mobilePlaceholderDisabled: "Select country first",
       message: "Your message",
       messagePlaceholder:
-        "Share your goals, timeline, or project idea — the more detail, the better.",
+        "Share your goals, timeline, or project idea. The more detail, the better.",
       submit: "Send message",
       submitting: "Sending…",
       successTitle: "Message received",
@@ -446,12 +454,17 @@ export const translations = {
         "Recommending practical next steps you can start using straight away",
       ],
       priceLabel: "Session fee",
+      priceNote:
+        "This session costs US$30 for applicants outside Iran and 3,500,000 toman for applicants inside Iran.",
       bookCta: "Book your session",
       bookHint:
         "You will be redirected to Google Calendar to choose a time and complete your booking.",
+      telegramCta: "Message us on Telegram",
+      iranTelegramHint:
+        "If you are in Iran, message us on Telegram and we will arrange the meeting.",
     },
     notFound: {
-      label: "404 — Page not found",
+      label: "404. Page not found",
       title: "This page doesn't exist.",
       description:
         "The link may be broken, outdated, or the page was moved. Head back home or explore courses and tutorials.",
@@ -537,7 +550,7 @@ export const translations = {
       bonusProgramsSubtitle:
         "Extra videos and files from your courses. Access is separate from your main program and may have its own expiry.",
       bonusProgramsHint:
-        "Supplemental content only — not part of your main course certificate.",
+        "Supplemental content only, not part of your main course certificate.",
       noBonusPrograms: "No bonus programs are available for you yet.",
       programsPageSubtitle: "All programs you are enrolled in. Open any program to continue learning.",
       resourcesPageSubtitle: "Helpful links from your enrolled programs in one place.",
@@ -584,8 +597,8 @@ export const translations = {
       quizSubmitting: "Submitting…",
       quizRetake: "Retake quiz",
       quizScore: "Your score",
-      quizPassed: "Perfect score — lesson complete!",
-      quizFailed: "Not quite — review the answers below and try again.",
+      quizPassed: "Perfect score. Lesson complete!",
+      quizFailed: "Not quite. Review the answers below and try again.",
       quizYourAnswer: "Your answer",
       quizCorrectAnswer: "Correct answer",
       quizSelectAnswer: "Please answer every question.",
@@ -654,13 +667,13 @@ export const translations = {
         "Your certificate for this private program has been issued. You can view and download it below.",
       certificateOnlyPendingHint:
         "No certificate yet. Contact support if you expected it to be ready.",
-      programCompletedTitle: "Congratulations — you finished this program!",
+      programCompletedTitle: "Congratulations. You finished this program!",
       programCompletedBody:
         "Your certificate is ready. Open the Certificates page to view and download it.",
       programCompletedBodyWithCert:
         "Your certificate has been issued. Open the Certificates page to view it, add it to LinkedIn, or share your credential.",
       programCompletedRewatchHint:
-        "You can keep watching lessons until your access expires — your progress and certificate stay saved.",
+        "You can keep watching lessons until your access expires. Your progress and certificate stay saved.",
       programCompletedCertificatesCta: "Go to Certificates",
       certificateVerifyPageTitle: "Certificate verification",
       certificateVerifyPageSubtitle:
@@ -672,7 +685,7 @@ export const translations = {
       noCertificates:
         "You do not have any certificates yet. Complete a program with certificates enabled to earn one.",
       membershipBadgeTitle: "Premium member",
-      membershipBadgeSubtitle: "Your tier is based on total programs enrolled — including expired access.",
+      membershipBadgeSubtitle: "Your tier is based on total programs enrolled, including expired access.",
       membershipTierSilver: "Silver",
       membershipTierGold: "Gold",
       membershipTierPlatinum: "Platinum",
@@ -765,7 +778,7 @@ export const translations = {
       brandName: "MX AI Academy",
       tagline: "Practical AI education in Farsi",
       description:
-        "Learn content creation, image generation, video production, and automation with AI — through free tutorials, live workshops, and private courses.",
+        "Learn content creation, image generation, video production, and automation with AI through free tutorials, live workshops, and private courses.",
       exploreTitle: "Explore",
       offeringsTitle: "Offerings",
       offeringTutorials: "Free AI tutorials",
@@ -855,11 +868,13 @@ export const translations = {
       label: "نمونه‌کار",
       title: "آثار من",
       description:
-        "ویدیو، تصویر و اپلیکیشن‌های ساخته‌شده با هوش مصنوعی — نمونه‌کار کامل برای برندها، تولیدکنندگان محتوا و محصولات شخصی.",
+        "ویدیو، تصویر و اپلیکیشن‌های ساخته‌شده با هوش مصنوعی. نمونه‌کار کامل برای برندها، تولیدکنندگان محتوا و محصولات شخصی.",
+      descriptionMore:
+        "ریل، تصویر ثابت و اپلیکیشن‌های زنده، ساخته‌شده با ابزارهای فعلی هوش مصنوعی و همان جریان کاری که در دوره‌ها و آموزش‌ها تدریس می‌کنم.",
       backHome: "بازگشت به خانه",
       applicationsTitle: "اپلیکیشن‌ها",
       imagesEmpty:
-        "تصاویر مربعی به‌زودی — آدرس Cloudinary را در lib/portfolio/media.ts اضافه کنید",
+        "تصاویر مربعی به‌زودی. آدرس Cloudinary را در lib/portfolio/media.ts اضافه کنید",
       viewApp: "مشاهده اپ",
     },
     courses: {
@@ -1101,6 +1116,8 @@ export const translations = {
       title: "آموزش رایگان هوش مصنوعی",
       introLead:
         "هوش مصنوعی با سرعتی بی‌سابقه در حال تغییر دنیای محتوا، کسب‌وکار و فناوری است. در این بخش می‌توانید به مجموعه‌ای از آموزش‌های رایگان هوش مصنوعی دسترسی داشته باشید که به زبان فارسی و به شکلی ساده و کاربردی تهیه شده‌اند.",
+      introNote:
+        "ویدیوهای آموزشی، راهنمای گام‌به‌گام و درس‌های به‌روز درباره جدیدترین ابزارهای هوش مصنوعی. بدون نیاز به دانش فنی.",
       introMore: {
         title: "درباره این آموزش‌ها",
         paragraphs: [
@@ -1131,7 +1148,7 @@ export const translations = {
       emptyLabel: "به زودی",
       emptyTitle: "اولین درس‌ها در راه هستند",
       emptyMessage:
-        "آموزش‌های رایگان جدید به زودی اضافه می‌شوند. به زودی سر بزنید — یا همین حالا ورکشاپ‌ها و دوره‌های زنده را ببینید.",
+        "آموزش‌های رایگان جدید به زودی اضافه می‌شوند. به زودی سر بزنید، یا همین حالا ورکشاپ‌ها و دوره‌های زنده را ببینید.",
       watchTutorial: "مشاهده آموزش ←",
       freeBadge: "رایگان",
       ctaTitle: "آماده‌ای عمیق‌تر یاد بگیری؟",
@@ -1142,9 +1159,11 @@ export const translations = {
     blogPage: {
       backHome: "← بازگشت به خانه",
       label: "بینش‌ها",
-      title: "وبلاگ",
+      title: "وبلاگ هوش مصنوعی",
       description:
-        "نوشته‌ها درباره هوش مصنوعی، خلاقیت، تولید محتوا و ساختن با ابزارهای جدید.",
+        "مقاله‌های کاربردی درباره استفاده از هوش مصنوعی در محتوا، طراحی، ویدیو و کار روزمره. نوشته‌شده از روی پروژه‌ها، دوره‌ها و ابزارهایی که واقعاً با آن‌ها کار می‌کنم.",
+      descriptionMore:
+        "مطالب تازه روی پرامپت‌نویسی، جریان کار خلاقانه و همان مهارت‌هایی تمرکز دارند که در دوره‌ها و آموزش‌های رایگان MX AI Academy تدریس می‌شود.",
       emptyLabel: "به زودی",
       emptyTitle: "هنوز مطلبی منتشر نشده",
       emptyMessage:
@@ -1156,9 +1175,11 @@ export const translations = {
       label: "ارتباط با من",
       title: "تماس",
       description:
-        "برای دوره خصوصی یک‌به‌یک یا همکاری روی یک پروژه پیام بفرستید — در اسرع وقت پاسخ می‌دهم.",
+        "برای دوره خصوصی هوش مصنوعی یا همکاری روی یک پروژه پیام بفرستید. در اسرع وقت پاسخ می‌دهم.",
       subdescription:
-        "مشخص کنید به دنبال آموزش شخصی هستید یا همکاری خلاقانه — و چند جزئیات بنویسید تا گفتگو را شروع کنیم.",
+        "مشخص کنید به دنبال آموزش یک به یک هستید یا همکاری خلاقانه، و چند جزئیات بنویسید تا گفتگو را شروع کنیم.",
+      heroNote:
+        "معمولاً ظرف چند روز پاسخ می‌دهم. هدف، زمان‌بندی و اگر لینکی دارید که کار را روشن می‌کند در پیام بنویسید.",
       inquiryLabel: "موضوع پیام شما چیست؟",
       inquiryOneOnOne: "دوره خصوصی",
       inquiryOneOnOneHint: "آموزش اختصاصی متناسب با اهداف شما",
@@ -1173,7 +1194,7 @@ export const translations = {
       mobilePlaceholderDisabled: "ابتدا کشور را انتخاب کنید",
       message: "پیام شما",
       messagePlaceholder:
-        "اهداف، زمان‌بندی یا ایده پروژه را بنویسید — هرچه جزئیات بیشتر، بهتر.",
+        "اهداف، زمان‌بندی یا ایده پروژه را بنویسید. هرچه جزئیات بیشتر، بهتر.",
       submit: "ارسال پیام",
       submitting: "در حال ارسال…",
       successTitle: "پیام شما دریافت شد",
@@ -1233,7 +1254,7 @@ export const translations = {
       title: "مشاوره خصوصی هوش مصنوعی",
       duration: "۳۰ دقیقه",
       description:
-        "یک جلسه مشاوره متمرکز ۳۰ دقیقه‌ای برای درک نیازهای شما — چه فرد باشید چه کسب‌وکار — و ارائه یک برنامه روشن و عملی برای اینکه هوش مصنوعی چطور می‌تواند شما را جلو ببرد.",
+        "یک جلسه مشاوره متمرکز ۳۰ دقیقه‌ای برای درک نیازهای شما، چه فرد باشید چه کسب‌وکار، و ارائه یک برنامه روشن و عملی برای اینکه هوش مصنوعی چطور می‌تواند شما را جلو ببرد.",
       whatWeCover: "در این جلسه چه می‌پوشانیم",
       bullets: [
         "درک اهداف، چالش‌ها و وضعیت فعلی شما",
@@ -1243,12 +1264,17 @@ export const translations = {
         "پیشنهاد گام‌های عملی که می‌توانید همان‌روز شروع کنید",
       ],
       priceLabel: "هزینه جلسه",
+      priceNote:
+        "هزینه این جلسه برای متقاضیان خارج از ایران ۳۰ دلار آمریکا و برای متقاضیان داخل ایران ۳٬۵۰۰٬۰۰۰ تومان است.",
       bookCta: "رزرو جلسه",
       bookHint:
         "برای انتخاب زمان و تکمیل رزرو به تقویم گوگل هدایت می‌شوید.",
+      telegramCta: "پیام در تلگرام",
+      iranTelegramHint:
+        "اگر داخل ایران هستید، از تلگرام پیام بدهید تا جلسه را هماهنگ کنیم.",
     },
     notFound: {
-      label: "۴۰۴ — صفحه پیدا نشد",
+      label: "۴۰۴. صفحه پیدا نشد",
       title: "این صفحه وجود ندارد.",
       description:
         "لینک ممکن است اشتباه یا قدیمی باشد، یا صفحه جابه‌جا شده باشد. به خانه برگردید یا دوره‌ها و آموزش‌های رایگان را ببینید.",
@@ -1334,7 +1360,7 @@ export const translations = {
       bonusProgramsSubtitle:
         "ویدیوها و فایل‌های اضافی دوره‌های شما. دسترسی جدا از برنامه اصلی است و ممکن است تاریخ انقضای خودش را داشته باشد.",
       bonusProgramsHint:
-        "محتوای تکمیلی — بخشی از گواهینامه برنامه اصلی نیست.",
+        "محتوای تکمیلی. بخشی از گواهینامه برنامه اصلی نیست.",
       noBonusPrograms: "هنوز برنامه تکمیلی برای شما فعال نیست.",
       programsPageSubtitle: "همه برنامه‌هایی که در آن‌ها ثبت‌نام کرده‌اید. برای ادامه یادگیری هر برنامه را باز کنید.",
       resourcesPageSubtitle: "لینک‌های مفید از برنامه‌های ثبت‌نام‌شده شما در یکجا.",
@@ -1381,8 +1407,8 @@ export const translations = {
       quizSubmitting: "در حال ارسال…",
       quizRetake: "تلاش مجدد",
       quizScore: "نمره شما",
-      quizPassed: "نمره کامل — درس تکمیل شد!",
-      quizFailed: "کامل نبود — پاسخ‌ها را ببینید و دوباره تلاش کنید.",
+      quizPassed: "نمره کامل. درس تکمیل شد!",
+      quizFailed: "کامل نبود. پاسخ‌ها را ببینید و دوباره تلاش کنید.",
       quizYourAnswer: "پاسخ شما",
       quizCorrectAnswer: "پاسخ صحیح",
       quizSelectAnswer: "لطفاً به همه سؤالات پاسخ دهید.",
@@ -1450,13 +1476,13 @@ export const translations = {
         "گواهینامه این برنامه خصوصی صادر شده است. می‌توانید آن را در ادامه مشاهده و دریافت کنید.",
       certificateOnlyPendingHint:
         "هنوز گواهینامه‌ای صادر نشده است. اگر انتظار داشتید آماده باشد، با پشتیبانی تماس بگیرید.",
-      programCompletedTitle: "تبریک — این برنامه را تمام کردید!",
+      programCompletedTitle: "تبریک. این برنامه را تمام کردید!",
       programCompletedBody:
         "گواهینامه شما آماده است. برای مشاهده و دریافت آن به صفحه گواهینامه‌ها بروید.",
       programCompletedBodyWithCert:
         "گواهینامه شما صادر شد. برای مشاهده، افزودن به لینکدین یا اشتراک‌گذاری به صفحه گواهینامه‌ها بروید.",
       programCompletedRewatchHint:
-        "تا پایان دسترسی می‌توانید درس‌ها را دوباره ببینید — پیشرفت و گواهینامه شما ذخیره می‌ماند.",
+        "تا پایان دسترسی می‌توانید درس‌ها را دوباره ببینید. پیشرفت و گواهینامه شما ذخیره می‌ماند.",
       programCompletedCertificatesCta: "رفتن به گواهینامه‌ها",
       certificateVerifyPageTitle: "تأیید گواهینامه",
       certificateVerifyPageSubtitle:
@@ -1468,7 +1494,7 @@ export const translations = {
       noCertificates:
         "هنوز گواهینامه‌ای ندارید. برنامه‌ای با گواهینامه فعال را کامل کنید تا دریافت کنید.",
       membershipBadgeTitle: "عضو ویژه",
-      membershipBadgeSubtitle: "سطح شما بر اساس کل برنامه‌های ثبت‌نام‌شده است — حتی برنامه‌های منقضی‌شده.",
+      membershipBadgeSubtitle: "سطح شما بر اساس کل برنامه‌های ثبت‌نام‌شده است، حتی برنامه‌های منقضی‌شده.",
       membershipTierSilver: "نقره‌ای",
       membershipTierGold: "طلایی",
       membershipTierPlatinum: "پلاتینیوم",

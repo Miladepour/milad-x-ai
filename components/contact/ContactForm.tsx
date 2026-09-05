@@ -212,7 +212,7 @@ export default function ContactForm() {
             )}
             aria-hidden
           >
-            {dialCode || "—"}
+            {dialCode || "+"}
           </span>
           <input
             id="contact-mobile"

@@ -10,8 +10,13 @@ export const PAGE_HERO_HEIGHT = 1080;
 const PAGE_HERO_FS_DIR = path.join(process.cwd(), "public/images/pages-hero");
 const EXTENSIONS = [".jpg", ".jpeg", ".webp", ".png"] as const;
 
-function heroFileUrl(stem: string, ext: (typeof EXTENSIONS)[number]): string {
-  return `${PAGE_HERO_PUBLIC_DIR}/${stem}${ext}`;
+function hasHeroExtension(filename: string): boolean {
+  const lower = filename.toLowerCase();
+  return EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
+
+function heroPublicUrl(filename: string): string {
+  return `${PAGE_HERO_PUBLIC_DIR}/${encodeURIComponent(filename)}`;
 }
 
 export function getPageHeroSrc(pageId: string, locale?: UrlLocale): string | null {
@@ -19,13 +24,26 @@ export function getPageHeroSrc(pageId: string, locale?: UrlLocale): string | nul
 
   for (const stem of stems) {
     for (const ext of EXTENSIONS) {
-      if (fs.existsSync(path.join(PAGE_HERO_FS_DIR, `${stem}${ext}`))) {
-        return heroFileUrl(stem, ext);
+      const filename = `${stem}${ext}`;
+      if (fs.existsSync(path.join(PAGE_HERO_FS_DIR, filename))) {
+        return heroPublicUrl(filename);
       }
     }
   }
 
-  return null;
+  if (!fs.existsSync(PAGE_HERO_FS_DIR)) return null;
+
+  const id = pageId.toLowerCase();
+  const bilingual = fs
+    .readdirSync(PAGE_HERO_FS_DIR)
+    .filter((file) => {
+      if (!hasHeroExtension(file)) return false;
+      const lower = file.toLowerCase();
+      return lower.startsWith(`${id}-`) || lower.startsWith(`${id} `);
+    })
+    .sort();
+
+  return bilingual[0] ? heroPublicUrl(bilingual[0]) : null;
 }
 
 export function getPageHeroAbsoluteUrl(pageId: string, locale?: UrlLocale): string | null {

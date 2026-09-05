@@ -17,6 +17,7 @@ import { toLocaleDigits } from "@/lib/i18n/digits";
 import type { Locale } from "@/lib/i18n/translations";
 import { cn } from "@/lib/utils";
 import PageBreadcrumb from "@/components/layout/PageBreadcrumb";
+import PageHero from "@/components/shared/PageHero";
 
 const btnPrimary =
   "inline-flex items-center justify-center font-mono px-8 py-4 text-sm uppercase tracking-widest rtl:tracking-normal bg-orange text-background border-2 border-orange hover:bg-orange-dim hover:border-orange-dim transition-colors duration-200 rounded-sm";
@@ -231,46 +232,64 @@ function FaqAccordion({
   );
 }
 
-export default function PrivateCoursePageContent() {
+export default function PrivateCoursePageContent({
+  heroSrc,
+}: {
+  heroSrc?: string | null;
+}) {
   const { href, lang } = useLanguage();
   const t = useTranslation();
   const p = privateCoursePageContent[lang];
 
+  const intro = (
+    <>
+      <PageBreadcrumb
+        ariaLabel={t.navbar.breadcrumbAria}
+        variant={heroSrc ? "hero" : "default"}
+        className={heroSrc ? "mb-8" : "mb-10"}
+        items={[
+          { label: t.navbar.home, href: href("/") },
+          { label: t.navbar.privateCourse, href: href(PRIVATE_AI_COURSE_BASE_PATH) },
+        ]}
+      />
+
+      <section className={heroSrc ? undefined : "mb-16 md:mb-20"}>
+        <p className="type-section-label font-mono text-orange mb-3">{p.label}</p>
+        <h1 className="type-course-page-title font-dm font-bold text-cream mb-6 max-w-4xl">
+          {p.title}
+        </h1>
+        <p className="type-section-body font-dm text-cream max-w-3xl mb-4 leading-relaxed">
+          {p.description}
+        </p>
+        <p className="type-section-body font-dm text-cream/80 max-w-3xl mb-8 leading-relaxed">
+          {p.descriptionSecondary}
+        </p>
+        <div className="flex flex-col sm:flex-row flex-wrap gap-4 mb-5">
+          <BookConsultationButton label={p.primaryCta} />
+          <TelegramButton label={p.telegramCta} />
+          <a href="#paths" className={btnSecondary}>
+            {p.secondaryCta}
+          </a>
+        </div>
+        <p className="font-dm text-sm text-cream/60 leading-relaxed max-w-2xl">
+          {p.pricingNote}
+        </p>
+      </section>
+    </>
+  );
+
   return (
     <div className="flex-1 w-full bg-background text-cream flex flex-col">
-      <div className="max-w-6xl mx-auto px-8 md:px-12 lg:px-16 pt-32 pb-24 w-full flex-1">
-        <PageBreadcrumb
-          ariaLabel={t.navbar.breadcrumbAria}
-          className="mb-10"
-          items={[
-            { label: t.navbar.home, href: href("/") },
-            { label: t.navbar.privateCourse, href: href(PRIVATE_AI_COURSE_BASE_PATH) },
-          ]}
-        />
+      {heroSrc ? <PageHero src={heroSrc} alt={p.title}>{intro}</PageHero> : null}
 
-        {/* Hero */}
-        <section className="mb-16 md:mb-20">
-          <p className="type-section-label font-mono text-orange mb-3">{p.label}</p>
-          <h1 className="type-course-page-title font-dm font-bold text-cream mb-6 max-w-4xl">
-            {p.title}
-          </h1>
-          <p className="type-section-body font-dm text-cream max-w-3xl mb-4 leading-relaxed">
-            {p.description}
-          </p>
-          <p className="type-section-body font-dm text-cream/80 max-w-3xl mb-8 leading-relaxed">
-            {p.descriptionSecondary}
-          </p>
-          <div className="flex flex-col sm:flex-row flex-wrap gap-4 mb-5">
-            <BookConsultationButton label={p.primaryCta} />
-            <TelegramButton label={p.telegramCta} />
-            <a href="#paths" className={btnSecondary}>
-              {p.secondaryCta}
-            </a>
-          </div>
-          <p className="font-dm text-sm text-cream/60 leading-relaxed max-w-2xl">
-            {p.pricingNote}
-          </p>
-        </section>
+      <div
+        className={
+          heroSrc
+            ? "max-w-6xl mx-auto px-8 md:px-12 lg:px-16 pt-12 md:pt-16 pb-24 w-full flex-1"
+            : "max-w-6xl mx-auto px-8 md:px-12 lg:px-16 pt-32 pb-24 w-full flex-1"
+        }
+      >
+        {heroSrc ? null : intro}
 
         {/* Trust strip */}
         <section className="mb-16 md:mb-20 border-y border-surface py-8">
