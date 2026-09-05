@@ -1,13 +1,14 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTutorialBySlug, getTutorialSlugs } from "@/lib/tutorials/data";
 import { TUTORIALS_BASE_PATH } from "@/lib/tutorials/constants";
 import { youtubeEmbedUrl } from "@/lib/tutorials/youtube";
+import PageBreadcrumb from "@/components/layout/PageBreadcrumb";
 import TutorialSocialLinks from "@/components/tutorials/TutorialSocialLinks";
 import TutorialsCtaBanner from "@/components/tutorials/TutorialsCtaBanner";
 import { locales, urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { localizedPath } from "@/lib/i18n/paths";
 import { pageAlternates } from "@/lib/i18n/metadata";
+import { translations } from "@/lib/i18n/translations";
 import type { Metadata } from "next";
 import sanitizeHtml from "sanitize-html";
 
@@ -76,20 +77,22 @@ export default function TutorialPage({ params }: TutorialPageProps) {
 
   if (!tutorial) notFound();
 
-  const backLabel =
-    internal === "FA" ? "بازگشت به آموزش‌های رایگان" : "← Back to free tutorials";
+  const nav = translations[internal].navbar;
   const authorLabel = internal === "FA" ? "نویسنده:" : "Author:";
   const safeHtml = sanitizeTutorialHtml(tutorial.content);
 
   return (
     <div className="flex-1 w-full bg-background text-cream">
       <article className="max-w-3xl mx-auto px-8 md:px-12 lg:px-16 pt-32 pb-24">
-        <Link
-          href={localizedPath(TUTORIALS_BASE_PATH, locale)}
-          className="font-dm text-sm text-muted hover:text-cream transition-colors mb-10 inline-block"
-        >
-          {backLabel}
-        </Link>
+        <PageBreadcrumb
+          ariaLabel={nav.breadcrumbAria}
+          className="mb-10"
+          items={[
+            { label: nav.home, href: localizedPath("/", locale) },
+            { label: nav.tutorials, href: localizedPath(TUTORIALS_BASE_PATH, locale) },
+            { label: tutorial.title },
+          ]}
+        />
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
           <time className="font-mono text-xs text-orange">{tutorial.date}</time>

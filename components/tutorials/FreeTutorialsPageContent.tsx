@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import type { Tutorial } from "@/lib/tutorials/types";
+import { TUTORIALS_BASE_PATH } from "@/lib/tutorials/constants";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import PageBreadcrumb from "@/components/layout/PageBreadcrumb";
 import TutorialExpandableSection from "./TutorialExpandableSection";
 import TutorialsGrid from "./TutorialsGrid";
 import TutorialsCtaBanner from "./TutorialsCtaBanner";
@@ -25,12 +26,14 @@ export default function FreeTutorialsPageContent({
   return (
     <div className="flex-1 w-full bg-background text-cream flex flex-col">
       <div className="max-w-6xl mx-auto px-8 md:px-12 lg:px-16 pt-32 pb-24 w-full flex-1">
-        <Link
-          href={href("/")}
-          className="font-dm text-sm text-muted hover:text-cream transition-colors mb-10 inline-block"
-        >
-          {p.backHome}
-        </Link>
+        <PageBreadcrumb
+          ariaLabel={t.navbar.breadcrumbAria}
+          className="mb-10"
+          items={[
+            { label: t.navbar.home, href: href("/") },
+            { label: t.navbar.tutorials, href: href(TUTORIALS_BASE_PATH) },
+          ]}
+        />
 
         <header className="max-w-3xl mb-8 md:mb-10">
           <p className="type-section-label font-mono text-orange mb-3">

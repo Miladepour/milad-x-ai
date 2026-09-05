@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 import { getAllBlogSlugs } from "@/lib/blog/store";
 import { getTutorialSlugs } from "@/lib/tutorials/data";
 import { courseUsesExternalApply } from "@/lib/courses/registration";
+import { isCourseOpenable } from "@/lib/courses";
+import { comingSoonSlugs } from "@/lib/courses/data/coming-soon";
 import { getAllCourseSlugs, getCourses } from "@/lib/courses/store";
 import { courseSlugs as staticCourseSlugs } from "@/lib/courses/data/index";
 import { locales, SITE_URL, type UrlLocale } from "@/lib/i18n/config";
@@ -65,7 +67,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
 
   const waitlistSlugs = new Set(
-    coursesEn.filter((course) => !courseUsesExternalApply(course)).map((course) => course.slug)
+    coursesEn
+      .filter((course) => isCourseOpenable(course) && !courseUsesExternalApply(course))
+      .map((course) => course.slug)
   );
 
   const entries: MetadataRoute.Sitemap = [];
@@ -76,6 +80,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
 
     for (const slug of courseSlugs) {
+      const course = coursesEn.find((item) => item.slug === slug);
+      if (comingSoonSlugs.includes(slug) || (course && !isCourseOpenable(course))) continue;
       addEntry(entries, `/courses/${slug}`, locale);
       if (waitlistSlugs.size === 0 || waitlistSlugs.has(slug)) {
         addEntry(entries, `/courses/${slug}/waitlist`, locale);

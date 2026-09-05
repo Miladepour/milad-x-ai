@@ -11,6 +11,7 @@ export const translations = {
       blog: "Blog",
       consultation: "Consultation",
       contact: "Contact",
+      breadcrumbAria: "Breadcrumb",
       studentLogin: "Student login",
       studentLoginAria: "Sign in to access your enrolled programs",
       studentDashboard: "My learning",
@@ -65,7 +66,7 @@ export const translations = {
       viewApp: "Open app",
     },
     courses: {
-      label: "EDUCATION",
+      label: "COURSES",
       heading: "Upcoming Courses",
       items: [
         {
@@ -131,10 +132,92 @@ export const translations = {
     },
     coursesPage: {
       backHome: "← Back to home",
-      label: "Education",
-      title: "Courses",
+      label: "Courses",
+      title: "Online and Offline AI Courses",
       description:
-        "Milad’s practical masterclasses and workshops on AI content creation, art, and automation.",
+        "MX AI Academy AI courses are for people who want to learn artificial intelligence by doing the work, not by collecting disconnected tutorials. You can take recorded offline courses at your own pace, or join a live online workshop on a set date.",
+      descriptionMore:
+        "The paths cover AI fundamentals, prompt engineering, content creation with AI, working with AI agents, website design, and vibe coding. After you complete a course, you receive an MX AI Academy certificate of completion.",
+      highlights: [
+        {
+          id: "certificate",
+          title: "Certificate after the course",
+          text: "When you finish a course, MX AI Academy issues a completion certificate.",
+        },
+        {
+          id: "formats",
+          title: "Offline and online",
+          text: "Watch recorded lessons in your own time, or join a live workshop with a fixed date.",
+        },
+        {
+          id: "skills",
+          title: "Practical AI skills",
+          text: "Prompt engineering, content creation, agents, website design, and vibe coding.",
+        },
+        {
+          id: "portal",
+          title: "Student portal",
+          text: "During online or offline courses you get a student portal for lessons, files, and progress in one place.",
+        },
+      ],
+      certificateTitle: "Certificate of completion",
+      certificateBody:
+        "Every MX AI Academy course includes a certificate of completion. After you finish the lessons or live workshop, the certificate is issued to your student account so you can download it and share it.",
+      faqTitle: "Frequently asked questions about AI courses",
+      faqItems: [
+        {
+          id: "offline-online",
+          question: "What is the difference between offline and online AI courses?",
+          answer:
+            "Offline courses are recorded inside the student portal. You watch them at your own pace. Online courses are live workshops on a set date. In both cases you use the student portal during the course.",
+        },
+        {
+          id: "certificate",
+          question: "Do I get a certificate after the course?",
+          answer:
+            "Yes. After you complete a course, MX AI Academy issues a certificate of completion to your student account.",
+        },
+        {
+          id: "language",
+          question: "Are the courses in Persian or English?",
+          answer:
+            "The academy publishes course pages in both Farsi and English. Choose the language in the site header. Live workshop language is stated on each course page.",
+        },
+        {
+          id: "beginner",
+          question: "Do I need previous AI experience?",
+          answer:
+            "No. AI Fundamentals and several other paths start from the basics. Live workshop pages also say who the session is for and what tools you need.",
+        },
+        {
+          id: "offline-when",
+          question: "When will the offline courses be released?",
+          answer:
+            "The offline AI courses are announced here first. Full syllabus, dates, and enrolment open when each course is ready. The cards stay visible so you can see what is coming.",
+        },
+        {
+          id: "enroll-online",
+          question: "How do I join a live online workshop?",
+          answer:
+            "Open the workshop card, read the details, and apply from that page. If you are in Iran, you can also message the academy on Telegram for registration and pricing.",
+        },
+        {
+          id: "private",
+          question: "Can I take a private AI course instead?",
+          answer:
+            "Yes. If you want one-to-one training built around your project, book a private course consultation from the Private Course page.",
+        },
+      ],
+      offlineTitle: "Offline courses",
+      offlineDescription:
+        "Recorded courses inside the student portal. Watch the lessons at your own pace, practise, and track your progress. Full syllabus and release dates will be announced soon.",
+      onlineTitle: "Online courses",
+      onlineDescription:
+        "Live workshops on a set date. You join the session, practise in class, and keep access to the student portal for files, recordings, and progress during the course.",
+      filterAria: "Filter courses",
+      filterAll: "All",
+      filterOffline: "Offline",
+      filterOnline: "Online",
       viewAll: "View all courses →",
       viewDetails: "View details →",
       home: "Home",
@@ -713,12 +796,13 @@ export const translations = {
     navbar: {
       home: "خانه",
       portfolio: "نمونه‌کار",
-      courses: "دوره",
+      courses: "دوره‌ها",
       privateCourse: "دوره خصوصی",
       tutorials: "آموزش رایگان",
       blog: "وبلاگ",
       consultation: "مشاوره",
       contact: "تماس",
+      breadcrumbAria: "مسیر صفحه",
       studentLogin: "ورود دانشجو",
       studentLoginAria: "ورود برای دسترسی به برنامه‌های ثبت‌نام‌شده",
       studentDashboard: "پنل دانشجو",
@@ -779,7 +863,7 @@ export const translations = {
       viewApp: "مشاهده اپ",
     },
     courses: {
-      label: "آموزش",
+      label: "دوره‌ها",
       heading: "ورکشاپ و دوره‌ها",
       items: [
         {
@@ -845,14 +929,96 @@ export const translations = {
     },
     coursesPage: {
       backHome: "→ بازگشت به خانه",
-      label: "آموزش",
-      title: "دوره",
+      label: "دوره‌ها",
+      title: "دوره‌های هوش مصنوعی آنلاین و آفلاین",
       description:
-        "مسترکلاس‌ها و ورکشاپ‌های عملی میلاد برای تولید محتوا، هنر و اتوماتیک‌سازی با هوش مصنوعی.",
+        "دوره‌های هوش مصنوعی MX AI Academy برای کسانی است که می‌خواهند هوش مصنوعی را عملی یاد بگیرند، نه با آموزش‌های پراکنده. می‌توانید دوره آفلاین ضبط‌شده را با سرعت خودتان ببینید، یا در ورکشاپ آنلاین زنده با تاریخ مشخص شرکت کنید.",
+      descriptionMore:
+        "مسیرها شامل مبانی هوش مصنوعی، مهندسی پرامپت، تولید محتوا با هوش مصنوعی، کار با ایجنت‌ها، طراحی وبسایت و وایب کدینگ است. بعد از اتمام هر دوره، گواهینامه پایان دوره MX AI Academy برای شما صادر می‌شود.",
+      highlights: [
+        {
+          id: "certificate",
+          title: "گواهینامه پایان دوره",
+          text: "پس از اتمام دوره، گواهینامه تکمیل دوره از MX AI Academy صادر می‌شود.",
+        },
+        {
+          id: "formats",
+          title: "آفلاین و آنلاین",
+          text: "درس‌های ضبط‌شده را در زمان خودتان ببینید، یا در ورکشاپ زنده با تاریخ مشخص شرکت کنید.",
+        },
+        {
+          id: "skills",
+          title: "مهارت عملی هوش مصنوعی",
+          text: "مهندسی پرامپت، تولید محتوا، ایجنت‌ها، طراحی وبسایت و وایب کدینگ.",
+        },
+        {
+          id: "portal",
+          title: "پنل دانشجویی",
+          text: "در طول دوره آنلاین یا آفلاین به پنل دانشجویی دسترسی دارید؛ درس‌ها، فایل‌ها و پیشرفتتان یکجا است.",
+        },
+      ],
+      certificateTitle: "گواهینامه پایان دوره هوش مصنوعی",
+      certificateBody:
+        "هر دوره MX AI Academy شامل گواهینامه پایان دوره است. بعد از اتمام درس‌ها یا ورکشاپ زنده، گواهینامه در حساب دانشجویی شما صادر می‌شود تا بتوانید آن را دانلود کنید و به اشتراک بگذارید.",
+      faqTitle: "سؤالات متداول دوره‌های هوش مصنوعی",
+      faqItems: [
+        {
+          id: "offline-online",
+          question: "تفاوت دوره آنلاین و آفلاین هوش مصنوعی چیست؟",
+          answer:
+            "دوره آفلاین ضبط شده است و داخل پنل دانشجویی با سرعت خودتان دیده می‌شود. دوره آنلاین ورکشاپ زنده با تاریخ مشخص است. در هر دو حالت، در طول دوره به پنل دانشجویی دسترسی دارید.",
+        },
+        {
+          id: "certificate",
+          question: "آیا بعد از دوره گواهینامه می‌گیرم؟",
+          answer:
+            "بله. بعد از اتمام دوره، گواهینامه پایان دوره MX AI Academy در حساب دانشجویی شما صادر می‌شود.",
+        },
+        {
+          id: "language",
+          question: "دوره‌ها به زبان فارسی هستند یا انگلیسی؟",
+          answer:
+            "صفحه دوره‌ها به فارسی و انگلیسی منتشر می‌شود. زبان سایت را از هدر عوض کنید. زبان ورکشاپ زنده در صفحه همان دوره نوشته شده است.",
+        },
+        {
+          id: "beginner",
+          question: "برای شروع به تجربه قبلی هوش مصنوعی نیاز دارم؟",
+          answer:
+            "خیر. مسیر مبانی هوش مصنوعی و چند مسیر دیگر از پایه شروع می‌شود. در صفحه ورکشاپ‌های زنده هم نوشته شده دوره برای چه کسانی مناسب است و چه ابزارهایی لازم دارید.",
+        },
+        {
+          id: "offline-when",
+          question: "دوره‌های آفلاین چه زمانی منتشر می‌شوند؟",
+          answer:
+            "دوره‌های آفلاین هوش مصنوعی ابتدا در همین صفحه اعلام می‌شوند. سرفصل کامل، تاریخ و ثبت‌نام وقتی هر دوره آماده باشد باز می‌شود. کارت‌ها همین حالا دیده می‌شوند تا بدانید چه دوره‌هایی در راه است.",
+        },
+        {
+          id: "enroll-online",
+          question: "چطور در ورکشاپ آنلاین ثبت‌نام کنم؟",
+          answer:
+            "کارت ورکشاپ را باز کنید، جزئیات را بخوانید و از همان صفحه ثبت‌نام کنید. اگر از ایران هستید، برای ثبت‌نام و قیمت می‌توانید در تلگرام به آکادمی پیام بدهید.",
+        },
+        {
+          id: "private",
+          question: "اگر بخواهم دوره خصوصی بگیرم چه کار کنم؟",
+          answer:
+            "اگر آموزش یک به یک متناسب با پروژه خودتان می‌خواهید، از صفحه دوره خصوصی جلسه مشاوره رزرو کنید.",
+        },
+      ],
+      offlineTitle: "دوره‌های آفلاین",
+      offlineDescription:
+        "دوره‌های ضبط‌شده داخل پنل دانشجویی. درس‌ها را با سرعت خودتان می‌بینید، تمرین می‌کنید و پیشرفتتان را دنبال می‌کنید. سرفصل کامل و زمان انتشار به‌زودی اعلام می‌شود.",
+      onlineTitle: "دوره‌های آنلاین",
+      onlineDescription:
+        "ورکشاپ‌های زنده با تاریخ مشخص. در جلسه حاضر می‌شوید، تمرین می‌کنید و در طول دوره به پنل دانشجویی برای فایل‌ها، ضبط و پیگیری دسترسی دارید.",
+      filterAria: "فیلتر دوره‌ها",
+      filterAll: "همه",
+      filterOffline: "آفلاین",
+      filterOnline: "آنلاین",
       viewAll: "مشاهده همه دوره‌ها ←",
       viewDetails: "مشاهده جزئیات ←",
       home: "خانه",
-      courses: "دوره",
+      courses: "دوره‌ها",
       joinWaitingList: "ثبت نام کنید",
       applyNow: "ثبت نام کنید",
       allCourses: "همه دوره‌ها",

@@ -5,6 +5,7 @@ import { promptToContentCourseEn } from "./data/en";
 import { promptToContentCourseFa } from "./data/fa";
 import { promptToWebsiteCourseEn } from "./data/prompt-to-website-en";
 import { promptToWebsiteCourseFa } from "./data/prompt-to-website-fa";
+import { comingSoonCoursesEn, comingSoonCoursesFa } from "./data/coming-soon";
 
 function buildStaticCoursePayload(
   en: Course,
@@ -26,9 +27,15 @@ function buildStaticCoursePayload(
 
 /** All courses defined in lib/courses/data — used for admin import and seeding. */
 export function getAllStaticCourseAdminPayloads(): CourseAdminPayload[] {
+  const comingSoon = comingSoonCoursesEn.map((en, index) => {
+    const fa = comingSoonCoursesFa[index]!;
+    return buildStaticCoursePayload(en, fa, index + 2);
+  });
+
   return [
     buildStaticCoursePayload(promptToContentCourseEn, promptToContentCourseFa, 0),
     buildStaticCoursePayload(promptToWebsiteCourseEn, promptToWebsiteCourseFa, 1),
+    ...comingSoon,
   ];
 }
 

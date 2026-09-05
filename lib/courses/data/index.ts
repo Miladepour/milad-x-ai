@@ -6,14 +6,15 @@ import { promptToContentCourseEn } from "./en";
 import { promptToContentCourseFa } from "./fa";
 import { promptToWebsiteCourseEn } from "./prompt-to-website-en";
 import { promptToWebsiteCourseFa } from "./prompt-to-website-fa";
+import { comingSoonCoursesEn, comingSoonCoursesFa } from "./coming-soon";
 import { withResolvedApplyUrl } from "../apply-url";
 import { sortCoursesByDate } from "../sort";
 
 export { COURSES_BASE_PATH } from "../constants";
 
 const coursesByLocale: Record<Locale, Course[]> = {
-  EN: [promptToContentCourseEn, promptToWebsiteCourseEn],
-  FA: [promptToContentCourseFa, promptToWebsiteCourseFa],
+  EN: [promptToContentCourseEn, promptToWebsiteCourseEn, ...comingSoonCoursesEn],
+  FA: [promptToContentCourseFa, promptToWebsiteCourseFa, ...comingSoonCoursesFa],
 };
 
 export const courseSlugs = coursesByLocale.EN.map((c) => c.slug);

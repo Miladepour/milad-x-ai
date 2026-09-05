@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import InstructorAboutSection from "@/components/shared/InstructorAboutSection";
+import PageBreadcrumb from "@/components/layout/PageBreadcrumb";
 import { toLocaleDigits } from "@/lib/i18n/digits";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
+  CONSULTATION_BASE_PATH,
   CONSULTATION_BOOKING_URL,
   CONSULTATION_PRICE_USD,
 } from "@/lib/consultation/constants";
@@ -25,12 +26,14 @@ export default function ConsultationPageContent() {
   return (
     <div className="flex-1 w-full bg-background text-cream flex flex-col">
       <div className="max-w-6xl mx-auto px-8 md:px-12 lg:px-16 pt-32 pb-24 w-full flex-1">
-        <Link
-          href={href("/")}
-          className="font-dm text-sm text-muted hover:text-cream transition-colors mb-10 inline-block"
-        >
-          {p.backHome}
-        </Link>
+        <PageBreadcrumb
+          ariaLabel={t.navbar.breadcrumbAria}
+          className="mb-10"
+          items={[
+            { label: t.navbar.home, href: href("/") },
+            { label: t.navbar.consultation, href: href(CONSULTATION_BASE_PATH) },
+          ]}
+        />
 
         <div className="grid gap-12 lg:grid-cols-[1fr_320px] lg:gap-10 items-start">
           <div>

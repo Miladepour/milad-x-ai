@@ -183,7 +183,7 @@ export function parseCourseAdminPayload(value: unknown): CourseAdminPayload {
 
   return {
     slug,
-    coverImage: requireString(value.coverImage, "coverImage"),
+    coverImage: typeof value.coverImage === "string" ? value.coverImage.trim() : "",
     priceUsd: Number(value.priceUsd) || 0,
     sortOrder: Number(value.sortOrder) || 0,
     publishedAt,

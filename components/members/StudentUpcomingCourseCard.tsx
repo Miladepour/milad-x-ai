@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { displayExcerpt } from "@/lib/members/text";
+import { hasCourseCover } from "@/lib/courses/openable";
 
 interface StudentUpcomingCourseCardProps {
   href: string;
@@ -11,6 +12,7 @@ interface StudentUpcomingCourseCardProps {
   isLive: boolean;
   coverImage: string;
   viewLabel: string;
+  openable?: boolean;
 }
 
 export default function StudentUpcomingCourseCard({
@@ -22,26 +24,26 @@ export default function StudentUpcomingCourseCard({
   isLive,
   coverImage,
   viewLabel,
+  openable = true,
 }: StudentUpcomingCourseCardProps) {
   const summary = displayExcerpt(excerpt, 72);
 
-  return (
-    <Link
-      href={href}
-      className="group relative block h-full w-full overflow-hidden rounded-xl shadow-[0_8px_28px_rgba(0,0,0,0.3)] transition-transform duration-300 hover:scale-[1.01]"
-    >
+  const media = (
+    <>
       <div className="relative aspect-[16/10] w-full bg-surface">
-        {coverImage ? (
+        {hasCourseCover(coverImage) ? (
           <Image
             src={coverImage}
             alt=""
             fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className={`object-cover ${
+              openable ? "transition-transform duration-500 group-hover:scale-105" : ""
+            }`}
             sizes="(max-width: 768px) 100vw, 50vw"
             unoptimized={coverImage.startsWith("http")}
           />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-orange via-orange/70 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-br from-orange/20 via-orange/10 to-background" />
         )}
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10" />
@@ -66,11 +68,30 @@ export default function StudentUpcomingCourseCard({
             </p>
           ) : null}
 
-          <span className="mt-0.5 w-full rounded-full bg-cream py-2.5 text-center font-mono text-xs uppercase tracking-widest text-background transition-colors group-hover:bg-orange group-hover:text-cream">
-            {viewLabel}
-          </span>
+          {openable ? (
+            <span className="mt-0.5 w-full rounded-full bg-cream py-2.5 text-center font-mono text-xs uppercase tracking-widest text-background transition-colors group-hover:bg-orange group-hover:text-cream">
+              {viewLabel}
+            </span>
+          ) : null}
         </div>
       </div>
+    </>
+  );
+
+  if (!openable) {
+    return (
+      <div className="relative block h-full w-full overflow-hidden rounded-xl shadow-[0_8px_28px_rgba(0,0,0,0.3)]">
+        {media}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={href}
+      className="group relative block h-full w-full overflow-hidden rounded-xl shadow-[0_8px_28px_rgba(0,0,0,0.3)] transition-transform duration-300 hover:scale-[1.01]"
+    >
+      {media}
     </Link>
   );
 }

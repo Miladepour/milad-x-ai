@@ -14,7 +14,7 @@ import { getAllStaticCourseAdminPayloads } from "./import-static";
 import { parseCourseAdminPayload } from "./validate";
 import { withResolvedApplyUrl } from "./apply-url";
 import { sortCoursesByDate } from "./sort";
-import { mergeWithStaticCatalog } from "./sync-static";
+import { mergeWithStaticCatalog, appendMissingStaticCourses } from "./sync-static";
 
 import {
   getCourseBySlug as getStaticCourseBySlug,
@@ -122,7 +122,7 @@ export async function getCourses(locale: Locale): Promise<Course[]> {
       })
       .filter((c): c is Course => c !== null);
 
-    return sortCoursesByDate(courses);
+    return sortCoursesByDate(appendMissingStaticCourses(courses, locale));
   }, () => getStaticCourses(locale));
 }
 
@@ -146,7 +146,7 @@ export async function getUpcomingCoursesPreview(
       })
       .filter((c): c is Course => c !== null);
 
-    return sortCoursesByDate(courses)
+    return sortCoursesByDate(appendMissingStaticCourses(courses, localeCode))
       .filter((course) => course.status !== "Closed")
       .slice(0, limit);
   }, () =>

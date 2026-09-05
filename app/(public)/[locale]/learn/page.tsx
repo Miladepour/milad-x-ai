@@ -14,6 +14,7 @@ import { getStudentDeviceCapMax } from "@/lib/members/device";
 import { listStudentDevices } from "@/lib/members/device-store";
 import { collectUsefulLinks } from "@/lib/members/learn-content";
 import { getUpcomingCoursesPreview } from "@/lib/courses/store";
+import { isCourseOpenable } from "@/lib/courses";
 import StudentUpcomingCourseCard from "@/components/members/StudentUpcomingCourseCard";
 import StudentProgramCardList from "@/components/members/StudentProgramCardList";
 import StudentBonusProgramCardList from "@/components/members/StudentBonusProgramCardList";
@@ -192,11 +193,12 @@ export default async function LearnDashboardPage({
                   href={localizedPath(`/courses/${course.slug}`, locale)}
                   title={course.listTitle}
                   excerpt={course.excerpt}
-                  date={course.date}
+                  date={isCourseOpenable(course) ? course.date : courseStatusLabels[course.status]}
                   statusLabel={courseStatusLabels[course.status]}
                   isLive={course.status === "Live"}
                   coverImage={course.coverImage}
                   viewLabel={t.memberPortal.viewCourse}
+                  openable={isCourseOpenable(course)}
                 />
               </li>
             ))}

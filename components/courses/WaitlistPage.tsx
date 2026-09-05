@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import type { Course } from "@/lib/courses";
 import { COURSES_BASE_PATH } from "@/lib/courses";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import PageBreadcrumb from "@/components/layout/PageBreadcrumb";
 import WaitlistForm from "./WaitlistForm";
 
 interface WaitlistPageProps {
@@ -25,22 +25,16 @@ export default function WaitlistPage({ course }: WaitlistPageProps) {
       className="flex-1 w-full bg-background text-cream"
     >
       <div className="max-w-2xl mx-auto px-8 md:px-12 lg:px-16 pt-32 pb-24">
-        <nav className="flex flex-wrap items-center gap-2 text-sm font-dm text-muted mb-10">
-          <Link href={href("/")} className="hover:text-cream transition-colors">
-            {p.home}
-          </Link>
-          <span aria-hidden>/</span>
-          <Link
-            href={href(COURSES_BASE_PATH)}
-            className="hover:text-cream transition-colors"
-          >
-            {p.courses}
-          </Link>
-          <span aria-hidden>/</span>
-          <Link href={coursePath} className="hover:text-cream transition-colors">
-            {course.listTitle}
-          </Link>
-        </nav>
+        <PageBreadcrumb
+          ariaLabel={t.navbar.breadcrumbAria}
+          className="mb-10"
+          items={[
+            { label: p.home, href: href("/") },
+            { label: p.courses, href: href(COURSES_BASE_PATH) },
+            { label: course.listTitle, href: coursePath },
+            { label: p.applyNow },
+          ]}
+        />
 
         <WaitlistForm course={course} />
       </div>

@@ -1,11 +1,12 @@
-import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import BlogPostContent from "@/components/blog/BlogPostContent";
+import PageBreadcrumb from "@/components/layout/PageBreadcrumb";
 import { getAllBlogSlugs, getBlogPostBySlug } from "@/lib/blog/store";
 import { locales, urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { localizedPath } from "@/lib/i18n/paths";
 import { pageAlternates } from "@/lib/i18n/metadata";
+import { translations } from "@/lib/i18n/translations";
 import type { Metadata } from "next";
 
 export const revalidate = 3600;
@@ -42,17 +43,20 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   if (!post) notFound();
 
-  const backLabel = internal === "FA" ? "بازگشت به وبلاگ" : "← Back to blog";
+  const nav = translations[internal].navbar;
 
   return (
     <div className="flex-1 w-full bg-background text-cream">
       <article className="max-w-3xl mx-auto px-8 md:px-12 lg:px-16 pt-32 pb-24">
-        <Link
-          href={localizedPath("/blog", locale)}
-          className="font-dm text-sm text-muted hover:text-cream transition-colors mb-10 inline-block"
-        >
-          {backLabel}
-        </Link>
+        <PageBreadcrumb
+          ariaLabel={nav.breadcrumbAria}
+          className="mb-10"
+          items={[
+            { label: nav.home, href: localizedPath("/", locale) },
+            { label: nav.blog, href: localizedPath("/blog", locale) },
+            { label: post.title },
+          ]}
+        />
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
           <time className="font-mono text-xs text-orange">{post.date}</time>
           <span className="font-mono text-xs text-cream/60">

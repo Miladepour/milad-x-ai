@@ -1,7 +1,7 @@
-import Link from "next/link";
 import type { Course } from "@/lib/courses/types";
 import type { Locale } from "@/lib/i18n/translations";
 import { toLocaleDigits } from "@/lib/i18n/digits";
+import PageBreadcrumb from "@/components/layout/PageBreadcrumb";
 
 const statusClass = {
   Live: "bg-orange text-background border-orange",
@@ -13,7 +13,7 @@ interface CourseDetailHeroProps {
   course: Course;
   lang: Locale;
   statusLabel: string;
-  nav: { home: string; courses: string };
+  nav: { home: string; courses: string; aria: string };
   homeHref: string;
   coursesHref: string;
   detail: {
@@ -60,17 +60,15 @@ export default function CourseDetailHero({
       }}
     >
       <div className="max-w-7xl mx-auto px-8 md:px-12 lg:px-16 pt-28 pb-8 md:pb-10">
-        <nav className="flex flex-wrap items-center gap-2 text-sm font-dm text-muted mb-6">
-          <Link href={homeHref} className="hover:text-cream transition-colors">
-            {nav.home}
-          </Link>
-          <span aria-hidden>/</span>
-          <Link href={coursesHref} className="hover:text-cream transition-colors">
-            {nav.courses}
-          </Link>
-          <span aria-hidden>/</span>
-          <span className="text-cream/70 line-clamp-1">{course.listTitle}</span>
-        </nav>
+        <PageBreadcrumb
+          ariaLabel={nav.aria}
+          className="mb-6"
+          items={[
+            { label: nav.home, href: homeHref },
+            { label: nav.courses, href: coursesHref },
+            { label: course.listTitle },
+          ]}
+        />
 
         <div className="flex flex-wrap items-center gap-2 mb-4">
           <span

@@ -1,4 +1,4 @@
-import type { Course } from "./types";
+import type { Course, CourseStatus } from "./types";
 
 const PERSIAN_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
 
@@ -84,9 +84,18 @@ export function getCourseSortTimestamp(course: Course): number {
   return Number.MAX_SAFE_INTEGER;
 }
 
-/** Sort courses by workshop date ascending (upcoming soonest first). */
+/** Coming soon first, then live by date, then closed. */
+function statusRank(status: CourseStatus): number {
+  if (status === "Coming Soon") return 0;
+  if (status === "Live") return 1;
+  return 2;
+}
+
+/** Sort catalog: coming soon first, then live workshops by date. */
 export function sortCoursesByDate(courses: Course[]): Course[] {
-  return [...courses].sort(
-    (a, b) => getCourseSortTimestamp(a) - getCourseSortTimestamp(b)
-  );
+  return [...courses].sort((a, b) => {
+    const rank = statusRank(a.status) - statusRank(b.status);
+    if (rank !== 0) return rank;
+    return getCourseSortTimestamp(a) - getCourseSortTimestamp(b);
+  });
 }

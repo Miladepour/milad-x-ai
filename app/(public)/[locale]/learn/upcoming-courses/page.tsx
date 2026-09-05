@@ -4,6 +4,7 @@ import StudentPortalButton from "@/components/members/StudentPortalButton";
 import StudentUpcomingCourseCard from "@/components/members/StudentUpcomingCourseCard";
 import { accountLoginPath } from "@/lib/members/paths";
 import { getCourses } from "@/lib/courses/store";
+import { isCourseOpenable } from "@/lib/courses";
 import { urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { localizedPath } from "@/lib/i18n/paths";
 import { getStudentUser } from "@/lib/supabase/require-student";
@@ -60,11 +61,12 @@ export default async function LearnUpcomingCoursesPage({
                   href={localizedPath(`/courses/${course.slug}`, locale)}
                   title={course.listTitle}
                   excerpt={course.excerpt}
-                  date={course.date}
+                  date={isCourseOpenable(course) ? course.date : courseStatusLabels[course.status]}
                   statusLabel={courseStatusLabels[course.status]}
                   isLive={course.status === "Live"}
                   coverImage={course.coverImage}
                   viewLabel={t.memberPortal.viewCourse}
+                  openable={isCourseOpenable(course)}
                 />
               </li>
             ))}

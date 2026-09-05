@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import PortfolioSections from "@/components/portfolio/PortfolioSections";
 import ConsultationCtaBanner from "@/components/shared/ConsultationCtaBanner";
+import PageBreadcrumb from "@/components/layout/PageBreadcrumb";
+import { PORTFOLIO_BASE_PATH } from "@/lib/portfolio/constants";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
@@ -14,12 +15,14 @@ export default function PortfolioPageContent() {
   return (
     <div className="flex-1 w-full bg-background text-cream">
       <div className="max-w-6xl mx-auto overflow-visible px-8 md:px-12 lg:px-16 pt-32 pb-24">
-        <Link
-          href={href("/")}
-          className="font-dm text-sm text-muted hover:text-cream transition-colors mb-10 inline-block"
-        >
-          {p.backHome}
-        </Link>
+        <PageBreadcrumb
+          ariaLabel={t.navbar.breadcrumbAria}
+          className="mb-10"
+          items={[
+            { label: t.navbar.home, href: href("/") },
+            { label: t.navbar.portfolio, href: href(PORTFOLIO_BASE_PATH) },
+          ]}
+        />
 
         <p className="type-section-label font-mono text-orange mb-3">{p.label}</p>
         <h1 className="type-course-page-title font-dm font-bold text-cream mb-4">

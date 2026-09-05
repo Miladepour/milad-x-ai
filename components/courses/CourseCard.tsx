@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import type { Course } from "@/lib/courses/types";
-import { COURSES_BASE_PATH, formatCoursePrice } from "@/lib/courses";
+import { COURSES_BASE_PATH, formatCoursePrice, isCourseOpenable } from "@/lib/courses";
+import CourseCoverImage from "./CourseCoverImage";
 import CourseIranTelegramNote from "./CourseIranTelegramNote";
 import { useLanguage } from "@/lib/i18n/context";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -23,32 +23,36 @@ export default function CourseCard({ course }: CourseCardProps) {
   const t = useTranslation();
   const p = t.coursesPage;
   const statusLabel = p.statusLabels[course.status];
-
+  const openable = isCourseOpenable(course);
   const courseHref = href(`${COURSES_BASE_PATH}/${course.slug}`);
 
-  return (
-    <article className="group flex flex-col bg-surface rounded-sm overflow-hidden border border-transparent hover:border-orange/40 transition-colors duration-200">
-      <Link href={courseHref} className="flex flex-col flex-1">
-        <div className="h-48 bg-background flex-shrink-0 relative overflow-hidden">
-          <Image
-            src={course.coverImage}
-            alt={course.listTitle}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-            sizes="(max-width: 768px) 100vw, 400px"
-          />
+  const body = (
+    <>
+      <div className="h-48 bg-background flex-shrink-0 relative overflow-hidden">
+        <CourseCoverImage
+          src={course.coverImage}
+          alt={course.listTitle}
+          seed={course.slug}
+          sizes="(max-width: 768px) 100vw, 33vw"
+          className={
+            openable
+              ? "object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+              : "object-cover"
+          }
+        />
+      </div>
+
+      <div className="flex flex-col flex-1 p-6 gap-4">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <span
+            className={`type-badge font-mono border px-2 py-1 ${statusClass[course.status]}`}
+            style={{ borderRadius: "2px" }}
+          >
+            {statusLabel}
+          </span>
         </div>
 
-        <div className="flex flex-col flex-1 p-6 gap-4">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <span
-              className={`type-badge font-mono border px-2 py-1 ${statusClass[course.status]}`}
-              style={{ borderRadius: "2px" }}
-            >
-              {statusLabel}
-            </span>
-          </div>
-
+        {openable ? (
           <div className="flex flex-wrap gap-4 font-dm text-sm text-cream">
             <span>
               <span className="text-cream/80">{p.dateLabel}: </span>
@@ -61,22 +65,48 @@ export default function CourseCard({ course }: CourseCardProps) {
               </span>
             </span>
           </div>
+        ) : null}
 
-          <h2 className="type-course-card-title font-dm font-semibold text-cream group-hover:text-orange transition-colors">
-            {course.listTitle}
-          </h2>
+        <h3
+          className={`type-course-card-title font-dm font-semibold text-cream ${
+            openable ? "group-hover:text-orange transition-colors" : ""
+          }`}
+        >
+          {course.listTitle}
+        </h3>
 
-          <p className="type-card-body font-dm text-cream leading-relaxed flex-1 line-clamp-3">
-            {course.excerpt}
-          </p>
+        <p className="type-card-body font-dm text-cream leading-relaxed flex-1 line-clamp-3">
+          {course.excerpt}
+        </p>
 
+        {openable ? (
           <span className="font-mono text-xs text-orange">{t.coursesPage.viewDetails}</span>
-        </div>
-      </Link>
-
-      <div className="px-6 pb-6 -mt-2">
-        <CourseIranTelegramNote lang={lang} />
+        ) : null}
       </div>
+    </>
+  );
+
+  return (
+    <article
+      className={`flex flex-col bg-surface rounded-sm overflow-hidden border border-transparent ${
+        openable
+          ? "group hover:border-orange/40 transition-colors duration-200"
+          : "cursor-default"
+      }`}
+    >
+      {openable ? (
+        <Link href={courseHref} className="flex flex-col flex-1">
+          {body}
+        </Link>
+      ) : (
+        <div className="flex flex-col flex-1">{body}</div>
+      )}
+
+      {openable ? (
+        <div className="px-6 pb-6 -mt-2">
+          <CourseIranTelegramNote lang={lang} />
+        </div>
+      ) : null}
     </article>
   );
 }

@@ -1,7 +1,9 @@
 import LegalDocumentPage from "@/components/legal/LegalDocumentPage";
 import { getTermsAndConditionsHtml } from "@/lib/legal/documents";
 import { urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
+import { localizedPath } from "@/lib/i18n/paths";
 import { pageAlternates } from "@/lib/i18n/metadata";
+import { translations } from "@/lib/i18n/translations";
 import type { Metadata } from "next";
 
 interface TermsPageProps {
@@ -26,7 +28,20 @@ export function generateMetadata({ params }: TermsPageProps): Metadata {
 export default function TermsAndConditionsPage({
   params,
 }: TermsPageProps) {
-  const internal = urlLocaleToInternal(params.locale as UrlLocale);
+  const locale = params.locale as UrlLocale;
+  const internal = urlLocaleToInternal(locale);
   const html = getTermsAndConditionsHtml(internal);
-  return <LegalDocumentPage html={html} dir={internal === "FA" ? "rtl" : "ltr"} />;
+  const nav = translations[internal].navbar;
+  const footer = translations[internal].footer;
+  return (
+    <LegalDocumentPage
+      html={html}
+      dir={internal === "FA" ? "rtl" : "ltr"}
+      breadcrumbAria={nav.breadcrumbAria}
+      breadcrumbItems={[
+        { label: nav.home, href: localizedPath("/", locale) },
+        { label: footer.termsAndConditions },
+      ]}
+    />
+  );
 }

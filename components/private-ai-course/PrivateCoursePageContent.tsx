@@ -1,20 +1,22 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import InstructorAboutSection from "@/components/shared/InstructorAboutSection";
 import {
   CONSULTATION_BOOKING_URL,
 } from "@/lib/consultation/constants";
 import { TELEGRAM_APPLY_URL } from "@/lib/courses/constants";
+import { PRIVATE_AI_COURSE_BASE_PATH } from "@/lib/private-ai-course/constants";
 import {
   privateCoursePageContent,
   type PrivateCoursePath,
 } from "@/lib/private-ai-course/content";
 import { useLanguage } from "@/lib/i18n/context";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { toLocaleDigits } from "@/lib/i18n/digits";
 import type { Locale } from "@/lib/i18n/translations";
 import { cn } from "@/lib/utils";
+import PageBreadcrumb from "@/components/layout/PageBreadcrumb";
 
 const btnPrimary =
   "inline-flex items-center justify-center font-mono px-8 py-4 text-sm uppercase tracking-widest rtl:tracking-normal bg-orange text-background border-2 border-orange hover:bg-orange-dim hover:border-orange-dim transition-colors duration-200 rounded-sm";
@@ -231,17 +233,20 @@ function FaqAccordion({
 
 export default function PrivateCoursePageContent() {
   const { href, lang } = useLanguage();
+  const t = useTranslation();
   const p = privateCoursePageContent[lang];
 
   return (
     <div className="flex-1 w-full bg-background text-cream flex flex-col">
       <div className="max-w-6xl mx-auto px-8 md:px-12 lg:px-16 pt-32 pb-24 w-full flex-1">
-        <Link
-          href={href("/")}
-          className="font-dm text-sm text-muted hover:text-cream transition-colors mb-10 inline-block"
-        >
-          {p.backHome}
-        </Link>
+        <PageBreadcrumb
+          ariaLabel={t.navbar.breadcrumbAria}
+          className="mb-10"
+          items={[
+            { label: t.navbar.home, href: href("/") },
+            { label: t.navbar.privateCourse, href: href(PRIVATE_AI_COURSE_BASE_PATH) },
+          ]}
+        />
 
         {/* Hero */}
         <section className="mb-16 md:mb-20">
