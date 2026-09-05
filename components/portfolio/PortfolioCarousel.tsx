@@ -87,13 +87,13 @@ export default function PortfolioCarousel({
     "pointer-events-auto absolute top-1/2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-surface bg-background/95 text-cream shadow-lg backdrop-blur-sm transition-colors duration-200 hover:border-orange hover:text-orange disabled:opacity-30 disabled:cursor-not-allowed";
 
   return (
-    <div className="relative overflow-hidden py-1">
+    <div className="relative py-1">
       <button
         type="button"
         aria-label={prevLabel}
         disabled={!canScrollLeft}
         onClick={() => scroll("left")}
-        className={`${arrowClass} start-0 -ms-1 md:-ms-3`}
+        className={`${arrowClass} start-1`}
       >
         {rtl ? (
           <ChevronRight className="h-5 w-5 shrink-0" aria-hidden />
@@ -107,7 +107,7 @@ export default function PortfolioCarousel({
         aria-label={nextLabel}
         disabled={!canScrollRight}
         onClick={() => scroll("right")}
-        className={`${arrowClass} end-0 -me-1 md:-me-3`}
+        className={`${arrowClass} end-1`}
       >
         {rtl ? (
           <ChevronLeft className="h-5 w-5 shrink-0" aria-hidden />

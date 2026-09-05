@@ -6,29 +6,31 @@ export const siteMetadata: Record<
   { title: string; description: string; keywords: string[] }
 > = {
   en: {
-    title: "Milad X AI — AI Content Creation Courses & Workshops",
+    title: "MX AI Academy | AI Courses by Milad X Talks",
     description:
-      "Learn AI content creation with Milad X AI. Live workshops, private courses, and project collaboration — AI image, video, prompts, and automation for creators and businesses.",
+      "Learn AI at MX AI Academy. Practical AI courses, private training, live workshops and free tutorials with Milad, for creators and businesses.",
     keywords: [
-      "AI content creation",
-      "AI workshops",
-      "prompt engineering",
-      "AI video",
+      "MX AI Academy",
+      "Milad X Talks",
       "AI courses",
-      "Milad X AI",
+      "AI training",
+      "private AI course",
+      "AI workshops",
+      "Milad",
     ],
   },
   fa: {
-    title: "میلاد X AI — دوره‌ها و کارگاه‌های تولید محتوا با هوش مصنوعی",
+    title: "دوره‌های آموزش هوش مصنوعی | MX AI Academy",
     description:
-      "با میلاد X AI هوش مصنوعی را برای تولید محتوا یاد بگیرید. کارگاه‌های زنده، دوره‌های خصوصی و همکاری پروژه — تصویر، ویدیو، پرامپت و اتوماسیون برای خالقان محتوا و کسب‌وکارها.",
+      "دوره‌های آموزش هوش مصنوعی در MX AI Academy. دوره آنلاین و آفلاین، دوره خصوصی، کارگاه زنده و آموزش رایگان با میلاد.",
     keywords: [
-      "هوش مصنوعی",
-      "تولید محتوا",
-      "کارگاه AI",
-      "پرامپت",
-      "دوره هوش مصنوعی",
-      "میلاد X AI",
+      "دوره‌های آموزش هوش مصنوعی",
+      "آموزش هوش مصنوعی",
+      "MX AI Academy",
+      "Milad X Talks",
+      "دوره خصوصی هوش مصنوعی",
+      "کارگاه هوش مصنوعی",
+      "میلاد",
     ],
   },
 };

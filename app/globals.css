@@ -39,6 +39,30 @@
     @apply relative overflow-hidden rounded-[28px] border border-white/[0.14] bg-gradient-to-br from-white/[0.11] via-white/[0.04] to-orange/[0.07] p-6 shadow-[0_20px_56px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-2xl;
   }
 
+  .home-course-glass {
+    @apply overflow-hidden rounded-[15px] border border-white/[0.14] bg-gradient-to-br from-white/[0.11] via-white/[0.05] to-orange/[0.08] shadow-[0_12px_40px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-xl;
+  }
+
+  .home-section-label {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  html.rtl .home-section-label {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  @media (min-width: 768px) {
+    .home-section-label {
+      font-size: 15px;
+    }
+
+    html.rtl .home-section-label {
+      font-size: 16px;
+    }
+  }
+
   .premium-card-perspective {
     perspective: 900px;
   }

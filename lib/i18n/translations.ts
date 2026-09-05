@@ -18,14 +18,14 @@ export const translations = {
       studentDashboardAria: "Open your student dashboard",
     },
     hero: {
-      tag: "CREATIVE × EDUCATOR × AI ARTIST",
+      tag: "AI TRAINING",
       h1: ["Learn AI.", "Create with AI.", "Build with AI."],
+      description:
+        "AI training with Milad at MX AI Academy, covering comprehensive AI courses, private training, live workshops and practical AI skills for work, business and content creation, with a certificate of completion.",
       quoteLines: [
-        "“AI didn’t replace me. It multiplied me.",
+        "“AI didn't replace me. It multiplied me.",
         "It can multiply you too.”",
       ],
-      description:
-        "I’m Milad, an AI artist, educator and creative entrepreneur. I help individuals and businesses use artificial intelligence to create, grow and build new income streams. Your transformation starts here.",
       cta1: "Book a Call",
       cta2: "View Courses",
       cta3: "Private Course",
@@ -33,6 +33,7 @@ export const translations = {
     },
     about: {
       label: "WHO IS MILAD?",
+      identity: "CREATIVE × EDUCATOR × AI ARTIST",
       heading1: "Human First.",
       heading2: "AI Powered.",
       paragraphs: [
@@ -822,19 +823,19 @@ export const translations = {
       studentDashboardAria: "باز کردن پنل دانشجویی",
     },
     hero: {
-      tag: "تولید کننده محتوا · مدرّس · هنرمند هوش مصنوعی",
+      tag: "آموزش هوش مصنوعی",
       h1: [
         "هوش مصنوعی رو یاد بگیر.",
         "به کارات سرعت بده.",
         "ایده‌هات رو واقعی کن.",
       ],
+      description:
+        "آموزش هوش مصنوعی با میلاد در MX AI Academy؛ شامل دوره‌های جامع هوش مصنوعی، آموزش‌های خصوصی، کارگاه‌های زنده و مهارت‌های کاربردی AI برای کار، کسب‌وکار و تولید محتوا، همراه با مدرک پایان دوره.",
       quoteLines: [
         "«هوش مصنوعی نیومده جای منو و شما رو بگیره.",
         "اومده قدرتمون رو چند برابر کنه.",
         "حالا من همین مسیر رو به شما هم یاد می‌دم.»",
       ],
-      description:
-        "من میلادم. به تولیدکننده‌های محتوا و کسب‌وکارها کمک می‌کنم با هوش مصنوعی، محتوای حرفه‌ای‌تر بسازن، برندشون رو قوی‌تر کنن و از ایده‌هاشون درآمد واقعی خلق کنن. اگه آماده‌ای AI رو درست یاد بگیری و باهاش چیزی بسازی، از همین‌جا شروع می‌کنیم.",
       cta1: "رزرو جلسه",
       cta2: "دوره‌ها",
       cta3: "دوره خصوصی",
@@ -842,6 +843,7 @@ export const translations = {
     },
     about: {
       label: "داستان من",
+      identity: "تولید کننده محتوا · مدرّس · هنرمند هوش مصنوعی",
       heading1: "اول انسان،",
       heading2: "بعد هوش مصنوعی.",
       paragraphs: [
@@ -854,7 +856,7 @@ export const translations = {
     },
     aiwork: {
       label: "آثار",
-      heading: "با هوش مصنوعی چه می‌سازم",
+      heading: "قسمتی از کارهای من با هوش مصنوعی",
       reelsTitle: "ویدیو",
       imagesTitle: "تصاویر",
       scrollPrev: "اسکرول قبلی",

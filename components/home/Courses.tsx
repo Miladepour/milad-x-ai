@@ -36,7 +36,7 @@ export default function Courses({ courses: catalog }: CoursesProps) {
     <section className="w-full bg-background pt-10 md:pt-12 pb-10 md:pb-12 px-8 md:px-12 lg:px-16">
       <div className="max-w-6xl mx-auto flex flex-col gap-8">
         <header>
-          <span className="type-section-label font-mono text-orange uppercase tracking-[0.35em] rtl:tracking-normal block mb-1">
+          <span className="home-section-label font-mono text-orange uppercase tracking-[0.35em] rtl:tracking-normal block mb-1">
             {t.courses.label}
           </span>
           <div className="flex items-end justify-between gap-4">
@@ -94,73 +94,81 @@ function HomeCourseGrid({ items }: { items: HomeCourseItem[] }) {
   const t = useTranslation();
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-      {items.map((course) => (
-        <article
-          key={course.id}
-          className="bg-surface flex flex-col overflow-hidden rounded-sm"
-        >
-          <div className="relative aspect-[16/10] bg-background">
-            {course.openable ? (
-              <Link href={course.detailHref} className="absolute inset-0">
-                <CourseCoverImage
-                  src={course.coverImage}
-                  alt={course.title}
-                  seed={course.id}
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                />
-              </Link>
-            ) : (
+    <div className="grid grid-cols-1 items-stretch md:grid-cols-2 gap-5">
+      {items.map((course) => {
+        const body = (
+          <>
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col justify-center gap-1 px-3.5 py-3 text-start sm:gap-1.5 sm:px-5">
+              <div>
+                {course.openable ? (
+                  <span className="type-badge-meta font-mono text-muted text-[10px] sm:text-xs">
+                    {course.date}
+                  </span>
+                ) : (
+                  <span
+                    className="type-badge font-mono border border-orange px-2 py-0.5 text-orange sm:py-1"
+                    style={{ borderRadius: "2px" }}
+                  >
+                    {t.coursesPage.statusLabels[course.status]}
+                  </span>
+                )}
+              </div>
+
+              <p className="font-dm font-semibold text-cream m-0 line-clamp-2 overflow-hidden min-w-0 text-[15px] leading-[1.45] sm:text-[18px] md:text-[20px] rtl:text-[14px] rtl:leading-[1.55] sm:rtl:text-[16px] md:rtl:text-[18px]">
+                {course.title}
+              </p>
+
+              <p className="font-dm text-muted m-0 line-clamp-2 overflow-hidden min-w-0 [word-break:keep-all] text-[12px] leading-[1.7] sm:text-[13px] md:text-[14px] rtl:text-[12.5px] rtl:leading-[1.75] sm:rtl:text-[13.5px] md:rtl:text-[14px]">
+                {course.description}
+              </p>
+
+              {course.openable ? (
+                <span className="font-dm text-xs sm:text-sm text-orange group-hover:text-cream transition-colors shrink-0">
+                  {t.coursesPage.viewDetails}
+                </span>
+              ) : null}
+            </div>
+
+            <div className="relative h-full w-[108px] shrink-0 bg-background sm:w-[160px] md:w-[208px]">
               <CourseCoverImage
                 src={course.coverImage}
                 alt={course.title}
                 seed={course.id}
-                sizes="(max-width: 768px) 100vw, 33vw"
+                sizes="208px"
+                className={
+                  course.openable
+                    ? "object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]"
+                    : "object-cover object-center"
+                }
               />
-            )}
-          </div>
-
-          <div className="flex flex-col flex-1 p-5 gap-3">
-            <div className="flex items-center justify-end">
-              {course.openable ? (
-                <span className="type-badge-meta font-mono text-muted text-xs">
-                  {course.date}
-                </span>
-              ) : (
-                <span
-                  className="type-badge font-mono border border-orange px-2 py-1 text-orange"
-                  style={{ borderRadius: "2px" }}
-                >
-                  {t.coursesPage.statusLabels[course.status]}
-                </span>
-              )}
             </div>
+          </>
+        );
 
-            <p className="type-card-title font-dm font-semibold text-cream leading-tight m-0">
-              {course.openable ? (
-                <Link href={course.detailHref} className="hover:text-orange transition-colors">
-                  {course.title}
-                </Link>
-              ) : (
-                course.title
-              )}
-            </p>
-
-            <p className="type-card-body font-dm text-muted leading-relaxed flex-1 m-0 line-clamp-3">
-              {course.description}
-            </p>
-
+        return (
+          <article
+            key={course.id}
+            className={`h-full home-course-glass ${
+              course.openable
+                ? "group hover:border-orange/45 transition-colors duration-200"
+                : ""
+            }`}
+          >
             {course.openable ? (
               <Link
                 href={course.detailHref}
-                className="font-dm text-sm text-orange hover:text-cream transition-colors"
+                className="flex h-[192px] flex-row items-stretch rtl:flex-row-reverse md:h-[208px]"
               >
-                {t.coursesPage.viewDetails}
+                {body}
               </Link>
-            ) : null}
-          </div>
-        </article>
-      ))}
+            ) : (
+              <div className="flex h-[192px] flex-row items-stretch rtl:flex-row-reverse md:h-[208px]">
+                {body}
+              </div>
+            )}
+          </article>
+        );
+      })}
     </div>
   );
 }

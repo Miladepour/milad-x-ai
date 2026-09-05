@@ -166,11 +166,11 @@ export default function ReelCoverFlowCarousel({
   };
 
   return (
-    <div className="relative w-full overflow-hidden select-none" aria-label={ariaLabel}>
+    <div className="relative w-full select-none" aria-label={ariaLabel}>
       <button
         type="button"
         onClick={handlePrev}
-        className={`${arrowClass} start-0 -ms-1 md:-ms-2`}
+        className={`${arrowClass} start-1 md:start-2`}
         aria-label={w.scrollPrev}
       >
         {isRtl ? (
@@ -183,7 +183,7 @@ export default function ReelCoverFlowCarousel({
       <button
         type="button"
         onClick={handleNext}
-        className={`${arrowClass} end-0 -me-1 md:-me-2`}
+        className={`${arrowClass} end-1 md:end-2`}
         aria-label={w.scrollNext}
       >
         {isRtl ? (

@@ -71,24 +71,24 @@ export default function Hero() {
             {t.hero.tag}
           </p>
 
-          {t.hero.h1.map((line, i) => (
-            <div key={i} className="overflow-hidden">
-              <h1 className="type-hero-h1 font-dm font-bold text-cream select-none">
+          <h1 className="type-hero-h1 font-dm font-bold text-cream select-none">
+            {t.hero.h1.map((line) => (
+              <span key={line} className="block">
                 {line}
-              </h1>
-            </div>
-          ))}
+              </span>
+            ))}
+          </h1>
 
-          <h2 className="type-hero-quote font-dm font-normal italic text-orange mt-5 leading-snug border-s-2 border-orange ps-4 max-w-[400px] rtl:max-w-[360px] rtl:mt-4">
+          <blockquote className="type-hero-quote font-dm font-normal italic text-orange mt-5 mb-0 leading-snug border-s-2 border-orange ps-4 max-w-xl">
             {t.hero.quoteLines.map((line, i) => (
-              <span key={i}>
+              <span key={line}>
                 {i > 0 && <br />}
                 {line}
               </span>
             ))}
-          </h2>
+          </blockquote>
 
-          <p className="type-hero-body font-dm text-muted mt-4 leading-relaxed max-w-[400px] rtl:max-w-[360px] rtl:mt-3">
+          <p className="type-hero-body font-dm text-muted mt-5 leading-relaxed max-w-xl">
             {t.hero.description}
           </p>
 

@@ -33,7 +33,7 @@ export function generateMetadata({
   return {
     title: {
       default: meta.title,
-      template: "%s | Milad X AI",
+      template: "%s | MX AI Academy",
     },
     description: meta.description,
     keywords: meta.keywords,

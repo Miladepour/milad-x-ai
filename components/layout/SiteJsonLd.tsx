@@ -3,7 +3,7 @@ export default function SiteJsonLd() {
     "@context": "https://schema.org",
     "@type": "Person",
     name: "Milad Pour",
-    alternateName: "Milad X AI",
+    alternateName: ["Milad X Talks", "Milad X AI", "Milad"],
     url: "https://www.mxaiacademy.com",
     jobTitle: "AI Artist & Educator",
     description:

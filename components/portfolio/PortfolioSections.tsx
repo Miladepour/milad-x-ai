@@ -29,7 +29,7 @@ export default function PortfolioSections({
   return (
     <div className="flex flex-col gap-16 md:gap-20">
       {showReels && (
-        <section aria-labelledby="portfolio-reels-heading" className="overflow-hidden">
+        <section aria-labelledby="portfolio-reels-heading">
           <h2
             id="portfolio-reels-heading"
             className="font-mono text-xs text-orange uppercase tracking-widest rtl:tracking-normal mb-6"
@@ -41,7 +41,7 @@ export default function PortfolioSections({
       )}
 
       {showImages && (
-        <section aria-labelledby="portfolio-images-heading" className="overflow-hidden">
+        <section aria-labelledby="portfolio-images-heading">
           <h2
             id="portfolio-images-heading"
             className="font-mono text-xs text-orange uppercase tracking-widest rtl:tracking-normal mb-6"

@@ -27,11 +27,11 @@ export default async function Home({ params }: PageProps) {
       <div id="about">
         <About />
       </div>
-      <div id="work">
-        <AIWork />
-      </div>
       <div id="courses">
         <Courses courses={courses} />
+      </div>
+      <div id="work">
+        <AIWork />
       </div>
       {reviews.length > 0 ? <StudentReviews reviews={reviews} /> : null}
       <BookCall />

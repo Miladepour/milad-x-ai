@@ -15,11 +15,11 @@ export default function AIWork() {
   return (
     <section
       id="work"
-      className="w-full bg-background pt-28 pb-10 md:pb-12 px-8 md:px-12 lg:px-16"
+      className="w-full bg-background pt-14 pb-10 md:pb-12 px-8 md:px-12 lg:px-16"
     >
-      <div className="max-w-6xl mx-auto overflow-hidden px-1">
+      <div className="max-w-6xl mx-auto px-1">
         <div className="mb-14">
-          <span className="type-section-label font-mono text-orange uppercase tracking-[0.35em] rtl:tracking-normal">
+          <span className="home-section-label font-mono text-orange uppercase tracking-[0.35em] rtl:tracking-normal">
             {w.label}
           </span>
           <h2 className="type-course-page-title font-dm font-bold text-cream leading-tight m-0 mt-1">

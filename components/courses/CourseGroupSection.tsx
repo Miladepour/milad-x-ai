@@ -6,6 +6,7 @@ interface CourseGroupSectionProps {
   description: string;
   headingLevel?: "h2" | "h3";
   className?: string;
+  titleClassName?: string;
   icon?: LucideIcon;
   children: ReactNode;
 }
@@ -15,6 +16,7 @@ export default function CourseGroupSection({
   description,
   headingLevel = "h2",
   className = "",
+  titleClassName = "",
   icon: Icon,
   children,
 }: CourseGroupSectionProps) {
@@ -27,7 +29,9 @@ export default function CourseGroupSection({
           {Icon ? (
             <Icon className="h-5 w-5 shrink-0 text-orange" strokeWidth={1.75} aria-hidden />
           ) : null}
-          <Heading className="type-course-section-heading font-dm font-bold text-cream m-0">
+          <Heading
+            className={`type-course-section-heading font-dm font-bold text-cream m-0 ${titleClassName}`.trim()}
+          >
             {title}
           </Heading>
         </div>

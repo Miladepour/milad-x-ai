@@ -13,6 +13,7 @@ interface StudentReviewsSectionProps {
   hideProgramLink?: boolean;
   sectionId?: string;
   className?: string;
+  accentTitles?: boolean;
 }
 
 export default function StudentReviewsSection({
@@ -21,6 +22,7 @@ export default function StudentReviewsSection({
   hideProgramLink = false,
   sectionId = "student-reviews",
   className = "",
+  accentTitles = false,
 }: StudentReviewsSectionProps) {
   const t = useTranslation();
   const p = t.studentReviews;
@@ -39,7 +41,13 @@ export default function StudentReviewsSection({
   const inner = (
     <>
       <header className="max-w-2xl">
-        <span className="type-section-label font-mono text-orange uppercase tracking-[0.35em] rtl:tracking-normal block mb-3">
+        <span
+          className={
+            accentTitles
+              ? "home-section-label font-mono text-orange uppercase tracking-[0.35em] rtl:tracking-normal block mb-3"
+              : "type-section-label font-mono text-orange uppercase tracking-[0.35em] rtl:tracking-normal block mb-3"
+          }
+        >
           {p.label}
         </span>
         <h2
