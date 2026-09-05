@@ -20,7 +20,7 @@ export function buildCoursesPageJsonLd(input: {
   title: string;
   description: string;
   faqTitle: string;
-  faqs: { question: string; answer: string }[];
+  faqs: readonly { question: string; answer: string }[];
   courses: Course[];
 }): Record<string, unknown> {
   const pageUrl = `${SITE_URL}${localizedPath(COURSES_BASE_PATH, input.locale)}`;

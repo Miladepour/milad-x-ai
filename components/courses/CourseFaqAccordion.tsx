@@ -10,7 +10,7 @@ import CourseSectionCard from "./CourseSectionCard";
 interface CourseFaqAccordionProps {
   id: string;
   title: string;
-  items: CourseFaqItem[];
+  items: readonly CourseFaqItem[];
   lang: Locale;
 }
 
