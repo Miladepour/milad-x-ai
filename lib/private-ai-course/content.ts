@@ -25,6 +25,13 @@ export type PrivateCoursePageCopy = {
   primaryCta: string;
   secondaryCta: string;
   telegramCta: string;
+  jumpNavAria: string;
+  jumpNavProcess: string;
+  jumpNavPaths: string;
+  jumpNavIncluded: string;
+  jumpNavFaq: string;
+  stickyBookCta: string;
+  stickyTelegramCta: string;
   pricingNote: string;
   trustItems: string[];
   whyTitle: string;
@@ -49,7 +56,6 @@ export type PrivateCoursePageCopy = {
     title: string;
     description: string;
     bullets?: string[];
-    cta?: string;
   }[];
   honestyTitle: string;
   honestyBody: string;
@@ -77,6 +83,13 @@ const en: PrivateCoursePageCopy = {
   primaryCta: "Book a 30-Minute Consultation",
   secondaryCta: "Explore the Available Learning Paths",
   telegramCta: "Message us on Telegram",
+  jumpNavAria: "On this page",
+  jumpNavProcess: "How it works",
+  jumpNavPaths: "Paths",
+  jumpNavIncluded: "Included",
+  jumpNavFaq: "FAQ",
+  stickyBookCta: "Book consultation",
+  stickyTelegramCta: "Telegram",
   pricingNote:
     "The consultation costs US$30. If we agree to begin a private course, the full consultation fee will be credited towards your final course fee.",
   trustItems: [
@@ -312,7 +325,6 @@ const en: PrivateCoursePageCopy = {
       title: "Book a 30-Minute Consultation",
       description:
         "During a 30-minute online consultation, we review your current level, personal or professional goal, intended project, existing tools and the time you can commit to learning. The consultation costs US$30. If we agree to proceed with a private course, the full consultation fee will be credited towards your final course fee.",
-      cta: "Book Your Consultation",
     },
     {
       title: "Receive Your Personalised Learning Programme",
@@ -451,6 +463,13 @@ const fa: PrivateCoursePageCopy = {
   primaryCta: "رزرو جلسه مشاوره ۳۰ دقیقه‌ای",
   secondaryCta: "مشاهده مسیرهای آموزشی",
   telegramCta: "پیام در تلگرام",
+  jumpNavAria: "در این صفحه",
+  jumpNavProcess: "روند کار",
+  jumpNavPaths: "مسیرها",
+  jumpNavIncluded: "شامل چیست",
+  jumpNavFaq: "سؤالات",
+  stickyBookCta: "رزرو مشاوره",
+  stickyTelegramCta: "تلگرام",
   pricingNote:
     "هزینه مشاوره برای متقاضیان خارج از ایران ۳۰ دلار آمریکا و برای متقاضیان داخل ایران ۳٬۵۰۰٬۰۰۰ تومان است. در صورت شروع دوره خصوصی، کل هزینه مشاوره از مبلغ نهایی دوره کسر می‌شود.",
   trustItems: [
@@ -686,7 +705,6 @@ const fa: PrivateCoursePageCopy = {
       title: "رزرو جلسه مشاوره",
       description:
         "در یک جلسه آنلاین ۳۰ دقیقه‌ای، سطح فعلی، هدف، نیاز کاری یا شخصی، پروژه موردنظر، ابزارهایی که استفاده می‌کنید و زمانی که برای یادگیری دارید بررسی می‌شود. هزینه این جلسه برای متقاضیان خارج از ایران ۳۰ دلار آمریکا و برای متقاضیان داخل ایران ۳٬۵۰۰٬۰۰۰ تومان است. اگر پس از جلسه برای شروع دوره خصوصی به توافق برسیم، کل هزینه مشاوره از مبلغ نهایی دوره کسر خواهد شد.",
-      cta: "رزرو جلسه مشاوره",
     },
     {
       title: "طراحی و ارسال برنامه آموزشی",
