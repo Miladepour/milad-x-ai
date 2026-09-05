@@ -9,8 +9,7 @@ import { PRIVATE_AI_COURSE_BASE_PATH } from '@/lib/private-ai-course/constants';
 import { useLanguage } from '@/lib/i18n/context';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 
-const HERO_IMAGE =
-  '/images/home-page-hero/آموزش هوش مصنوعی - Ai courses by Milad X Talk - MX AI ACADEMY.jpeg';
+const HERO_IMAGE = '/images/home-page-hero/ai-courses-milad-x-talks-mx-ai-academy.jpeg';
 
 function IconInstagram() {
   return (
