@@ -67,6 +67,22 @@ function parseDisplayDate(value: string): number | null {
   return new Date(year, month, day).getTime();
 }
 
+/** Whether the course has at least one parseable session date today or later. */
+export function hasConfirmedFutureCourseDate(
+  course: Course,
+  referenceTimestamp: number = Date.now()
+): boolean {
+  const startOfReferenceDay = new Date(referenceTimestamp);
+  startOfReferenceDay.setHours(0, 0, 0, 0);
+
+  return [course.date, ...course.meta.sessions.map((session) => session.date)]
+    .map(parseDisplayDate)
+    .some(
+      (timestamp): timestamp is number =>
+        timestamp !== null && timestamp >= startOfReferenceDay.getTime()
+    );
+}
+
 /** Earliest session / display date for sorting listings (soonest first). */
 export function getCourseSortTimestamp(course: Course): number {
   const candidates = [

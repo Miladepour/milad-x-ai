@@ -32,3 +32,4 @@ export {
 export type { WaitlistSubmission } from "./types";
 export { parseCourseAdminPayload, normalizeSlug, courseToAdminPayload } from "./validate";
 export { isCourseOpenable, isOfflineCourse, hasCourseCover } from "./openable";
+export { hasConfirmedFutureCourseDate } from "./sort";

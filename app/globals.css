@@ -43,6 +43,84 @@
     @apply overflow-hidden rounded-[15px] border border-white/[0.14] bg-gradient-to-br from-white/[0.11] via-white/[0.05] to-orange/[0.08] shadow-[0_12px_40px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-xl;
   }
 
+  .trust-rail-window {
+    -webkit-mask-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      #000 6%,
+      #000 94%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      #000 6%,
+      #000 94%,
+      transparent 100%
+    );
+  }
+
+  .trust-rail-track {
+    animation: trust-rail-scroll 38s linear infinite;
+    will-change: transform;
+  }
+
+  .trust-rail-track-rtl {
+    animation-direction: reverse;
+  }
+
+  .trust-rail-window:hover .trust-rail-track {
+    animation-play-state: paused;
+  }
+
+  @keyframes trust-rail-scroll {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+
+  @media (min-width: 768px) {
+    .trust-rail-window {
+      -webkit-mask-image: linear-gradient(
+        90deg,
+        transparent 0%,
+        #000 3%,
+        #000 97%,
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        90deg,
+        transparent 0%,
+        #000 3%,
+        #000 97%,
+        transparent 100%
+      );
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .trust-rail-window {
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+
+    .trust-rail-window::-webkit-scrollbar {
+      display: none;
+    }
+
+    .trust-rail-track {
+      animation: none;
+      transform: none;
+      will-change: auto;
+    }
+  }
+
   .home-section-label {
     font-size: 14px;
     line-height: 1.4;

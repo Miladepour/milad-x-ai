@@ -53,3 +53,11 @@ next-env.d.ts
 
 # duplicate source images (site uses public/images)
 /Images/
+
+# playwright cli artifacts (local browser snapshots, screenshots, console logs)
+/.playwright-cli/
+
+# local audit reports and scratch screenshots (not for the repo)
+/docs/SECURITY-AUDIT-*.md
+/docs/SITE-AUDIT-*.md
+/hero-private-en.png

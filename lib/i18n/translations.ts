@@ -18,24 +18,59 @@ export const translations = {
       studentDashboardAria: "Open your student dashboard",
     },
     hero: {
-      tag: "AI TRAINING",
-      h1: ["Learn AI.", "Create with AI.", "Build with AI."],
+      tag: "Practical AI education for work, content and business",
+      h1: ["Learn AI.", "Work faster.", "Turn your ideas into reality."],
       description:
-        "AI training with Milad at MX AI Academy, covering comprehensive AI courses, private training, live workshops and practical AI skills for work, business and content creation, with a certificate of completion.",
+        "Practical, accessible learning paths that help you use AI in real work, content creation and business.",
       quoteLines: [
         "“AI didn't replace me. It multiplied me.",
         "It can multiply you too.”",
       ],
-      cta1: "Book a Call",
-      cta2: "View Courses",
+      cta1: "View Courses",
+      cta2: "Private AI Training",
       cta3: "Private Course",
+      consultationLink: "Need AI guidance for your business? Book a consultation →",
+      imageAlt: "AI courses and practical AI education at MX AI Academy",
       scroll: "SCROLL",
+    },
+    trustStrip: {
+      items: [
+        { value: "100K+", label: "Learning Community" },
+        { value: "10+ Years", label: "Digital Marketing Experience" },
+        { value: "Practical", label: "Project-Based Learning" },
+        { value: "Course", label: "Completion Certificate" },
+      ],
+    },
+    learningPaths: {
+      label: "LEARNING PATHS",
+      heading: "Where do you want to start?",
+      description: "Choose the learning path that best matches your goals.",
+      cards: [
+        {
+          title: "AI Courses",
+          description:
+            "Structured, project-based learning designed for real-world AI use.",
+          cta: "View Courses",
+        },
+        {
+          title: "Private AI Training",
+          description:
+            "A personalised learning path built around your goals, level and project.",
+          cta: "Explore Private Training",
+        },
+        {
+          title: "Free AI Tutorials",
+          description:
+            "Start learning today with practical, free AI tutorials.",
+          cta: "Start Learning Free",
+        },
+      ],
     },
     about: {
       label: "WHO IS MILAD?",
       identity: "CREATIVE × EDUCATOR × AI ARTIST",
-      heading1: "Human First.",
-      heading2: "AI Powered.",
+      heading1: "Human first.",
+      heading2: "AI second.",
       paragraphs: [
         "I graduated with a degree in IT back in 2012, packed my bags and moved to Stockholm, Sweden, where I fell in love with web development and digital marketing. I built my own marketing agency and ran it for nearly a decade, working with brands, learning what works and what doesn’t.",
         "Then in 2022 I made another big move, this time to Manchester, UK, and that’s when everything changed.",
@@ -45,8 +80,8 @@ export const translations = {
       ],
     },
     aiwork: {
-      label: "AI WORK",
-      heading: "What I Create",
+      label: "SELECTED WORK",
+      heading: "Selected AI Work",
       reelsTitle: "Video",
       imagesTitle: "Images",
       scrollPrev: "Scroll previous",
@@ -70,7 +105,9 @@ export const translations = {
     },
     courses: {
       label: "COURSES",
-      heading: "Upcoming Courses",
+      heading: "Featured Courses",
+      waitlistOpen: "Waitlist Open",
+      nextDateSoon: "The next course date will be announced soon.",
       items: [
         {
           id: 1,
@@ -120,6 +157,12 @@ export const translations = {
       heading: "Bring AI into your work, practically and with purpose",
       sub: "In a private 30-minute session, we review your needs or business and help you find the right path for learning, content creation, automation, marketing, or executing business ideas with AI.",
       cta: "Book a private consultation",
+    },
+    homeFinalCta: {
+      heading: "Ready to put AI to work in the real world?",
+      sub: "Choose a structured course, or book a focused consultation to find the right AI path for your work or business.",
+      primaryCta: "View Courses",
+      secondaryCta: "Book a Consultation",
     },
     studentReviews: {
       label: "Student feedback",
@@ -342,6 +385,7 @@ export const translations = {
         "New free tutorials are being added. Check back soon, or explore live workshops and courses in the meantime.",
       watchTutorial: "Watch tutorial →",
       freeBadge: "Free",
+      viewAllCta: "View All Free Tutorials",
       ctaTitle: "Ready to go deeper?",
       ctaDescription:
         "Free tutorials are a great start. For hands-on live training, step-by-step projects, and direct feedback, explore our paid workshops and courses.",
@@ -823,23 +867,58 @@ export const translations = {
       studentDashboardAria: "باز کردن پنل دانشجویی",
     },
     hero: {
-      tag: "آموزش هوش مصنوعی",
+      tag: "آموزش کاربردی هوش مصنوعی برای کار، محتوا و کسب‌وکار",
       h1: [
         "هوش مصنوعی رو یاد بگیر.",
         "به کارات سرعت بده.",
         "ایده‌هات رو واقعی کن.",
       ],
       description:
-        "آموزش هوش مصنوعی با میلاد در MX AI Academy؛ شامل دوره‌های جامع هوش مصنوعی، آموزش‌های خصوصی، کارگاه‌های زنده و مهارت‌های کاربردی AI برای کار، کسب‌وکار و تولید محتوا، همراه با مدرک پایان دوره.",
+        "مسیرهای آموزشی کاربردی و قابل‌فهم برای استفاده واقعی از هوش مصنوعی در کار، تولید محتوا و کسب‌وکار.",
       quoteLines: [
         "«هوش مصنوعی نیومده جای منو و شما رو بگیره.",
         "اومده قدرتمون رو چند برابر کنه.",
         "حالا من همین مسیر رو به شما هم یاد می‌دم.»",
       ],
-      cta1: "رزرو جلسه",
-      cta2: "دوره‌ها",
+      cta1: "مشاهده دوره‌ها",
+      cta2: "دوره خصوصی",
       cta3: "دوره خصوصی",
+      consultationLink: "برای کسب‌وکارت مشاوره می‌خوای؟ رزرو مشاوره ←",
+      imageAlt: "آموزش هوش مصنوعی در MX AI Academy با میلاد",
       scroll: "پایین",
+    },
+    trustStrip: {
+      items: [
+        { value: "+۱۰۰ هزار نفر", label: "جامعه آموزشی" },
+        { value: "+۱۰ سال", label: "تجربه دیجیتال مارکتینگ" },
+        { value: "آموزش عملی", label: "و پروژه‌محور" },
+        { value: "مدرک", label: "پایان دوره" },
+      ],
+    },
+    learningPaths: {
+      label: "مسیر یادگیری",
+      heading: "از کجا می‌خوای شروع کنی؟",
+      description: "مسیر مناسب خودت رو بر اساس هدفت انتخاب کن.",
+      cards: [
+        {
+          title: "دوره‌های هوش مصنوعی",
+          description:
+            "یادگیری ساختاریافته و پروژه‌محور برای استفاده واقعی از هوش مصنوعی.",
+          cta: "مشاهده دوره‌ها",
+        },
+        {
+          title: "آموزش خصوصی",
+          description:
+            "مسیر آموزشی اختصاصی، متناسب با هدف، سطح و پروژه خودت.",
+          cta: "دوره خصوصی",
+        },
+        {
+          title: "آموزش رایگان",
+          description:
+            "با آموزش‌های رایگان و کاربردی، همین امروز یادگیری رو شروع کن.",
+          cta: "شروع رایگان",
+        },
+      ],
     },
     about: {
       label: "داستان من",
@@ -855,7 +934,7 @@ export const translations = {
       ],
     },
     aiwork: {
-      label: "آثار",
+      label: "نمونه‌کارهای منتخب",
       heading: "قسمتی از کارهای من با هوش مصنوعی",
       reelsTitle: "ویدیو",
       imagesTitle: "تصاویر",
@@ -864,7 +943,7 @@ export const translations = {
       createdWithAi: "ساخته‌شده با هوش مصنوعی",
       playVideo: "پخش ویدیو",
       pauseVideo: "توقف ویدیو",
-      cta: "مشاهده همه آثار",
+      cta: "مشاهده همه نمونه‌کارها",
     },
     portfolioPage: {
       label: "نمونه‌کار",
@@ -881,7 +960,9 @@ export const translations = {
     },
     courses: {
       label: "دوره‌ها",
-      heading: "ورکشاپ و دوره‌ها",
+      heading: "دوره‌های منتخب",
+      waitlistOpen: "لیست انتظار باز",
+      nextDateSoon: "تاریخ دوره بعدی به‌زودی اعلام می‌شود",
       items: [
         {
           id: 1,
@@ -931,6 +1012,12 @@ export const translations = {
       heading: "هوش مصنوعی را کاربردی و هدفمند وارد کار خود کن",
       sub: "در یک جلسه خصوصی ۳۰ دقیقه‌ای، نیاز شما یا کسب‌وکارتان را بررسی می‌کنیم و به شما کمک می‌کنیم مسیر مناسب برای یادگیری، تولید محتوا، اتوماتیک‌سازی، بازاریابی یا اجرای ایده‌های کاری با هوش مصنوعی را پیدا کنید.",
       cta: "رزرو مشاوره خصوصی",
+    },
+    homeFinalCta: {
+      heading: "آماده‌ای هوش مصنوعی رو وارد کار واقعی‌ات کنی؟",
+      sub: "با یک دوره ساختاریافته شروع کن، یا برای پیدا کردن مسیر مناسب هوش مصنوعی در کار و کسب‌وکارت یک جلسه مشاوره رزرو کن.",
+      primaryCta: "مشاهده دوره‌ها",
+      secondaryCta: "رزرو مشاوره",
     },
     studentReviews: {
       label: "نظر دانشجویان",
@@ -1153,6 +1240,7 @@ export const translations = {
         "آموزش‌های رایگان جدید به زودی اضافه می‌شوند. به زودی سر بزنید، یا همین حالا ورکشاپ‌ها و دوره‌های زنده را ببینید.",
       watchTutorial: "مشاهده آموزش ←",
       freeBadge: "رایگان",
+      viewAllCta: "مشاهده همه آموزش‌های رایگان",
       ctaTitle: "آماده‌ای عمیق‌تر یاد بگیری؟",
       ctaDescription:
         "آموزش‌های رایگان نقطه شروع خوبی هستند. برای آموزش زنده، پروژه گام‌به‌گام و بازخورد مستقیم، دوره‌های آکادمی ما را ببینید.",

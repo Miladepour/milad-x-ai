@@ -1,33 +1,29 @@
 'use client';
 
 import Image from 'next/image';
+import { INSTRUCTOR_PORTRAIT_SRC } from '@/lib/instructor/constants';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 
 export default function About() {
   const t = useTranslation();
 
   return (
-    <section className="w-full bg-background pt-28 pb-14 px-8 md:px-12 lg:px-16">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row items-stretch gap-0">
-          <div className="w-full md:w-[42%] flex-shrink-0">
-            <div
-              className="w-full bg-surface overflow-hidden"
-              style={{ borderRadius: '2px', height: '520px', position: 'relative' }}
-            >
+    <section className="w-full border-t border-white/[0.08] bg-background px-8 py-20 md:px-12 md:py-24 lg:px-16">
+      <div className="mx-auto max-w-6xl">
+        <div className="grid grid-cols-1 items-center gap-10 md:grid-cols-[minmax(260px,0.8fr)_minmax(0,1.2fr)] md:gap-12 lg:gap-16">
+          <div className="w-full">
+            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[2px] bg-surface md:h-[460px] md:aspect-auto">
               <Image
-                src="/images/about-me-milad.jpeg"
+                src={INSTRUCTOR_PORTRAIT_SRC}
                 alt="Milad"
                 fill
-                sizes="(max-width: 768px) 100vw, 42vw"
+                sizes="(max-width: 767px) calc(100vw - 4rem), 38vw"
                 className="object-cover object-top"
               />
             </div>
           </div>
 
-          <div className="hidden md:block w-px bg-orange mx-10 flex-shrink-0" />
-
-          <div className="flex flex-col justify-center gap-7 flex-1 mt-12 md:mt-0">
+          <div className="flex flex-col justify-center gap-7 md:border-s md:border-orange/70 md:ps-10 lg:ps-14">
             <div className="flex flex-col gap-3">
               <span className="home-section-label font-mono text-orange uppercase tracking-widest rtl:tracking-normal">
                 {t.about.label}
@@ -42,7 +38,7 @@ export default function About() {
               </h2>
             </div>
 
-            <div className="flex flex-col gap-5">
+            <div className="flex max-w-2xl flex-col gap-4">
               {t.about.paragraphs.map((text, i) => (
                 <p
                   key={i}

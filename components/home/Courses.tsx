@@ -5,15 +5,21 @@ import { Clapperboard, Radio } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/context';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import type { Course } from '@/lib/courses';
-import { COURSES_BASE_PATH, isCourseOpenable, isOfflineCourse } from '@/lib/courses';
+import {
+  COURSES_BASE_PATH,
+  hasConfirmedFutureCourseDate,
+  isCourseOpenable,
+  isOfflineCourse,
+} from '@/lib/courses';
 import CourseCoverImage from '@/components/courses/CourseCoverImage';
 import CourseGroupSection from '@/components/courses/CourseGroupSection';
 
 interface CoursesProps {
   courses: Course[];
+  referenceTimestamp: number;
 }
 
-export default function Courses({ courses: catalog }: CoursesProps) {
+export default function Courses({ courses: catalog, referenceTimestamp }: CoursesProps) {
   const t = useTranslation();
   const { href } = useLanguage();
   const p = t.coursesPage;
@@ -29,6 +35,7 @@ export default function Courses({ courses: catalog }: CoursesProps) {
       coverImage: course.coverImage,
       status: course.status,
       openable: isCourseOpenable(course),
+      hasConfirmedFutureDate: hasConfirmedFutureCourseDate(course, referenceTimestamp),
       detailHref: href(`${COURSES_BASE_PATH}/${course.slug}`),
     }));
 
@@ -87,6 +94,7 @@ interface HomeCourseItem {
   coverImage: string;
   status: Course['status'];
   openable: boolean;
+  hasConfirmedFutureDate: boolean;
   detailHref: string;
 }
 
@@ -101,9 +109,23 @@ function HomeCourseGrid({ items }: { items: HomeCourseItem[] }) {
             <div className="flex min-h-0 min-w-0 flex-1 flex-col justify-center gap-1 px-3.5 py-3 text-start sm:gap-1.5 sm:px-5">
               <div>
                 {course.openable ? (
-                  <span className="type-badge-meta font-mono text-muted text-[10px] sm:text-xs">
-                    {course.date}
-                  </span>
+                  course.hasConfirmedFutureDate ? (
+                    <span className="type-badge-meta font-mono text-muted text-[10px] sm:text-xs">
+                      {course.date}
+                    </span>
+                  ) : (
+                    <div className="flex flex-col items-start gap-1.5">
+                      <span
+                        className="type-badge whitespace-nowrap border border-orange px-2 py-0.5 font-mono text-orange sm:py-1"
+                        style={{ borderRadius: '2px' }}
+                      >
+                        {t.courses.waitlistOpen}
+                      </span>
+                      <span className="line-clamp-2 font-dm text-[10px] leading-relaxed text-cream/55 sm:text-[11px]">
+                        {t.courses.nextDateSoon}
+                      </span>
+                    </div>
+                  )
                 ) : (
                   <span
                     className="type-badge font-mono border border-orange px-2 py-0.5 text-orange sm:py-1"
@@ -157,12 +179,12 @@ function HomeCourseGrid({ items }: { items: HomeCourseItem[] }) {
             {course.openable ? (
               <Link
                 href={course.detailHref}
-                className="flex h-[192px] flex-row items-stretch rtl:flex-row-reverse md:h-[208px]"
+                className="flex h-[224px] flex-row items-stretch rtl:flex-row-reverse md:h-[232px]"
               >
                 {body}
               </Link>
             ) : (
-              <div className="flex h-[192px] flex-row items-stretch rtl:flex-row-reverse md:h-[208px]">
+              <div className="flex h-[224px] flex-row items-stretch rtl:flex-row-reverse md:h-[232px]">
                 {body}
               </div>
             )}

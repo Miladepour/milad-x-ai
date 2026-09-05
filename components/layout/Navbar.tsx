@@ -23,9 +23,6 @@ function isNavActive(
   urlLocale: UrlLocale
 ) {
   const target = localizedPath(logicalPath, urlLocale);
-  if (logicalPath === "/") {
-    return pathname === target || pathname === `${target}/`;
-  }
   return pathname === target || pathname.startsWith(`${target}/`);
 }
 
@@ -67,7 +64,6 @@ export default function Navbar() {
   const t = useTranslation();
 
   const navItems = [
-    { href: href("/"), path: "/", label: t.navbar.home },
     { href: href(COURSES_BASE_PATH), path: COURSES_BASE_PATH, label: t.navbar.courses },
     {
       href: href(PRIVATE_AI_COURSE_BASE_PATH),
@@ -102,6 +98,7 @@ export default function Navbar() {
       <nav className="px-4 sm:px-6 md:px-12 lg:px-16 h-20 flex items-center justify-between gap-3">
         <Link
           href={isLearnPortalActive(pathname, urlLocale) ? href("/learn") : href("/")}
+          aria-label={t.navbar.home}
           className="flex shrink-0 items-center"
         >
           <Image

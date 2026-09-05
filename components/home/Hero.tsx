@@ -1,11 +1,16 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { COURSES_BASE_PATH } from '@/lib/courses';
+import { CONSULTATION_BASE_PATH } from '@/lib/consultation/constants';
 import { PRIVATE_AI_COURSE_BASE_PATH } from '@/lib/private-ai-course/constants';
 import { useLanguage } from '@/lib/i18n/context';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+
+const HERO_IMAGE =
+  '/images/home-page-hero/آموزش هوش مصنوعی - Ai courses by Milad X Talk - MX AI ACADEMY.jpeg';
 
 function IconInstagram() {
   return (
@@ -44,34 +49,41 @@ export default function Hero() {
   return (
     <section
       dir="ltr"
-      className="relative w-full min-h-screen bg-background overflow-x-hidden"
+      aria-labelledby="home-hero-title"
+      className="relative isolate min-h-[100dvh] w-full overflow-hidden bg-background"
     >
-      {/* Radial glow — bottom-left */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(ellipse 65% 65% at 0% 100%, rgba(255,92,0,0.18) 0%, transparent 70%)',
-        }}
-      />
+      <div className="absolute inset-0 pointer-events-none">
+        <Image
+          src={HERO_IMAGE}
+          alt={t.hero.imageAlt}
+          fill
+          priority
+          quality={90}
+          sizes="100vw"
+          className="object-cover object-[62%_center] sm:object-[60%_center] md:object-center"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(13,13,13,0.2)_0%,rgba(13,13,13,0.46)_38%,rgba(13,13,13,0.86)_72%,#0D0D0D_100%)] md:hidden" />
+        <div
+          className="absolute inset-0 hidden md:block"
+          style={{
+            background:
+              'linear-gradient(90deg, #0D0D0D 0%, rgba(13,13,13,0.96) 30%, rgba(13,13,13,0.78) 52%, rgba(13,13,13,0.18) 78%, rgba(13,13,13,0) 100%), linear-gradient(0deg, #0D0D0D 0%, rgba(13,13,13,0) 24%)',
+          }}
+        />
+      </div>
 
-      {/* Floating orb */}
-      <div
-        className="absolute bottom-28 left-8 w-48 h-48 md:left-24 md:w-72 md:h-72 rounded-full pointer-events-none hero-orb"
-        style={{
-          background: 'radial-gradient(circle, rgba(255,92,0,0.12) 0%, transparent 70%)',
-          filter: 'blur(10px)',
-        }}
-      />
-
-      {/* Main content — always left on desktop (LTR layout); text direction follows language */}
-      <div className="hero-content relative z-10 flex flex-col justify-center min-h-screen px-8 md:px-12 lg:px-16 md:max-w-[55%] py-24 md:py-16">
+      <div className="relative z-10 flex min-h-[100dvh] w-full flex-col justify-center px-8 pb-12 pt-44 sm:px-10 sm:pt-48 md:max-w-[68%] md:px-12 md:pb-16 md:pt-24 lg:max-w-[64%] lg:px-16 xl:max-w-[60%]">
         <div className="max-w-3xl w-full" dir={textDir}>
-          <p className="type-hero-tag font-mono text-orange hero-tag-animated text-start mb-4 md:mb-5 tracking-[0.2em] rtl:tracking-normal">
+          <p className="type-hero-tag max-w-xl text-start font-mono leading-relaxed text-orange mb-4 md:mb-5">
             {t.hero.tag}
           </p>
 
-          <h1 className="type-hero-h1 font-dm font-bold text-cream select-none">
+          <h1
+            id="home-hero-title"
+            className={`type-hero-h1 select-none text-start font-dm font-bold text-cream ${
+              lang === 'EN' ? 'md:text-[clamp(42px,4.2vw,58px)]' : ''
+            }`}
+          >
             {t.hero.h1.map((line) => (
               <span key={line} className="block">
                 {line}
@@ -79,32 +91,37 @@ export default function Hero() {
             ))}
           </h1>
 
-          <blockquote className="type-hero-quote font-dm font-normal italic text-orange mt-5 mb-0 leading-snug border-s-2 border-orange ps-4 max-w-xl">
-            {t.hero.quoteLines.map((line, i) => (
-              <span key={line}>
-                {i > 0 && <br />}
-                {line}
-              </span>
-            ))}
-          </blockquote>
-
-          <p className="type-hero-body font-dm text-muted mt-5 leading-relaxed max-w-xl">
+          <p className="type-hero-body mt-5 max-w-[56ch] text-start font-dm leading-relaxed text-cream/75">
             {t.hero.description}
           </p>
 
-          <div className="flex flex-wrap items-center gap-4 mt-8 rtl:mt-6">
-            <Button variant="primary" size="lg" href={href("/consultation")}>
+          <div className="mt-7 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+            <Button
+              variant="primary"
+              size="lg"
+              href={href(COURSES_BASE_PATH)}
+              className="w-full whitespace-nowrap text-center sm:w-auto"
+            >
               {t.hero.cta1}
             </Button>
-            <Button variant="outline" size="lg" href={href(COURSES_BASE_PATH)}>
+            <Button
+              variant="outline"
+              size="lg"
+              href={href(PRIVATE_AI_COURSE_BASE_PATH)}
+              className="w-full whitespace-nowrap text-center sm:w-auto"
+            >
               {t.hero.cta2}
-            </Button>
-            <Button variant="outline" size="lg" href={href(PRIVATE_AI_COURSE_BASE_PATH)}>
-              {t.hero.cta3}
             </Button>
           </div>
 
-          <div className="flex items-center gap-5 mt-6">
+          <Link
+            href={href(CONSULTATION_BASE_PATH)}
+            className="mt-4 inline-flex w-fit border-b border-cream/20 pb-1 font-dm text-sm text-cream/70 transition-colors hover:border-orange/60 hover:text-orange focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange focus-visible:ring-offset-4 focus-visible:ring-offset-background"
+          >
+            {t.hero.consultationLink}
+          </Link>
+
+          <div className="mt-5 flex items-center gap-5">
             <a
               href="https://www.instagram.com/miladxaitalks/"
               target="_blank"
@@ -136,26 +153,7 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Hero image — right side */}
-      <div className="absolute right-0 top-0 bottom-0 min-h-screen w-[45%] hidden md:block">
-        <div className="relative h-full w-full">
-          <Image
-            src="/images/milad-hero2.jpg"
-            alt="Milad"
-            fill
-            priority
-            quality={100}
-            sizes="(max-width: 768px) 0px, 100vw"
-            className="object-cover object-top hero-image-mask"
-          />
-          <div
-            className="absolute inset-0 pointer-events-none hero-image-fade"
-          />
-        </div>
-      </div>
-
-      {/* Bottom-right: SCROLL */}
-      <div className="absolute bottom-8 right-10 flex flex-col items-center gap-3">
+      <div className="absolute bottom-8 right-10 hidden flex-col items-center gap-3 md:flex">
         <span
           className="type-hero-scroll font-mono text-muted uppercase rtl:tracking-normal"
           style={{
@@ -167,7 +165,6 @@ export default function Hero() {
         </span>
         <div className="w-px h-10 bg-muted opacity-30" />
       </div>
-
     </section>
   );
 }

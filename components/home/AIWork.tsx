@@ -3,9 +3,24 @@
 import Button from '@/components/ui/Button';
 import PortfolioSections from '@/components/portfolio/PortfolioSections';
 import { PORTFOLIO_BASE_PATH } from '@/lib/portfolio/constants';
-import { portfolioSquareImages } from '@/lib/portfolio/media';
+import { portfolioReels, portfolioSquareImages } from '@/lib/portfolio/media';
 import { useLanguage } from '@/lib/i18n/context';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+
+const HOME_REEL_IDS = new Set([
+  'ai-video-showcase',
+  'danlee-pharma-device-ad',
+  'ugc-with-ai-jb-design-london',
+]);
+
+const HOME_IMAGE_IDS = new Set([
+  'ai-by-milad-01',
+  'ai-by-milad-10',
+  'ai-by-milad-13',
+]);
+
+const homeReels = portfolioReels.filter((item) => HOME_REEL_IDS.has(item.id));
+const homeImages = portfolioSquareImages.filter((item) => HOME_IMAGE_IDS.has(item.id));
 
 export default function AIWork() {
   const { href } = useLanguage();
@@ -29,7 +44,10 @@ export default function AIWork() {
 
         <PortfolioSections
           showApplications={false}
-          showImages={portfolioSquareImages.length > 0}
+          showImages={homeImages.length > 0}
+          reels={homeReels}
+          images={homeImages}
+          headingLevel="h3"
         />
 
         <div className="flex justify-center mt-12">
