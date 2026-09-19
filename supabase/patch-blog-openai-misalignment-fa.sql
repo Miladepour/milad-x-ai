@@ -17,7 +17,7 @@ values (
   'FA',
   'OpenAI شش مورد واقعی از رفتارهای عجیب و نگران‌کننده مدل‌های AI خودش رو منتشر کرد',
   'Milad Ebrahimpour - MX AI Academy',
-  null,
+  '/images/openai-model-misalignment-cover.png',
   'OpenAI در گزارش جدیدش از یک سیستم تازه برای ثبت و انتشار موارد Misalignment رونمایی کرده؛ شش Incident واقعی از رفتارهای ناهماهنگ مدل‌ها در محیط Training و Evaluation.',
   $html$
 <p>OpenAI در گزارش جدیدش از یک سیستم تازه برای ثبت و انتشار موارد Misalignment رونمایی کرده؛ یعنی جاهایی که مدل کاری انجام داده که با هدف، دستور یا محدودیت‌هایی که براش تعیین شده هماهنگ نبوده.</p>

@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import BlogPostContent from "@/components/blog/BlogPostContent";
 import PageBreadcrumb from "@/components/layout/PageBreadcrumb";
 import { getAllBlogSlugs, getBlogPostBySlug } from "@/lib/blog/store";
-import { locales, urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
+import { BLOG_BASE_PATH } from "@/lib/blog/constants";
+import { SITE_URL, locales, urlLocaleToInternal, type UrlLocale } from "@/lib/i18n/config";
 import { localizedPath } from "@/lib/i18n/paths";
 import { pageAlternates } from "@/lib/i18n/metadata";
 import { translations } from "@/lib/i18n/translations";
@@ -11,8 +12,18 @@ import type { Metadata } from "next";
 
 export const revalidate = 3600;
 
+/** Standard Open Graph / Twitter share size */
+const OG_IMAGE_WIDTH = 1200;
+const OG_IMAGE_HEIGHT = 630;
+
 interface BlogPostPageProps {
   params: { locale: string; slug: string };
+}
+
+function absoluteCoverUrl(coverImage?: string | null): string | undefined {
+  if (!coverImage?.trim()) return undefined;
+  if (/^https?:\/\//i.test(coverImage)) return coverImage;
+  return `${SITE_URL}${coverImage.startsWith("/") ? "" : "/"}${coverImage}`;
 }
 
 export async function generateStaticParams() {
@@ -29,10 +40,43 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     return { title: internal === "FA" ? "وبلاگ" : "Blog" };
   }
 
+  const isFa = internal === "FA";
+  const path = `${BLOG_BASE_PATH}/${params.slug}`;
+  const url = `${SITE_URL}${localizedPath(path, locale)}`;
+  const imageUrl = absoluteCoverUrl(post.coverImage);
+  const ogImages = imageUrl
+    ? [
+        {
+          url: imageUrl,
+          width: OG_IMAGE_WIDTH,
+          height: OG_IMAGE_HEIGHT,
+          alt: post.title,
+        },
+      ]
+    : undefined;
+
   return {
     title: post.title,
     description: post.excerpt,
-    alternates: pageAlternates(`/blog/${params.slug}`, locale),
+    authors: [{ name: post.author }],
+    alternates: pageAlternates(path, locale),
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      url,
+      locale: isFa ? "fa_IR" : "en_GB",
+      type: "article",
+      siteName: "MX AI Academy",
+      publishedTime: post.publishedAt,
+      authors: [post.author],
+      ...(ogImages ? { images: ogImages } : {}),
+    },
+    twitter: {
+      card: ogImages ? "summary_large_image" : "summary",
+      title: post.title,
+      description: post.excerpt,
+      ...(ogImages ? { images: [imageUrl!] } : {}),
+    },
   };
 }
 
@@ -70,7 +114,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <div className="relative aspect-[16/9] w-full overflow-hidden rounded-sm border border-surface bg-background mb-8">
             <Image
               src={post.coverImage}
-              alt=""
+              alt={post.title}
               fill
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 768px"

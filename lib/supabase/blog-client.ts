@@ -6,8 +6,9 @@ import { createAnonClient } from "./server";
  * Uses service role when available (same pattern as course catalog) so posts
  * stay visible even if anon grants/RLS are misconfigured. Blog content is public.
  *
- * `cache: "no-store"` avoids Next.js Data Cache serving stale posts after CMS
- * updates (important for local testing and immediate publish visibility).
+ * In development, fetches skip the Data Cache so CMS updates show immediately.
+ * In production, use ISR-friendly revalidate so `generateStaticParams` / prerender
+ * can succeed (plain `cache: "no-store"` breaks the Vercel static build).
  */
 export function createBlogClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -20,7 +21,9 @@ export function createBlogClient() {
         fetch: (input, init) =>
           fetch(input, {
             ...init,
-            cache: "no-store",
+            ...(process.env.NODE_ENV === "development"
+              ? { cache: "no-store" as const }
+              : { next: { revalidate: 3600 } }),
           }),
       },
     });
