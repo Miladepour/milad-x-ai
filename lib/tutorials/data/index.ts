@@ -1,15 +1,19 @@
 import type { Tutorial } from "../types";
+import { akhbarHooshMasnoeiGpt6AstraFa } from "./akhbar-hoosh-masnoei-gpt6-astra-fa";
 import { aksVideoMahsulFa } from "./aks-video-mahsul-fa";
 import { claudeAiAzPayeFa } from "./claude-ai-az-paye-fa";
 import { claudeAiFa } from "./claude-ai-fa";
 import { claudeMotionGraphicsFa } from "./claude-motion-graphics-fa";
 import { claudeTokenSarfeJoeeFa } from "./claude-token-sarfe-joee-fa";
+import { gpt6AstraHiggsfieldKampaynFa } from "./gpt6-astra-higgsfield-kampayn-fa";
 import { hyperframesVideoEditFa } from "./hyperframes-video-edit-fa";
 import { obsidianMaghzDovomFa } from "./obsidian-maghz-dovom-fa";
 import { sakhtVideoBaHooshMasnoeiFa } from "./sakht-video-ba-hoosh-masnoei-fa";
 
 /** Code-defined tutorials — add new entries here when publishing lessons. Newest first. */
 export const tutorials: Tutorial[] = [
+  gpt6AstraHiggsfieldKampaynFa,
+  akhbarHooshMasnoeiGpt6AstraFa,
   obsidianMaghzDovomFa,
   aksVideoMahsulFa,
   claudeAiAzPayeFa,

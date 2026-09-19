@@ -37,13 +37,25 @@ const sanitizeOptions: sanitizeHtml.IOptions = {
     "img",
     "pre",
     "code",
+    "div",
+    "iframe",
   ],
   allowedAttributes: {
     a: ["href", "target", "rel"],
     img: ["src", "alt", "title"],
+    iframe: [
+      "src",
+      "title",
+      "allow",
+      "allowfullscreen",
+      "referrerpolicy",
+      "loading",
+      "frameborder",
+    ],
     "*": ["class"],
   },
   allowedSchemes: ["http", "https"],
+  allowedIframeHostnames: ["www.youtube.com", "youtube.com", "www.youtube-nocookie.com"],
   transformTags: {
     a: sanitizeHtml.simpleTransform("a", { rel: "noreferrer noopener" }),
   },
@@ -53,7 +65,7 @@ function renderHtml(html: string) {
   const safeHtml = sanitizeHtml(html, sanitizeOptions);
   return (
     <div
-      className="flex flex-col gap-5 [&_a]:text-orange [&_a]:underline [&_a]:underline-offset-4 [&_blockquote]:border-l-2 [&_blockquote]:border-orange [&_blockquote]:pl-4 [&_code]:rounded [&_code]:bg-surface [&_code]:px-2 [&_code]:py-1 [&_code]:font-mono [&_code]:text-sm [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-orange [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-orange [&_img]:rounded-sm [&_img]:border [&_img]:border-surface [&_ol]:list-decimal [&_ol]:pl-6 [&_pre]:overflow-x-auto [&_pre]:rounded-sm [&_pre]:border [&_pre]:border-surface [&_pre]:bg-surface/60 [&_pre]:p-4 [&_ul]:list-disc [&_ul]:pl-6"
+      className="flex flex-col gap-5 [&_a]:text-orange [&_a]:underline [&_a]:underline-offset-4 [&_blockquote]:border-l-2 [&_blockquote]:border-orange [&_blockquote]:pl-4 [&_code]:rounded [&_code]:bg-surface [&_code]:px-2 [&_code]:py-1 [&_code]:font-mono [&_code]:text-sm [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-orange [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-orange [&_iframe]:absolute [&_iframe]:inset-0 [&_iframe]:h-full [&_iframe]:w-full [&_img]:rounded-sm [&_img]:border [&_img]:border-surface [&_ol]:list-decimal [&_ol]:pl-6 [&_pre]:overflow-x-auto [&_pre]:rounded-sm [&_pre]:border [&_pre]:border-surface [&_pre]:bg-surface/60 [&_pre]:p-4 [&_ul]:list-disc [&_ul]:pl-6"
       dangerouslySetInnerHTML={{ __html: safeHtml }}
     />
   );

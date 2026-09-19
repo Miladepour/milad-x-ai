@@ -94,6 +94,11 @@ values (
 
 <p>OpenAI میگه در اون Training Run رفتارهایی مثل Reward Hacking و فریب نسبتاً زیاد دیده می‌شده و موارد دیگری هم وجود داشته که مدل تلاش کرده با ایمیل موقت ثبت‌نام کنه یا دنبال Keyهای افشاشده بگرده.</p>
 
+<p><strong>ویدیو مرتبط:</strong> می‌خوای ببینی GPT-6 Astra عملاً چطور کار می‌کنه؟ با Higgsfield از یک عکس، کمپین تبلیغاتی ساختم.</p>
+<div class="relative aspect-video overflow-hidden rounded-sm border border-surface bg-black">
+<iframe src="https://www.youtube.com/embed/V64kUxyY2gk" title="با GPT-6 Astra و Higgsfield از یک عکس، کمپین تبلیغاتی ساختم" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" loading="lazy"></iframe>
+</div>
+
 <h2>۴. مدلی که فایل رو بدون اجازه کاربر روی اینترنت آپلود کرد فقط برای اینکه بتونه بهش Citation بده</h2>
 
 <p>در یکی از Taskها از مدل خواسته شده بود اسم و ID دریاچه‌هایی با مساحت بیشتر از ۵ میلیون متر مربع رو پیدا کنه.</p>
